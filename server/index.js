@@ -369,8 +369,15 @@ io.on("connection", (socket) => {
     startRevealingPhase(sessionId);
   });
 
-  // Restart game (host only)
+  // Restart game (host only) - Original version is replaced with the enhanced version below
+  /*
   socket.on("restart-game", (sessionId) => {
+    // Old implementation - replaced with enhanced one below
+  });
+  */
+
+  // Enhanced version of restart-game
+  socket.on("restart-game", (sessionId, returnToLobby = false) => {
     const session = sessions[sessionId];
 
     if (!session) {
@@ -378,9 +385,11 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Only the host can restart the game
+    // Only host can restart the game
     if (socket.id !== session.host) {
-      socket.emit("error", { message: "Only the host can restart the game" });
+      socket.emit("error", {
+        message: "Only the host can restart or return to lobby",
+      });
       return;
     }
 
@@ -389,26 +398,102 @@ io.on("connection", (socket) => {
       clearInterval(session.gameState.timerId);
     }
 
-    // Reset the game state
-    if (session.gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
-      session.gameState = {
-        phase: "collecting",
-        statements: [],
-        currentStatementIndex: -1,
-        responses: {},
-        timer: 60,
-      };
-    } else if (session.gameType === GAME_TYPES.MUSIC_GUESS) {
-      session.gameState = {
-        phase: "category-selection",
-      };
+    console.log(
+      `Host ${socket.id} restarting game in session ${sessionId}, returnToLobby: ${returnToLobby}`
+    );
+
+    if (returnToLobby) {
+      // Reset the game state to "none"
+      session.gameType = GAME_TYPES.NONE;
+      session.gameState = null;
+
+      // Inform all players that they are back in the lobby
+      io.to(sessionId).emit("return-to-lobby", {
+        players: session.players,
+      });
+    } else {
+      // Reset the game state
+      if (session.gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
+        session.gameState = {
+          phase: "collecting",
+          statements: [],
+          currentStatementIndex: -1,
+          responses: {},
+          timer: 60,
+        };
+      } else if (session.gameType === GAME_TYPES.MUSIC_GUESS) {
+        session.gameState = {
+          phase: "category-selection",
+        };
+      }
+
+      // Notify all players the game has been restarted
+      io.to(sessionId).emit("game-restarted", {
+        gameType: session.gameType,
+        gameState: session.gameState,
+      });
+    }
+  });
+
+  // Return to lobby (host only)
+  socket.on("return-to-lobby", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session) {
+      socket.emit("error", { message: "Session not found" });
+      return;
     }
 
-    // Notify all players the game has been restarted
-    io.to(sessionId).emit("game-restarted", {
-      gameType: session.gameType,
-      gameState: session.gameState,
+    // Only the host can return to lobby
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can return to the lobby",
+      });
+      return;
+    }
+
+    console.log(`Host ${socket.id} returning session ${sessionId} to lobby`);
+
+    // Clear any existing timers
+    if (session.gameState && session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+    }
+
+    // Reset the game state to "none"
+    session.gameType = GAME_TYPES.NONE;
+    session.gameState = null;
+
+    // Inform all players that they are back in the lobby
+    io.to(sessionId).emit("return-to-lobby", {
+      players: session.players,
     });
+  });
+
+  // End game event handler
+  socket.on("end-game", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session) {
+      socket.emit("error", { message: "Session not found" });
+      return;
+    }
+
+    // Only the host can end the game
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can end the game" });
+      return;
+    }
+
+    console.log(`Host ${socket.id} ending game in session ${sessionId}`);
+
+    // Emit game-ended event with all statements and responses
+    io.to(sessionId).emit("game-ended", {
+      statements: session.gameState.statements,
+      responses: session.gameState.responses,
+    });
+
+    // Set phase to ended
+    session.gameState.phase = "ended";
   });
 
   // Explicitly leave a session
@@ -420,6 +505,47 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     handlePlayerDisconnect(socket.id);
     console.log("User disconnected:", socket.id);
+  });
+
+  socket.on("transfer-host", (sessionId, newHostId) => {
+    const session = sessions[sessionId];
+
+    if (!session) {
+      socket.emit("error", { message: "Session not found" });
+      return;
+    }
+
+    // Only the current host can transfer host rights
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the current host can transfer host rights",
+      });
+      return;
+    }
+
+    // Check if the new host is a valid participant
+    const newHostPlayer = session.players.find(
+      (player) => player.id === newHostId
+    );
+    if (!newHostPlayer) {
+      socket.emit("error", { message: "Selected player not found in session" });
+      return;
+    }
+
+    // Update the host
+    const oldHostId = session.host;
+    session.host = newHostId;
+
+    console.log(
+      `Host transferred from ${oldHostId} to ${newHostId} in session ${sessionId}`
+    );
+
+    // Notify all players about the host change
+    io.to(sessionId).emit("host-changed", {
+      newHost: newHostId,
+      newHostName: newHostPlayer.name,
+      players: session.players,
+    });
   });
 });
 
@@ -517,6 +643,8 @@ function startRevealingPhase(sessionId) {
   io.to(sessionId).emit("phase-changed", {
     phase: "revealing",
     statement: session.gameState.statements[0],
+    statementIndex: 0,
+    totalStatements: session.gameState.statements.length,
   });
 }
 
@@ -544,11 +672,8 @@ function moveToNextStatement(sessionId) {
       responses: session.gameState.responses,
     });
 
-    // Reset for a potential new round
-    session.gameState.phase = "collecting";
-    session.gameState.statements = [];
-    session.gameState.currentStatementIndex = -1;
-    session.gameState.responses = {};
+    // Don't reset the game state immediately - wait for user to choose restart or return to lobby
+    session.gameState.phase = "ended";
   } else {
     // Send the next statement to all players
     console.log(
@@ -562,93 +687,6 @@ function moveToNextStatement(sessionId) {
     });
   }
 }
-
-// Legg til eller modifiser disse delene i server-filen
-
-// Legg til denne event-listeneren i socket.on-seksjonene:
-socket.on("return-to-lobby", (sessionId) => {
-  const session = sessions[sessionId];
-
-  if (!session) {
-    socket.emit("error", { message: "Session not found" });
-    return;
-  }
-
-  // Kun host kan returnere til lobby
-  if (socket.id !== session.host) {
-    socket.emit("error", { message: "Only the host can return to the lobby" });
-    return;
-  }
-
-  console.log(`Host ${socket.id} returning session ${sessionId} to lobby`);
-
-  // Resett spilltilstanden til "none"
-  session.gameType = GAME_TYPES.NONE;
-  session.gameState = null;
-
-  // Informer alle spillere om at de er tilbake i lobbyen
-  io.to(sessionId).emit("return-to-lobby", {
-    players: session.players,
-  });
-});
-
-// Modifiser også restart-game eventet for å støtte returnering til lobby:
-socket.on("restart-game", (sessionId, returnToLobby = false) => {
-  const session = sessions[sessionId];
-
-  if (!session) {
-    socket.emit("error", { message: "Session not found" });
-    return;
-  }
-
-  // Kun host kan restarte spillet
-  if (socket.id !== session.host) {
-    socket.emit("error", {
-      message: "Only the host can restart or return to lobby",
-    });
-    return;
-  }
-
-  // Clear any existing timers
-  if (session.gameState && session.gameState.timerId) {
-    clearInterval(session.gameState.timerId);
-  }
-
-  if (returnToLobby) {
-    console.log(
-      `Host ${socket.id} returning session ${sessionId} to lobby via restart-game`
-    );
-    // Resett spilltilstanden til "none"
-    session.gameType = GAME_TYPES.NONE;
-    session.gameState = null;
-
-    // Informer alle spillere om at de er tilbake i lobbyen
-    io.to(sessionId).emit("return-to-lobby", {
-      players: session.players,
-    });
-  } else {
-    // Reset the game state
-    if (session.gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
-      session.gameState = {
-        phase: "collecting",
-        statements: [],
-        currentStatementIndex: -1,
-        responses: {},
-        timer: 60,
-      };
-    } else if (session.gameType === GAME_TYPES.MUSIC_GUESS) {
-      session.gameState = {
-        phase: "category-selection",
-      };
-    }
-
-    // Notify all players the game has been restarted
-    io.to(sessionId).emit("game-restarted", {
-      gameType: session.gameType,
-      gameState: session.gameState,
-    });
-  }
-});
 
 // Start the server
 const PORT = process.env.PORT || 3001;
