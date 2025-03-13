@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Socket } from "socket.io-client";
 import "../styles/NeverHaveIEver.css";
+import { CustomSocket } from "../types/socket.types";
 
 interface NeverHaveIEverProps {
   sessionId: string;
   players: any[];
   isHost: boolean;
   gameState: any;
-  socket: Socket | null;
+  socket: CustomSocket | null;
   restartGame: () => void;
   leaveSession: () => void;
   returnToLobby: () => void;

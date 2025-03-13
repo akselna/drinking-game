@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Socket } from "socket.io-client";
+// Endre fra:
+// Til:
+import { CustomSocket } from "../types/socket.types";
 import "../styles/ParticipantPanel.css";
 
 interface ParticipantPanelProps {
   players: any[];
   isHost: boolean;
   currentUserId: string;
-  socket: Socket | null;
+  socket: CustomSocket | null;
   sessionId: string;
 }
 

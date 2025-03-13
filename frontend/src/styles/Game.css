@@ -1,0 +1,41 @@
+/* Game styles */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+.game-content {
+  flex: 1;
+  padding: 20px;
+  padding-top: 80px; /* Space for participant toggle button */
+}
+
+.reconnecting-message {
+  text-align: center;
+  padding: 40px;
+  background-color: rgba(98, 0, 234, 0.1);
+  border-radius: 10px;
+  margin: 20px;
+}
+
+.error-container {
+  text-align: center;
+  padding: 40px;
+  background-color: rgba(207, 102, 121, 0.1);
+  border-radius: 10px;
+  margin: 20px;
+}
+
+.error-message {
+  color: #cf6679;
+  margin-bottom: 20px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .game-content {
+    padding: 10px;
+  }
+}
