@@ -11,6 +11,27 @@ const Home: React.FC = () => {
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
+  // Add this useEffect near the top of the Home component function in Home.tsx
+  // In Home.tsx, replace the cleanup useEffect with this simpler version:
+  // This should be placed near the beginning of the Home component function
+
+  useEffect(() => {
+    // Check if we're coming from an error redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("error") === "true") {
+      setError(
+        "Previous session expired or not found. Please create or join a new session."
+      );
+      // Only clear localStorage if we came from an error redirect
+      localStorage.removeItem("drinkingGameSession");
+    }
+
+    // Clean up the URL if needed
+    if (window.location.search) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   useEffect(() => {
     if (!socket) return;
 
@@ -50,11 +71,16 @@ const Home: React.FC = () => {
       navigate("/game");
     };
 
-    // Handle error responses
     const handleError = (data: any) => {
       console.error("Socket error:", data);
       setError(data.message);
-      setIsLoading(false);
+
+      // Only clear localStorage when we have a specific session not found error
+      if (data.message === "Session not found") {
+        console.log("Session not found, clearing session data");
+        localStorage.removeItem("drinkingGameSession");
+        // No need to navigate here - we'll let the existing code handle that
+      }
     };
 
     // Register event listeners

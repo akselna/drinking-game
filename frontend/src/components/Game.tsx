@@ -92,9 +92,24 @@ const Game: React.FC = () => {
       }));
     };
 
+    // Find this function in Game.tsx
     const handleError = (data: any) => {
       console.error("Socket error:", data);
       setError(data.message);
+
+      // Add this code to clear localStorage and redirect on session errors
+      if (
+        data.message === "Session not found" ||
+        data.message.includes("session")
+      ) {
+        console.log("Clearing invalid session data");
+        localStorage.removeItem("drinkingGameSession");
+
+        // Short delay before redirecting to avoid potential race conditions
+        setTimeout(() => {
+          navigate("/");
+        }, 100);
+      }
     };
 
     const handleGameRestarted = (data: any) => {

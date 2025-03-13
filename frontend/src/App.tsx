@@ -58,9 +58,14 @@ function App() {
       );
     };
 
+    // Find this function in App.tsx
+    // In App.tsx, update the connect_error handler:
     const onConnectError = (error: Error) => {
       console.error("Connection error:", error);
       setConnectionError(error.message || "Unable to connect to the server");
+
+      // We won't clear localStorage here - we'll let the explicit error handlers
+      // in the Game component handle that when appropriate
     };
 
     // Debug reconnection
