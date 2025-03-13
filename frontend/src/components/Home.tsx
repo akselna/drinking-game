@@ -33,6 +33,14 @@ const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // Only clear if we're not already in the loading state
+    // This prevents cleaning up when we're in the middle of creating a session
+    if (!isLoading) {
+      localStorage.removeItem("drinkingGameSession");
+    }
+  }, []);
+
+  useEffect(() => {
     if (!socket) return;
 
     // Handle session creation response
@@ -40,7 +48,10 @@ const Home: React.FC = () => {
       console.log("Session created:", data);
       setIsLoading(false);
 
-      // Save session data for reconnection
+      // Clear any previous session data first
+      localStorage.removeItem("drinkingGameSession");
+
+      // Then save the new session data
       localStorage.setItem(
         "drinkingGameSession",
         JSON.stringify({

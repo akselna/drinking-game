@@ -39,3 +39,58 @@
     padding: 10px;
   }
 }
+
+/* Add this to src/styles/Game.css */
+
+.mobile-leave-button-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 90;
+}
+
+.mobile-leave-button {
+  background-color: #cf6679;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 20px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.mobile-leave-button:hover {
+  background-color: #c75667;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.mobile-leave-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive styles */
+@media (min-width: 768px) {
+  /* Hide mobile button on desktop */
+  .mobile-leave-button-container {
+    display: none;
+  }
+}
+
+/* Show on mobile only */
+@media (max-width: 767px) {
+  .mobile-leave-button-container {
+    display: block;
+  }
+
+  /* Make the button more visible */
+  .mobile-leave-button {
+    font-size: 16px;
+    padding: 14px 22px;
+  }
+}

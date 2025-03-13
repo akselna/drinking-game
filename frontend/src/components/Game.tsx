@@ -93,22 +93,17 @@ const Game: React.FC = () => {
     };
 
     // Find this function in Game.tsx
+    // Replace the handleError function in Game.tsx with this:
     const handleError = (data: any) => {
       console.error("Socket error:", data);
       setError(data.message);
 
-      // Add this code to clear localStorage and redirect on session errors
-      if (
-        data.message === "Session not found" ||
-        data.message.includes("session")
-      ) {
-        console.log("Clearing invalid session data");
+      // ONLY clear localStorage when we get specifically "Session not found"
+      // Don't clear for other types of errors
+      if (data.message === "Session not found") {
+        console.log("Session not found, clearing session data");
         localStorage.removeItem("drinkingGameSession");
-
-        // Short delay before redirecting to avoid potential race conditions
-        setTimeout(() => {
-          navigate("/");
-        }, 100);
+        setIsReconnecting(false);
       }
     };
 
@@ -242,6 +237,16 @@ const Game: React.FC = () => {
 
       {/* Render game content */}
       <div className="game-content">{renderGame()}</div>
+      {/* Persistent Leave Session button */}
+      <div className="mobile-leave-button-container">
+        <button
+          onClick={leaveSession}
+          className="mobile-leave-button"
+          aria-label="Leave Session"
+        >
+          Leave Session
+        </button>
+      </div>
     </div>
   );
 };
