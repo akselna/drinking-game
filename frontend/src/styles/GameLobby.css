@@ -130,3 +130,9 @@
     width: 100%;
   }
 }
+
+/* Add this to frontend/src/styles/GameLobby.css */
+
+.game-button.drink-or-judge {
+  background-color: #9c27b0; /* Purple */
+}

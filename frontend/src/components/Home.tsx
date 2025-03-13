@@ -8,13 +8,12 @@ const Home: React.FC = () => {
   const [sessionId, setSessionId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [createSessionTimeout, setCreateSessionTimeout] =
+    useState<NodeJS.Timeout | null>(null);
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
 
-  // Add this useEffect near the top of the Home component function in Home.tsx
-  // In Home.tsx, replace the cleanup useEffect with this simpler version:
-  // This should be placed near the beginning of the Home component function
-
+  // Check for errors in the URL or saved sessions
   useEffect(() => {
     // Check if we're coming from an error redirect
     const urlParams = new URLSearchParams(window.location.search);
@@ -32,14 +31,23 @@ const Home: React.FC = () => {
     }
   }, []);
 
+  // Check for existing saved session
   useEffect(() => {
-    // Only clear if we're not already in the loading state
-    // This prevents cleaning up when we're in the middle of creating a session
-    if (!isLoading) {
-      localStorage.removeItem("drinkingGameSession");
+    // Check if we have saved session data for auto-reconnection
+    const savedSession = localStorage.getItem("drinkingGameSession");
+    if (savedSession) {
+      try {
+        const { sessionId, playerName } = JSON.parse(savedSession);
+        setSessionId(sessionId);
+        setPlayerName(playerName);
+      } catch (e) {
+        console.error("Error parsing saved session data:", e);
+        localStorage.removeItem("drinkingGameSession");
+      }
     }
   }, []);
 
+  // Set up socket event listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -47,6 +55,12 @@ const Home: React.FC = () => {
     const handleSessionCreated = (data: any) => {
       console.log("Session created:", data);
       setIsLoading(false);
+
+      // Clear any existing timeout
+      if (createSessionTimeout) {
+        clearTimeout(createSessionTimeout);
+        setCreateSessionTimeout(null);
+      }
 
       // Clear any previous session data first
       localStorage.removeItem("drinkingGameSession");
@@ -69,6 +83,12 @@ const Home: React.FC = () => {
       console.log("Session joined:", data);
       setIsLoading(false);
 
+      // Clear any existing timeout
+      if (createSessionTimeout) {
+        clearTimeout(createSessionTimeout);
+        setCreateSessionTimeout(null);
+      }
+
       // Save session data for reconnection
       localStorage.setItem(
         "drinkingGameSession",
@@ -85,12 +105,18 @@ const Home: React.FC = () => {
     const handleError = (data: any) => {
       console.error("Socket error:", data);
       setError(data.message);
+      setIsLoading(false);
+
+      // Clear any existing timeout
+      if (createSessionTimeout) {
+        clearTimeout(createSessionTimeout);
+        setCreateSessionTimeout(null);
+      }
 
       // Only clear localStorage when we have a specific session not found error
       if (data.message === "Session not found") {
         console.log("Session not found, clearing session data");
         localStorage.removeItem("drinkingGameSession");
-        // No need to navigate here - we'll let the existing code handle that
       }
     };
 
@@ -99,31 +125,31 @@ const Home: React.FC = () => {
     socket.on("session-joined", handleSessionJoined);
     socket.on("error", handleError);
 
-    // Check if we have saved session data for auto-reconnection
-    const savedSession = localStorage.getItem("drinkingGameSession");
-    if (savedSession) {
-      try {
-        const { sessionId, playerName } = JSON.parse(savedSession);
-        setSessionId(sessionId);
-        setPlayerName(playerName);
-      } catch (e) {
-        console.error("Error parsing saved session data:", e);
-      }
-    }
-
     // Clean up on unmount
     return () => {
       socket.off("session-created", handleSessionCreated);
       socket.off("session-joined", handleSessionJoined);
       socket.off("error", handleError);
+
+      // Clear any existing timeout
+      if (createSessionTimeout) {
+        clearTimeout(createSessionTimeout);
+      }
     };
-  }, [socket, navigate, playerName]);
+  }, [socket, navigate, playerName, createSessionTimeout]);
 
   const createSession = (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!socket) {
       setError("Socket connection not available");
+      return;
+    }
+
+    if (!socket.connected) {
+      setError(
+        "Waiting for connection to server. Please try again in a moment."
+      );
       return;
     }
 
@@ -134,7 +160,18 @@ const Home: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
+    console.log("Creating session as:", playerName);
     socket.emit("create-session", playerName);
+
+    // Set a timeout to handle if the server doesn't respond
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+      setError(
+        "Server didn't respond in time. Please check if the server is running and try again."
+      );
+    }, 10000); // 10 second timeout
+
+    setCreateSessionTimeout(timeout);
   };
 
   const joinSession = (event: React.FormEvent) => {
@@ -142,6 +179,13 @@ const Home: React.FC = () => {
 
     if (!socket) {
       setError("Socket connection not available");
+      return;
+    }
+
+    if (!socket.connected) {
+      setError(
+        "Waiting for connection to server. Please try again in a moment."
+      );
       return;
     }
 
@@ -157,7 +201,18 @@ const Home: React.FC = () => {
 
     setIsLoading(true);
     setError(null);
+    console.log("Joining session:", sessionId, "as", playerName);
     socket.emit("join-session", sessionId, playerName);
+
+    // Set a timeout to handle if the server doesn't respond
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+      setError(
+        "Server didn't respond in time. Please check if the server is running and try again."
+      );
+    }, 10000); // 10 second timeout
+
+    setCreateSessionTimeout(timeout);
   };
 
   return (
@@ -178,13 +233,17 @@ const Home: React.FC = () => {
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               placeholder="Enter your name"
-              disabled={isLoading}
+              disabled={isLoading || !socket?.connected}
               maxLength={20}
               required
             />
           </div>
 
-          <button type="submit" disabled={isLoading} className="btn-primary">
+          <button
+            type="submit"
+            disabled={isLoading || !socket?.connected}
+            className="btn-primary"
+          >
             {isLoading ? "Creating..." : "Create Game"}
           </button>
         </form>
@@ -202,7 +261,7 @@ const Home: React.FC = () => {
               value={playerName}
               onChange={(e) => setPlayerName(e.target.value)}
               placeholder="Enter your name"
-              disabled={isLoading}
+              disabled={isLoading || !socket?.connected}
               maxLength={20}
               required
             />
@@ -216,19 +275,48 @@ const Home: React.FC = () => {
               value={sessionId}
               onChange={(e) => setSessionId(e.target.value.toUpperCase())}
               placeholder="Enter session code"
-              disabled={isLoading}
+              disabled={isLoading || !socket?.connected}
               maxLength={6}
               required
             />
           </div>
 
-          <button type="submit" disabled={isLoading} className="btn-primary">
+          <button
+            type="submit"
+            disabled={isLoading || !socket?.connected}
+            className="btn-primary"
+          >
             {isLoading ? "Joining..." : "Join Game"}
           </button>
         </form>
       </div>
 
-      {isLoading && <div className="loading-spinner">Loading...</div>}
+      {isLoading && (
+        <div className="loading-spinner">
+          <p>Connecting to server... Please wait.</p>
+          <button
+            onClick={() => {
+              setIsLoading(false);
+              if (createSessionTimeout) {
+                clearTimeout(createSessionTimeout);
+                setCreateSessionTimeout(null);
+              }
+            }}
+            className="cancel-button"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {!socket?.connected && (
+        <div className="connection-status">
+          <p>
+            Not connected to server. Make sure the server is running at
+            http://localhost:3001
+          </p>
+        </div>
+      )}
     </div>
   );
 };

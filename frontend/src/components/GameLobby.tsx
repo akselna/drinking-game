@@ -60,6 +60,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             >
               Musikkgjetting
             </button>
+            <button
+              onClick={() => onSelectGame("drinkOrJudge")}
+              className="game-button drink-or-judge"
+            >
+              Drikk eller Dømmes
+            </button>
           </div>
         </div>
       ) : (

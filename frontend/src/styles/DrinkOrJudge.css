@@ -1,0 +1,307 @@
+/* Drink or Judge game styles */
+.drink-or-judge {
+  padding: 24px;
+  border-radius: 10px;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.drink-or-judge.statement-phase {
+  background-color: #1e1e1e;
+}
+
+.drink-or-judge h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 2rem;
+  color: white;
+}
+
+.game-message {
+  background-color: #272727;
+  padding: 24px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  text-align: left;
+  color: white;
+}
+
+.game-message p {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.game-message p:last-child {
+  margin-bottom: 0;
+}
+
+.host-controls {
+  margin-bottom: 24px;
+}
+
+.start-button,
+.next-button {
+  padding: 16px 32px;
+  background-color: #26890c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.waiting-message {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  color: white;
+}
+
+.game-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.lobby-button {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px;
+  background-color: #1368ce;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.leave-button {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px;
+  background-color: rgba(207, 102, 121, 0.1);
+  color: #cf6679;
+  border: 1px solid #cf6679;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Voting Phase */
+.drink-or-judge.voting-phase {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  padding-top: 80px; /* Space for participant panel */
+  transition: background-color 0.5s ease;
+  color: white;
+}
+
+.statement-container {
+  margin-bottom: 32px;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.statement-text {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.voting-container {
+  margin-bottom: 24px;
+}
+
+.vote-instruction {
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+}
+
+.player-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.player-button {
+  padding: 16px;
+  border: none;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.player-button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.player-button.selected {
+  background-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 2px white;
+}
+
+.player-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vote-button {
+  padding: 12px 24px;
+  background-color: #26890c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vote-submitted {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.vote-progress {
+  margin-top: 16px;
+}
+
+.progress-bar {
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: white;
+  transition: width 0.3s ease;
+}
+
+.force-button {
+  padding: 12px 24px;
+  background-color: #e21b3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+/* Results Phase */
+.drink-or-judge.results-phase {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  padding-top: 80px; /* Space for participant panel */
+  color: white;
+}
+
+.results-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  position: relative;
+}
+
+.result-item.winner {
+  background-color: rgba(255, 215, 0, 0.3);
+  padding: 20px 16px;
+}
+
+.result-item.current-user {
+  border: 2px solid white;
+}
+
+.result-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.result-votes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.vote-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.vote-text {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.drinking-instruction {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #e21b3c;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .drink-or-judge {
+    padding: 16px;
+  }
+
+  .drink-or-judge h2 {
+    font-size: 1.8rem;
+  }
+
+  .statement-text {
+    font-size: 1.5rem;
+  }
+
+  .game-controls {
+    flex-direction: column;
+  }
+
+  .lobby-button,
+  .leave-button {
+    width: 100%;
+    max-width: none;
+  }
+}
