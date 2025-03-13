@@ -1,14 +1,39 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 # Dependencies
 node_modules/
 client/node_modules/
 /.pnp
 .pnp.js
+
 # Testing
 /coverage
+
 # Production
 /build
 client/build/
+
+# Python virtual environment
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+drinkinggame/bin/
+drinkinggame/lib/
+drinkinggame/pyvenv.cfg
+env.bak/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+dist/
+build/
+.tox/
+.coverage
+.cache
+nosetests.xml
+
 # Misc
 .DS_Store
 .env.local
