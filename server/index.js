@@ -18,12 +18,11 @@ let sessions = {};
 
 // Keeps track of which socket belongs to which player
 let playerSessions = {};
-
-// Game types
 const GAME_TYPES = {
   NONE: "none",
   NEVER_HAVE_I_EVER: "neverHaveIEver",
   MUSIC_GUESS: "musicGuess",
+  DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
 };
 
 io.on("connection", (socket) => {
@@ -137,6 +136,46 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Add this condition for our new game type
+    else if (gameType === GAME_TYPES.DRINK_OR_JUDGE) {
+      session.gameState = {
+        phase: "statement", // Phases: statement, voting, results
+        statements: [
+          "Hvem i rommet ville vært dårligst til å overleve en zombieapokalypse?",
+          "Hvem i rommet er mest sannsynlig til å bli berømt?",
+          "Hvem i rommet er mest sannsynlig til å ende opp som statsminister?",
+          "Hvem i rommet ville klart seg lengst i ødemarken?",
+          "Hvem i rommet er mest sannsynlig til å bli rik?",
+          "Hvem i rommet er mest sannsynlig til å gjøre noe flaut på jobb/skole?",
+          "Hvem i rommet er mest sannsynlig til å bli arrestert?",
+          "Hvem i rommet er mest sannsynlig til å gråte under en romantisk film?",
+          "Hvem i rommet er mest sannsynlig til å miste telefonen sin?",
+          "Hvem i rommet er mest sannsynlig til å glemme sin egen bursdag?",
+          "Hvem i rommet er mest sannsynlig til å spørre om en selfie med en kjendis?",
+          "Hvem i rommet er mest sannsynlig til å dra på festival uten billetter?",
+          "Hvem i rommet er mest sannsynlig til å holde en tale uten forberedelse?",
+          "Hvem i rommet er mest sannsynlig til å bli lurt av en svindler?",
+          "Hvem i rommet er mest sannsynlig til å glemme hvem du er?",
+          "Hvem i rommet er mest sannsynlig til å overleve en naturkatastrofe?",
+          "Hvem i rommet er mest sannsynlig til å bruke en hel dag på sosiale medier?",
+          "Hvem i rommet er mest sannsynlig til å forelske seg i en fremmed?",
+          "Hvem i rommet er mest sannsynlig til å drikke for mye på et jobbparty?",
+          "Hvem i rommet er mest sannsynlig til å få mat i hele ansiktet?",
+          "Hvem i rommet er mest kverulerende?",
+          "Hvem i rommet ville vært verst på en øde øy?",
+          "Hvem i rommet er mest dramatisk?",
+          "Hvem i rommet er mest sosial?",
+          "Hvem i rommet er mest sta?",
+          "Hvem i rommet er mest sannsynlig til å spise noe som har falt på bakken?",
+          "Hvem i rommet er mest sannsynlig til å bli invitert på TV?",
+        ],
+        currentStatementIndex: 0,
+        votes: {},
+        results: [],
+        usedStatements: [],
+      };
+    }
+
     // Only the host can select the game
     if (socket.id !== session.host) {
       socket.emit("error", { message: "Only the host can select the game" });
@@ -159,9 +198,14 @@ io.on("connection", (socket) => {
         responses: {},
         timer: 60, // Initial timer in seconds
       };
-    } else if (gameType === GAME_TYPES.MUSIC_GUESS) {
+    } // In server/index.js, in your select-game handler
+    else if (gameType === GAME_TYPES.MUSIC_GUESS) {
       session.gameState = {
-        phase: "category-selection",
+        phase: "topic-selection", // This is crucial - start at topic-selection phase
+        topic: "",
+        playerSongs: [],
+        votes: {},
+        revealedSongs: [],
       };
     }
 
@@ -169,6 +213,441 @@ io.on("connection", (socket) => {
     io.to(sessionId).emit("game-selected", {
       gameType,
       gameState: session.gameState,
+    });
+  });
+
+  // Start next statement for Drink or Judge
+  socket.on("drink-or-judge-next-statement", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.DRINK_OR_JUDGE) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can move to the next statement
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can move to the next statement",
+      });
+      return;
+    }
+
+    // Reset votes for the new statement
+    session.gameState.votes = {};
+
+    // Choose a random statement that hasn't been used yet
+    const availableStatements = session.gameState.statements.filter(
+      (statement) => !session.gameState.usedStatements.includes(statement)
+    );
+
+    // If we've used all statements, reset the used statements list
+    if (availableStatements.length === 0) {
+      session.gameState.usedStatements = [];
+      availableStatements.push(...session.gameState.statements);
+    }
+
+    // Pick a random statement
+    const randomIndex = Math.floor(Math.random() * availableStatements.length);
+    const nextStatement = availableStatements[randomIndex];
+
+    // Mark this statement as used
+    session.gameState.usedStatements.push(nextStatement);
+
+    // Set the current statement
+    session.gameState.currentStatement = nextStatement;
+
+    // Move to voting phase
+    session.gameState.phase = "voting";
+
+    // Notify all clients about the new statement and phase
+    io.to(sessionId).emit("drink-or-judge-statement", {
+      statement: nextStatement,
+      phase: "voting",
+      players: session.players,
+    });
+  });
+
+  // Music Guess - Set topic
+  socket.on("music-guess-set-topic", (sessionId, topic) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can set the topic
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can set the topic" });
+      return;
+    }
+
+    // Initialize game state with the topic
+    session.gameState = {
+      phase: "song-selection",
+      topic: topic,
+      playerSongs: [],
+      votes: {},
+      revealedSongs: [],
+    };
+
+    // Notify all players about the topic
+    io.to(sessionId).emit("music-guess-topic-set", {
+      topic: topic,
+      phase: "song-selection",
+    });
+  });
+
+  // Music Guess - Submit song
+  socket.on("music-guess-submit-song", (sessionId, song) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Validate the song data
+    if (!song || !song.id || !song.title || !song.artist) {
+      socket.emit("error", { message: "Invalid song data" });
+      return;
+    }
+
+    // Find the player who submitted
+    const player = session.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    // Check if player has already submitted a song
+    const existingSongIndex = session.gameState.playerSongs.findIndex(
+      (s) => s.selectedBy === socket.id
+    );
+
+    if (existingSongIndex >= 0) {
+      // Replace the existing song
+      session.gameState.playerSongs[existingSongIndex] = {
+        ...song,
+        selectedBy: socket.id,
+        selectedByName: player.name,
+      };
+    } else {
+      // Add the new song
+      session.gameState.playerSongs.push({
+        ...song,
+        selectedBy: socket.id,
+        selectedByName: player.name,
+      });
+    }
+
+    console.log(
+      `Player ${player.name} submitted song "${song.title}" in session ${sessionId}`
+    );
+
+    // Notify all players about the submission progress
+    io.to(sessionId).emit("music-guess-song-submitted", {
+      submittedCount: session.gameState.playerSongs.length,
+      totalPlayers: session.players.length,
+      playerSongs: session.gameState.playerSongs.map((s) => ({
+        ...s,
+        // Don't expose who selected which song yet
+        selectedBy: s.selectedBy === socket.id ? s.selectedBy : null,
+        selectedByName: s.selectedBy === socket.id ? s.selectedByName : null,
+      })),
+    });
+  });
+
+  // Music Guess - Start guessing phase
+  socket.on("music-guess-start-guessing", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can start the guessing phase
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can start the guessing phase",
+      });
+      return;
+    }
+
+    // Make sure we have at least one song
+    if (
+      !session.gameState.playerSongs ||
+      session.gameState.playerSongs.length === 0
+    ) {
+      socket.emit("error", { message: "No songs have been submitted yet" });
+      return;
+    }
+
+    // Shuffle the songs to randomize the order
+    const shuffledSongs = [...session.gameState.playerSongs].sort(
+      () => Math.random() - 0.5
+    );
+    session.gameState.playerSongs = shuffledSongs;
+
+    // Set the first song as current
+    session.gameState.currentSongIndex = 0;
+    session.gameState.currentSong = session.gameState.playerSongs[0];
+    session.gameState.phase = "guessing";
+    session.gameState.votes = {};
+
+    // Notify all players that we're starting the guessing phase
+    io.to(sessionId).emit("music-guess-start-guessing", {
+      phase: "guessing",
+      currentSong: {
+        id: session.gameState.currentSong.id,
+        title: session.gameState.currentSong.title,
+        artist: session.gameState.currentSong.artist,
+        previewUrl: session.gameState.currentSong.previewUrl,
+        albumImageUrl: session.gameState.currentSong.albumImageUrl,
+        // Don't expose who selected the song yet
+        selectedBy: null,
+        selectedByName: null,
+      },
+      songIndex: 0,
+      totalSongs: session.gameState.playerSongs.length,
+    });
+  });
+
+  // Music Guess - Submit vote
+  socket.on("music-guess-vote", (sessionId, votedForId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Store the player's vote
+    session.gameState.votes[socket.id] = votedForId;
+
+    // Get current player
+    const currentPlayer = session.players.find((p) => p.id === socket.id);
+    if (!currentPlayer) return;
+
+    console.log(
+      `Player ${currentPlayer.name} voted for ${votedForId} in session ${sessionId}`
+    );
+
+    // Calculate how many votes received
+    const votesReceived = Object.keys(session.gameState.votes).length;
+    const totalVoters = session.players.length;
+
+    // Notify all players about the voting progress
+    io.to(sessionId).emit("music-guess-vote-update", {
+      votedCount: votesReceived,
+      totalPlayers: totalVoters,
+    });
+
+    // If everyone except the song owner has voted, show results automatically
+    // Find the current song owner
+    const currentSong =
+      session.gameState.playerSongs[session.gameState.currentSongIndex];
+    const songOwnerId = currentSong?.selectedBy;
+
+    // Count eligible voters (everyone except the song owner)
+    const eligibleVoters = session.players.filter(
+      (p) => p.id !== songOwnerId
+    ).length;
+
+    // If all eligible voters have voted, show results
+    if (votesReceived >= eligibleVoters) {
+      showMusicGuessResults(sessionId);
+    }
+  });
+
+  // Music Guess - Force show results
+  socket.on("music-guess-force-results", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can force results
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can force show results" });
+      return;
+    }
+
+    showMusicGuessResults(sessionId);
+  });
+
+  // Music Guess - Next song
+  socket.on("music-guess-next-song", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can move to the next song
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can move to the next song",
+      });
+      return;
+    }
+
+    // Move to the next song
+    const nextIndex = session.gameState.currentSongIndex + 1;
+
+    // Check if we've gone through all songs
+    if (nextIndex >= session.gameState.playerSongs.length) {
+      // Game is over
+      session.gameState.phase = "game-end";
+
+      // Add the last song to revealed songs if not already there
+      if (
+        session.gameState.currentSong &&
+        !session.gameState.revealedSongs.some(
+          (s) => s.id === session.gameState.currentSong.id
+        )
+      ) {
+        session.gameState.revealedSongs.push(session.gameState.currentSong);
+      }
+
+      io.to(sessionId).emit("music-guess-game-end", {
+        allSongs: session.gameState.playerSongs,
+      });
+      return;
+    }
+
+    // Update game state for next song
+    session.gameState.currentSongIndex = nextIndex;
+    session.gameState.currentSong = session.gameState.playerSongs[nextIndex];
+    session.gameState.votes = {};
+
+    // Notify all players about the next song
+    io.to(sessionId).emit("music-guess-next-song", {
+      currentSong: {
+        id: session.gameState.currentSong.id,
+        title: session.gameState.currentSong.title,
+        artist: session.gameState.currentSong.artist,
+        previewUrl: session.gameState.currentSong.previewUrl,
+        albumImageUrl: session.gameState.currentSong.albumImageUrl,
+        // Don't expose who selected the song yet
+        selectedBy: null,
+        selectedByName: null,
+      },
+      songIndex: nextIndex,
+      songsLeft: session.gameState.playerSongs.length - nextIndex - 1,
+    });
+  });
+
+  // Submit vote
+  socket.on("drink-or-judge-vote", (sessionId, votedPlayerId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.DRINK_OR_JUDGE) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Store the vote (each player can only vote once per round)
+    session.gameState.votes[socket.id] = votedPlayerId;
+
+    // Calculate how many people have voted
+    const totalVotes = Object.keys(session.gameState.votes).length;
+
+    // Notify all players about vote progress (without revealing who voted for whom)
+    io.to(sessionId).emit("drink-or-judge-vote-update", {
+      votedCount: totalVotes,
+      totalPlayers: session.players.length,
+    });
+
+    // If everyone has voted, move to results phase
+    if (totalVotes >= session.players.length) {
+      // Tally the votes
+      const voteCounts = {};
+
+      // Initialize vote counts for all players
+      session.players.forEach((player) => {
+        voteCounts[player.id] = 0;
+      });
+
+      // Count the votes
+      Object.values(session.gameState.votes).forEach((votedId) => {
+        if (voteCounts[votedId] !== undefined) {
+          voteCounts[votedId] += 1;
+        }
+      });
+
+      // Create results array with player names and vote counts
+      const results = session.players
+        .map((player) => ({
+          id: player.id,
+          name: player.name,
+          votes: voteCounts[player.id] || 0,
+        }))
+        .sort((a, b) => b.votes - a.votes); // Sort by votes (highest first)
+
+      // Store results in game state
+      session.gameState.results = results;
+      session.gameState.phase = "results";
+
+      // Send results to all players
+      io.to(sessionId).emit("drink-or-judge-results", {
+        results: results,
+        statement: session.gameState.currentStatement,
+      });
+    }
+  });
+
+  // Force show results (host only)
+  socket.on("drink-or-judge-force-results", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.DRINK_OR_JUDGE) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can force results
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can force show results",
+      });
+      return;
+    }
+
+    // Tally the votes (even if not everyone has voted)
+    const voteCounts = {};
+
+    // Initialize vote counts
+    session.players.forEach((player) => {
+      voteCounts[player.id] = 0;
+    });
+
+    // Count votes
+    Object.values(session.gameState.votes).forEach((votedId) => {
+      if (voteCounts[votedId] !== undefined) {
+        voteCounts[votedId] += 1;
+      }
+    });
+
+    // Create results
+    const results = session.players
+      .map((player) => ({
+        id: player.id,
+        name: player.name,
+        votes: voteCounts[player.id] || 0,
+      }))
+      .sort((a, b) => b.votes - a.votes);
+
+    // Update game state
+    session.gameState.results = results;
+    session.gameState.phase = "results";
+
+    // Send results to all players
+    io.to(sessionId).emit("drink-or-judge-results", {
+      results: results,
+      statement: session.gameState.currentStatement,
     });
   });
 
@@ -645,6 +1124,61 @@ function startRevealingPhase(sessionId) {
     statement: session.gameState.statements[0],
     statementIndex: 0,
     totalStatements: session.gameState.statements.length,
+  });
+}
+
+// Helper function to show music guess results
+function showMusicGuessResults(sessionId) {
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  // Get the current song
+  const currentSongIndex = session.gameState.currentSongIndex;
+  const currentSong = session.gameState.playerSongs[currentSongIndex];
+
+  if (!currentSong) return;
+
+  // Process the votes
+  const results = [];
+
+  // For each vote cast
+  for (const [voterId, votedForId] of Object.entries(session.gameState.votes)) {
+    // Find the voter and who they voted for
+    const voter = session.players.find((p) => p.id === voterId);
+    const votedFor = session.players.find((p) => p.id === votedForId);
+
+    if (!voter || !votedFor) continue;
+
+    // Add to results
+    results.push({
+      voterId: voterId,
+      voterName: voter.name,
+      votedForId: votedForId,
+      votedForName: votedFor.name,
+      correct: votedForId === currentSong.selectedBy,
+    });
+  }
+
+  // Update game state
+  session.gameState.phase = "results";
+
+  // Add this song to revealed songs if not already there
+  if (!session.gameState.revealedSongs.some((s) => s.id === currentSong.id)) {
+    session.gameState.revealedSongs.push(currentSong);
+  }
+
+  // Calculate drinking penalties
+  // Wrong guesses: 2 slurks
+  // Song owner: 2 slurks for each correct guess
+  const correctGuesses = results.filter((r) => r.correct).length;
+
+  // Send results to all players
+  io.to(sessionId).emit("music-guess-results", {
+    results: results,
+    correctVotes: correctGuesses,
+    songOwnerId: currentSong.selectedBy,
+    songOwnerName: currentSong.selectedByName,
+    revealedSongs: session.gameState.revealedSongs,
   });
 }
 
