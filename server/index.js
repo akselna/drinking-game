@@ -25,6 +25,156 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
 };
 
+// Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
+const neverHaveIEverStatements = [
+  "...hoppet i fallskjerm",
+  "...vært i USA",
+  "...stjålet noe",
+  "...blitt arrestert",
+  "...løyet til foreldrene mine",
+  "...brutt en lov",
+  "...tatt en tatovering",
+  "...mistet telefonen min",
+  "...kastet opp på offentlig sted",
+  "...deltatt i en demonstrasjon",
+  "...vært på blind date",
+  "...prøvd å lære meg å spille et instrument",
+  "...vært på en øde øy",
+  "...møtt en kjendis",
+  "...ridd på en hest",
+  "...deltatt i et TV-program",
+  "...gitt falsk telefonnummer til noen",
+  "...gitt penger til en tigger",
+  "...sovet på gaten",
+  "...spilt i et band",
+  "...løpt et maraton",
+  "...gått på ski utenfor preparerte løyper",
+  "...blitt utvist fra skolen",
+  "...klatret i et fjell",
+  "...haiket",
+  "...fått en bot",
+  "...gått meg vill i en fremmed by",
+  "...tatt improvisasjonsteater",
+  "...vært på fest i et annet land",
+  "...stått på scenen foran over 100 mennesker",
+];
+
+// Modify the "submit-never-statement" event handler to allow submissions during any phase
+// Finn denne event handleren og erstatt den med denne oppdaterte versjonen:
+
+// Modifiser moveToNextStatement for å bruke predefinerte spørsmål når man går tom for brukerspørsmål
+// Finn denne funksjonen og erstatt den med:
+
+// Helper function to move to the next statement
+function moveToNextStatement(sessionId) {
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  // Increment the statement index
+  session.gameState.currentStatementIndex++;
+
+  console.log(
+    `Moving to statement ${session.gameState.currentStatementIndex} in session ${sessionId}`
+  );
+
+  // Check if we've gone through all statements
+  if (
+    session.gameState.currentStatementIndex >=
+    session.gameState.statements.length
+  ) {
+    console.log(`Ran out of statements in session ${sessionId}`);
+
+    // Check if there are any pending statements from users to use next
+    if (
+      session.gameState.pendingStatements &&
+      session.gameState.pendingStatements.length > 0
+    ) {
+      console.log(
+        `Using ${session.gameState.pendingStatements.length} pending user statements`
+      );
+
+      // Add pending statements to the main statements array
+      session.gameState.statements = session.gameState.statements.concat(
+        session.gameState.pendingStatements
+      );
+
+      // Clear the pending statements
+      session.gameState.pendingStatements = [];
+
+      // Reset the current index to point to the first new statement
+      session.gameState.currentStatementIndex =
+        session.gameState.statements.length -
+        session.gameState.pendingStatements.length;
+    }
+    // If no pending statements, use predefined ones
+    else {
+      // Initialize used statements array if it doesn't exist
+      if (!session.gameState.usedPredefinedStatements) {
+        session.gameState.usedPredefinedStatements = [];
+      }
+
+      // Find statements that haven't been used recently
+      const availableStatements = neverHaveIEverStatements.filter(
+        (stmt) => !session.gameState.usedPredefinedStatements.includes(stmt)
+      );
+
+      // If we've used all statements or nearly all, reset the used list
+      if (availableStatements.length < 5) {
+        session.gameState.usedPredefinedStatements = [];
+        console.log(`Reset used statements list for session ${sessionId}`);
+      }
+
+      // Get a random statement from the available ones
+      const randomIndex = Math.floor(
+        Math.random() *
+          (availableStatements.length || neverHaveIEverStatements.length)
+      );
+
+      const statement = availableStatements.length
+        ? availableStatements[randomIndex]
+        : neverHaveIEverStatements[randomIndex];
+
+      // Mark this statement as used
+      session.gameState.usedPredefinedStatements.push(statement);
+
+      // Add this predefined statement to the game
+      session.gameState.statements.push({
+        text: statement,
+        author: "Spillet",
+        authorId: "system",
+        isPredefined: true,
+      });
+
+      console.log(
+        `Added predefined statement: "${statement}" to session ${sessionId}`
+      );
+
+      // Reset the current index to show this new statement
+      session.gameState.currentStatementIndex =
+        session.gameState.statements.length - 1;
+    }
+
+    // Send the new statement to all players
+    io.to(sessionId).emit("next-statement", {
+      statement:
+        session.gameState.statements[session.gameState.currentStatementIndex],
+      statementIndex: session.gameState.currentStatementIndex,
+      totalStatements: session.gameState.statements.length,
+    });
+  } else {
+    // Send the next statement to all players
+    console.log(
+      `Sending statement ${session.gameState.currentStatementIndex} to players in session ${sessionId}`
+    );
+    io.to(sessionId).emit("next-statement", {
+      statement:
+        session.gameState.statements[session.gameState.currentStatementIndex],
+      statementIndex: session.gameState.currentStatementIndex,
+      totalStatements: session.gameState.statements.length,
+    });
+  }
+}
+
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
 
@@ -194,12 +344,13 @@ io.on("connection", (socket) => {
       session.gameState = {
         phase: "collecting", // collecting or revealing
         statements: [],
+        pendingStatements: [], // New array for statements submitted during the revealing phase
         currentStatementIndex: -1,
         responses: {},
         timer: 60, // Initial timer in seconds
+        usedPredefinedStatements: [], // Track which predefined statements we've used
       };
-    } // In server/index.js, in your select-game handler
-    else if (gameType === GAME_TYPES.MUSIC_GUESS) {
+    } else if (gameType === GAME_TYPES.MUSIC_GUESS) {
       session.gameState = {
         phase: "topic-selection", // This is crucial - start at topic-selection phase
         topic: "",
@@ -652,6 +803,7 @@ io.on("connection", (socket) => {
   });
 
   // Never Have I Ever - Submit statement
+
   socket.on("submit-never-statement", (sessionId, statement) => {
     const session = sessions[sessionId];
 
@@ -669,35 +821,65 @@ io.on("connection", (socket) => {
     );
 
     // Add the statement to the collection
-    session.gameState.statements.push({
+    // We now track submissions in a separate array to include recent ones
+    if (!session.gameState.pendingStatements) {
+      session.gameState.pendingStatements = [];
+    }
+
+    // Add to pending statements that will be used after current ones finish
+    session.gameState.pendingStatements.push({
       text: statement,
       author: player.name,
       authorId: socket.id,
     });
 
-    // Check if all players have submitted
-    const totalStatements = session.gameState.statements.length;
-    const totalPlayers = session.players.length;
+    // If we're in the collecting phase, also add it to the immediate statements
+    if (session.gameState.phase === "collecting") {
+      session.gameState.statements.push({
+        text: statement,
+        author: player.name,
+        authorId: socket.id,
+      });
+    }
 
-    console.log(
-      `Session ${sessionId}: ${totalStatements}/${totalPlayers} statements submitted`
-    );
+    // Notify all players about the submission, even during revealing phase
+    // We use a different event for ongoing submissions
+    if (session.gameState.phase === "collecting") {
+      // Check if all players have submitted
+      const totalStatements = session.gameState.statements.length;
+      const totalPlayers = session.players.length;
 
-    // Notify all players about the submission progress
-    io.to(sessionId).emit("statement-submitted", {
-      submittedCount: totalStatements,
-      totalPlayers: totalPlayers,
-    });
-
-    // If all players have submitted, we can start revealing (or wait for the timer)
-    if (
-      totalStatements >= totalPlayers &&
-      session.gameState.phase === "collecting"
-    ) {
       console.log(
-        `All players have submitted statements in session ${sessionId}, starting reveal phase`
+        `Session ${sessionId}: ${totalStatements}/${totalPlayers} statements submitted`
       );
-      startRevealingPhase(sessionId);
+
+      // Notify all players about the submission progress
+      io.to(sessionId).emit("statement-submitted", {
+        submittedCount: totalStatements,
+        totalPlayers: totalPlayers,
+      });
+
+      // If all players have submitted, we can start revealing (or wait for the timer)
+      if (
+        totalStatements >= totalPlayers &&
+        session.gameState.phase === "collecting"
+      ) {
+        console.log(
+          `All players have submitted statements in session ${sessionId}, starting reveal phase`
+        );
+        startRevealingPhase(sessionId);
+      }
+    } else {
+      // We're in revealing phase, simply acknowledge the submission
+      io.to(sessionId).emit("ongoing-statement-submitted", {
+        playerName: player.name,
+        pendingCount: session.gameState.pendingStatements.length,
+      });
+
+      // Only tell the submitter that their statement was received
+      socket.emit("your-statement-submitted", {
+        text: statement,
+      });
     }
   });
 

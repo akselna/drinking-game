@@ -230,3 +230,89 @@
     width: 100%;
   }
 }
+
+/* Legg til disse CSS-reglene i frontend/src/styles/NeverHaveIEver.css */
+
+/* Fade-in/fade-out animasjon for meldinger */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.submission-feedback {
+  animation: fadeInOut 3s ease;
+}
+
+/* Styling for innsendingsskjemaet under avsløringsrunden */
+.ongoing-statement-input {
+  margin-top: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 15px;
+  border-radius: 8px;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ongoing-statement-input input {
+  width: 100%;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.ongoing-statement-input .button-group {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.add-statement-button {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.add-statement-button button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-statement-button button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.pending-count {
+  font-size: 0.9rem;
+  margin-top: 10px;
+  opacity: 0.8;
+  text-align: center;
+}
+
+/* Responsivitet for mobile enheter */
+@media (max-width: 768px) {
+  .ongoing-statement-input {
+    padding: 10px;
+  }
+
+  .ongoing-statement-input .button-group {
+    flex-direction: column;
+  }
+}

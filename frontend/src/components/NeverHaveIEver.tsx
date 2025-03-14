@@ -35,6 +35,11 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
   const [statementIndex, setStatementIndex] = useState(0);
   const [statements, setStatements] = useState<any[]>([]);
   const [totalStatements, setTotalStatements] = useState(0);
+  const [ongoingStatement, setOngoingStatement] = useState("");
+  const [ongoingSubmitted, setOngoingSubmitted] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [showOngoingForm, setShowOngoingForm] = useState(false);
+  const [submissionFeedback, setSubmissionFeedback] = useState("");
 
   // Kahoot-like colors for different statements
   const kahootColors = [
@@ -47,6 +52,28 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     "#00bcd4", // cyan
     "#ff9800", // orange
   ];
+
+  const handleOngoingStatementSubmitted = (data: any) => {
+    console.log("Ongoing statement submitted:", data);
+    setPendingCount(data.pendingCount || 0);
+
+    // Show a temporary message that a new statement was submitted
+    setSubmissionFeedback(`${data.playerName} sendte inn et nytt spørsmål!`);
+    setTimeout(() => {
+      setSubmissionFeedback("");
+    }, 3000);
+  };
+
+  const handleYourStatementSubmitted = (data: any) => {
+    console.log("Your statement was submitted:", data);
+    setOngoingStatement("");
+    setOngoingSubmitted(true);
+
+    // Reset the submission state after a delay
+    setTimeout(() => {
+      setOngoingSubmitted(false);
+    }, 3000);
+  };
 
   // Get color based on current statement index
   const getCurrentColor = () => {
@@ -109,6 +136,12 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     socket.on("phase-changed", handlePhaseChanged);
     socket.on("next-statement", handleNextStatement);
     socket.on("game-ended", handleGameEnded);
+    socket.on("ongoing-statement-submitted", handleOngoingStatementSubmitted);
+    socket.on("your-statement-submitted", handleYourStatementSubmitted);
+
+    // Og husk å legge dem til i clean-up funksjonen (return):
+    socket.off("ongoing-statement-submitted", handleOngoingStatementSubmitted);
+    socket.off("your-statement-submitted", handleYourStatementSubmitted);
 
     // Clean up on unmount
     return () => {
@@ -170,6 +203,16 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
       socket.emit("submit-never-statement", sessionId, statement);
       setStatement("");
       setSubmitted(true);
+    }
+  };
+
+  const handleSubmitOngoingStatement = () => {
+    if (!socket) return;
+
+    if (ongoingStatement.trim()) {
+      console.log("Submitting ongoing statement:", ongoingStatement);
+      socket.emit("submit-never-statement", sessionId, ongoingStatement);
+      // Vi resetter ikke state her fordi vi gjør det når vi får bekreftelse fra serveren
     }
   };
 
@@ -335,6 +378,129 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
                 Neste spørsmål
               </button>
             </div>
+
+            {submissionFeedback && (
+              <div
+                className="submission-feedback"
+                style={{
+                  background: "rgba(0,0,0,0.6)",
+                  padding: "10px",
+                  borderRadius: "5px",
+                  marginTop: "10px",
+                  animation: "fadeInOut 3s",
+                }}
+              >
+                {submissionFeedback}
+              </div>
+            )}
+
+            {!showOngoingForm ? (
+              <div
+                className="add-statement-button"
+                style={{ marginTop: "20px" }}
+              >
+                <button
+                  onClick={() => setShowOngoingForm(true)}
+                  style={{
+                    background: "rgba(255,255,255,0.2)",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "10px 15px",
+                    color: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  Legg til et nytt spørsmål
+                </button>
+              </div>
+            ) : (
+              <div
+                className="ongoing-statement-input"
+                style={{
+                  marginTop: "20px",
+                  background: "rgba(0,0,0,0.4)",
+                  padding: "15px",
+                  borderRadius: "8px",
+                }}
+              >
+                {!ongoingSubmitted ? (
+                  <>
+                    <p
+                      style={{
+                        marginTop: 0,
+                        marginBottom: "10px",
+                        fontSize: "0.9rem",
+                      }}
+                    >
+                      Fullfør setningen: "Jeg har aldri..."
+                    </p>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <input
+                        type="text"
+                        value={ongoingStatement}
+                        onChange={(e) => setOngoingStatement(e.target.value)}
+                        placeholder="...hoppet i fallskjerm"
+                        style={{
+                          flex: 1,
+                          padding: "8px 12px",
+                          backgroundColor: "rgba(255,255,255,0.1)",
+                          border: "1px solid rgba(255,255,255,0.3)",
+                          borderRadius: "4px",
+                          color: "white",
+                        }}
+                      />
+                      <div style={{ display: "flex", gap: "5px" }}>
+                        <button
+                          onClick={handleSubmitOngoingStatement}
+                          style={{
+                            padding: "8px 15px",
+                            backgroundColor: "#26890c",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Send inn
+                        </button>
+                        <button
+                          onClick={() => setShowOngoingForm(false)}
+                          style={{
+                            padding: "8px 15px",
+                            backgroundColor: "rgba(255,255,255,0.2)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "4px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Avbryt
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "10px" }}>
+                    <p>
+                      Takk for bidraget! Det vil bli brukt senere i spillet.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {pendingCount > 0 && (
+              <div
+                className="pending-count"
+                style={{
+                  fontSize: "0.9rem",
+                  marginTop: "10px",
+                  opacity: 0.8,
+                }}
+              >
+                {pendingCount} spørsmål i kø
+              </div>
+            )}
 
             <div className="statement-progress">
               Spørsmål {statementIndex + 1} av {totalStatements}
