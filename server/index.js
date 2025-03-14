@@ -281,15 +281,31 @@ io.on("connection", (socket) => {
   socket.on("select-game", (sessionId, gameType) => {
     const session = sessions[sessionId];
 
+    // Check if session exists
     if (!session) {
       socket.emit("error", { message: "Session not found" });
       return;
     }
 
-    // Add this condition for our new game type
-    else if (gameType === GAME_TYPES.DRINK_OR_JUDGE) {
+    // Verify that only the host can select the game
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can select the game" });
+      return;
+    }
+
+    // Validate the game type
+    if (!Object.values(GAME_TYPES).includes(gameType)) {
+      socket.emit("error", { message: "Invalid game type" });
+      return;
+    }
+
+    // Set the game type
+    session.gameType = gameType;
+
+    // Initialize game state based on game type
+    if (gameType === GAME_TYPES.DRINK_OR_JUDGE) {
       session.gameState = {
-        phase: "statement", // Phases: statement, voting, results
+        phase: "statement",
         statements: [
           "Hvem i rommet ville vært dårligst til å overleve en zombieapokalypse?",
           "Hvem i rommet er mest sannsynlig til å bli berømt?",
@@ -324,22 +340,7 @@ io.on("connection", (socket) => {
         results: [],
         usedStatements: [],
       };
-    }
-
-    // Only the host can select the game
-    if (socket.id !== session.host) {
-      socket.emit("error", { message: "Only the host can select the game" });
-      return;
-    }
-
-    if (!Object.values(GAME_TYPES).includes(gameType)) {
-      socket.emit("error", { message: "Invalid game type" });
-      return;
-    }
-
-    session.gameType = gameType;
-    if (gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
-      // Default statements in Norwegian
+    } else if (gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
       const defaultStatements = [
         "sett nordlyset",
         "gått på ski",
@@ -357,10 +358,8 @@ io.on("connection", (socket) => {
         "sunget karaoke foran andre mennesker",
         "danset på et bord",
       ];
-
-      // Initialize the game state with default statements
       session.gameState = {
-        phase: "collecting", // collecting or revealing
+        phase: "collecting",
         statements: defaultStatements.map((statement) => ({
           text: statement,
           author: "Spillet",
@@ -368,21 +367,25 @@ io.on("connection", (socket) => {
         })),
         currentStatementIndex: -1,
         responses: {},
-        timer: 60, // Initial timer in seconds
+        timer: 60,
+        usedStatements: [],
+        availableStatements: [],
+        defaultStatements: defaultStatements.map((statement) => ({
+          text: statement,
+          author: "Spillet",
+          authorId: "system",
+        })),
       };
     } else if (gameType === GAME_TYPES.MUSIC_GUESS) {
       session.gameState = {
-        phase: "topic-selection", // This is crucial - start at topic-selection phase
-        topic: "",
-        playerSongs: [],
-        votes: {},
-        revealedSongs: [],
+        phase: "category-selection",
+        // Add additional MUSIC_GUESS-specific state if needed
       };
     }
 
-    // Notify all players in the session about the game selection
+    // Notify all players about the game selection
     io.to(sessionId).emit("game-selected", {
-      gameType,
+      gameType: session.gameType,
       gameState: session.gameState,
     });
   });
@@ -436,6 +439,44 @@ io.on("connection", (socket) => {
       statement: nextStatement,
       phase: "voting",
       players: session.players,
+    });
+  });
+
+  socket.on("prev-statement", (sessionId, index) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.NEVER_HAVE_I_EVER) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can navigate statements
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can navigate statements",
+      });
+      return;
+    }
+
+    // Ensure the index is valid
+    if (index < 0 || index >= session.gameState.usedStatements.length) {
+      socket.emit("error", { message: "Invalid statement index" });
+      return;
+    }
+
+    console.log(
+      `Host navigated to statement index ${index} in session ${sessionId}`
+    );
+
+    // Get the statement at the requested index from used statements
+    const statement = session.gameState.usedStatements[index];
+    session.gameState.currentStatementIndex = index;
+
+    // Notify all players about the navigation
+    io.to(sessionId).emit("navigation-update", {
+      statement: statement,
+      statementIndex: index,
+      totalStatements: session.gameState.availableStatements.length,
     });
   });
 
@@ -839,29 +880,47 @@ io.on("connection", (socket) => {
       `Player ${player.name} submitted statement: "${statement}" in session ${sessionId}`
     );
 
-    // Add the statement to the collection
-    session.gameState.statements.push({
+    // Create the statement object
+    const newStatement = {
       text: statement,
       author: player.name,
       authorId: socket.id,
-    });
+    };
 
-    // Important change: Only emit statement-submitted, don't check for phase transition
-    // This allows adding statements even during the revealing phase
-    io.to(sessionId).emit("statement-submitted", {
-      submittedCount:
-        session.gameState.statements.length - defaultStatements.length, // Only count player statements
-      totalPlayers: session.players.length,
-    });
+    // Add the statement to the collection
+    session.gameState.statements.push(newStatement);
 
-    // If all players have submitted during collecting phase AND we're still in collecting phase,
-    // we can start revealing
-    const totalStatements =
-      session.gameState.statements.length - defaultStatements.length;
+    // If we're already in revealing phase, also add it to available statements
+    if (
+      session.gameState.phase === "revealing" &&
+      session.gameState.availableStatements
+    ) {
+      session.gameState.availableStatements.push(newStatement);
+    }
+
+    // Count only user-submitted statements for the collection progress
+    const userSubmittedStatements = session.gameState.statements.filter(
+      (s) => s.authorId !== "system"
+    );
+    const totalUserStatements = userSubmittedStatements.length;
     const totalPlayers = session.players.length;
 
+    console.log(
+      `Session ${sessionId}: ${totalUserStatements}/${totalPlayers} user statements submitted`
+    );
+
+    // Notify all players about the submission progress, count only user statements
+    io.to(sessionId).emit("statement-submitted", {
+      submittedCount: totalUserStatements,
+      totalPlayers: totalPlayers,
+      // Also send the full statements array so clients have complete state
+      statements: session.gameState.statements,
+    });
+
+    // If all players have submitted AND we're still in collecting phase,
+    // we can start revealing (or wait for the timer)
     if (
-      totalStatements >= totalPlayers &&
+      totalUserStatements >= totalPlayers &&
       session.gameState.phase === "collecting"
     ) {
       console.log(
@@ -983,39 +1042,6 @@ io.on("connection", (socket) => {
       `Host manually moved to next statement in session ${sessionId}`
     );
     moveToNextStatement(sessionId);
-  });
-
-  // Force reveal phase (for when automatic transition doesn't work)
-  socket.on("force-reveal-phase", (sessionId) => {
-    const session = sessions[sessionId];
-
-    if (!session || session.gameType !== GAME_TYPES.NEVER_HAVE_I_EVER) {
-      socket.emit("error", { message: "Invalid session or game type" });
-      return;
-    }
-
-    // Only the host can force reveal
-    if (socket.id !== session.host) {
-      socket.emit("error", {
-        message: "Only the host can force start revealing",
-      });
-      return;
-    }
-
-    console.log(
-      `Host ${socket.id} forcing reveal phase for session ${sessionId}`
-    );
-
-    // Make sure we have at least one statement
-    if (
-      !session.gameState.statements ||
-      session.gameState.statements.length === 0
-    ) {
-      socket.emit("error", { message: "No statements submitted yet" });
-      return;
-    }
-
-    startRevealingPhase(sessionId);
   });
 
   // Restart game (host only) - Original version is replaced with the enhanced version below
@@ -1261,7 +1287,7 @@ function startRevealingPhase(sessionId) {
     session.gameState.timerId = null;
   }
 
-  // Make sure we have statements
+  // Make sure we have statements (either user-submitted or default)
   if (
     !session.gameState.statements ||
     session.gameState.statements.length === 0
@@ -1275,26 +1301,33 @@ function startRevealingPhase(sessionId) {
   // Change the phase to revealing
   session.gameState.phase = "revealing";
 
-  // Shuffle the statements before revealing
-  session.gameState.statements = shuffleArray(session.gameState.statements);
+  // Reset used statements
+  session.gameState.usedStatements = [];
 
-  // Start with the first statement
+  // Clone the statements for the available pool
+  session.gameState.availableStatements = [...session.gameState.statements];
+
+  // Shuffle available statements
+  shuffleArray(session.gameState.availableStatements);
+
+  // Start with first statement
   session.gameState.currentStatementIndex = 0;
+  const firstStatement = session.gameState.availableStatements[0];
 
-  // Make sure we have a first statement
-  if (!session.gameState.statements[0]) {
-    console.log(`First statement missing for session ${sessionId}`);
-    return;
-  }
+  // Mark as used
+  session.gameState.usedStatements.push(firstStatement);
 
   console.log(`Emitting phase-changed event for session ${sessionId}`);
 
   // Notify all players that we're moving to the revealing phase
   io.to(sessionId).emit("phase-changed", {
     phase: "revealing",
-    statement: session.gameState.statements[0],
+    statement: firstStatement,
     statementIndex: 0,
-    totalStatements: session.gameState.statements.length,
+    // Send total count of available statements
+    totalStatements: session.gameState.availableStatements.length,
+    // Send all statements so client has complete state
+    statements: session.gameState.availableStatements,
   });
 }
 
@@ -1364,26 +1397,16 @@ function shuffleArray(array) {
 
 // Helper function to move to the next statement
 // Modify the moveToNextStatement function to shuffle the statements if we're starting the game
+
+// Replace the existing moveToNextStatement function
 function moveToNextStatement(sessionId) {
   const session = sessions[sessionId];
   if (!session) return;
 
-  // If this is the first statement (index was -1), shuffle the statements
-  if (session.gameState.currentStatementIndex === -1) {
-    session.gameState.statements = shuffleArray(session.gameState.statements);
-  }
-
-  // Increment the statement index
-  session.gameState.currentStatementIndex++;
-
-  console.log(
-    `Moving to statement ${session.gameState.currentStatementIndex} in session ${sessionId}`
-  );
-
-  // Check if we've gone through all statements
+  // If we've used all the available statements, end the game
   if (
-    session.gameState.currentStatementIndex >=
-    session.gameState.statements.length
+    session.gameState.usedStatements.length >=
+    session.gameState.availableStatements.length
   ) {
     // Game is over
     console.log(`All statements revealed in session ${sessionId}, game ended`);
@@ -1392,24 +1415,70 @@ function moveToNextStatement(sessionId) {
       responses: session.gameState.responses,
     });
 
-    // Don't reset the game state immediately - wait for user to choose restart or return to lobby
+    // Set phase to ended
     session.gameState.phase = "ended";
-  } else {
-    // Send the next statement to all players
-    console.log(
-      `Sending statement ${session.gameState.currentStatementIndex} to players in session ${sessionId}`
-    );
-    io.to(sessionId).emit("next-statement", {
-      statement:
-        session.gameState.statements[session.gameState.currentStatementIndex],
-      statementIndex: session.gameState.currentStatementIndex,
-      totalStatements: session.gameState.statements.length,
-    });
+    return;
   }
+
+  // Increment the statement index
+  const newIndex = session.gameState.currentStatementIndex + 1;
+  session.gameState.currentStatementIndex = newIndex;
+
+  // If we're already at the end of used statements, get a new one
+  let nextStatement;
+  if (newIndex >= session.gameState.usedStatements.length) {
+    // Find a statement that hasn't been used yet
+    const unusedStatements = session.gameState.availableStatements.filter(
+      (statement) =>
+        !session.gameState.usedStatements.some(
+          (used) =>
+            used.text === statement.text && used.authorId === statement.authorId
+        )
+    );
+
+    // If we have unused statements, pick one randomly
+    if (unusedStatements.length > 0) {
+      // Get a random unused statement
+      const randomIndex = Math.floor(Math.random() * unusedStatements.length);
+      nextStatement = unusedStatements[randomIndex];
+    }
+    // If we've used all statements, reuse a random one (shouldn't happen with end game check above)
+    else {
+      const randomIndex = Math.floor(
+        Math.random() * session.gameState.availableStatements.length
+      );
+      nextStatement = session.gameState.availableStatements[randomIndex];
+    }
+
+    // Add to used statements
+    session.gameState.usedStatements.push(nextStatement);
+  } else {
+    // We're navigating to an already used statement
+    nextStatement = session.gameState.usedStatements[newIndex];
+  }
+
+  console.log(
+    `Sending statement ${session.gameState.currentStatementIndex} to players in session ${sessionId}`
+  );
+
+  // Send the next statement to all players
+  io.to(sessionId).emit("next-statement", {
+    statement: nextStatement,
+    statementIndex: session.gameState.currentStatementIndex,
+    totalStatements: session.gameState.availableStatements.length,
+  });
+}
+
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
 }
 
 // Start the server
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
+}); // Start the server
