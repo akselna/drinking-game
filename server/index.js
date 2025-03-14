@@ -338,17 +338,37 @@ io.on("connection", (socket) => {
     }
 
     session.gameType = gameType;
-
-    // Initialize the game state based on the game type
     if (gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
+      // Default statements in Norwegian
+      const defaultStatements = [
+        "sett nordlyset",
+        "gått på ski",
+        "badet i havet om vinteren",
+        "reist utenfor Europa",
+        "drukket for mye og angret dagen etter",
+        "løyet til en venn for å slippe unna noe",
+        "latet som jeg kjenner en kjendis",
+        "stjålet noe",
+        "kastet opp på en date",
+        "kysset noen jeg nettopp møtte",
+        "sendt en melding til feil person",
+        "fått bot",
+        "vært på blind date",
+        "sunget karaoke foran andre mennesker",
+        "danset på et bord",
+      ];
+
+      // Initialize the game state with default statements
       session.gameState = {
         phase: "collecting", // collecting or revealing
-        statements: [],
-        pendingStatements: [], // New array for statements submitted during the revealing phase
+        statements: defaultStatements.map((statement) => ({
+          text: statement,
+          author: "Spillet",
+          authorId: "system",
+        })),
         currentStatementIndex: -1,
         responses: {},
         timer: 60, // Initial timer in seconds
-        usedPredefinedStatements: [], // Track which predefined statements we've used
       };
     } else if (gameType === GAME_TYPES.MUSIC_GUESS) {
       session.gameState = {
@@ -803,7 +823,6 @@ io.on("connection", (socket) => {
   });
 
   // Never Have I Ever - Submit statement
-
   socket.on("submit-never-statement", (sessionId, statement) => {
     const session = sessions[sessionId];
 
@@ -821,65 +840,34 @@ io.on("connection", (socket) => {
     );
 
     // Add the statement to the collection
-    // We now track submissions in a separate array to include recent ones
-    if (!session.gameState.pendingStatements) {
-      session.gameState.pendingStatements = [];
-    }
-
-    // Add to pending statements that will be used after current ones finish
-    session.gameState.pendingStatements.push({
+    session.gameState.statements.push({
       text: statement,
       author: player.name,
       authorId: socket.id,
     });
 
-    // If we're in the collecting phase, also add it to the immediate statements
-    if (session.gameState.phase === "collecting") {
-      session.gameState.statements.push({
-        text: statement,
-        author: player.name,
-        authorId: socket.id,
-      });
-    }
+    // Important change: Only emit statement-submitted, don't check for phase transition
+    // This allows adding statements even during the revealing phase
+    io.to(sessionId).emit("statement-submitted", {
+      submittedCount:
+        session.gameState.statements.length - defaultStatements.length, // Only count player statements
+      totalPlayers: session.players.length,
+    });
 
-    // Notify all players about the submission, even during revealing phase
-    // We use a different event for ongoing submissions
-    if (session.gameState.phase === "collecting") {
-      // Check if all players have submitted
-      const totalStatements = session.gameState.statements.length;
-      const totalPlayers = session.players.length;
+    // If all players have submitted during collecting phase AND we're still in collecting phase,
+    // we can start revealing
+    const totalStatements =
+      session.gameState.statements.length - defaultStatements.length;
+    const totalPlayers = session.players.length;
 
+    if (
+      totalStatements >= totalPlayers &&
+      session.gameState.phase === "collecting"
+    ) {
       console.log(
-        `Session ${sessionId}: ${totalStatements}/${totalPlayers} statements submitted`
+        `All players have submitted statements in session ${sessionId}, starting reveal phase`
       );
-
-      // Notify all players about the submission progress
-      io.to(sessionId).emit("statement-submitted", {
-        submittedCount: totalStatements,
-        totalPlayers: totalPlayers,
-      });
-
-      // If all players have submitted, we can start revealing (or wait for the timer)
-      if (
-        totalStatements >= totalPlayers &&
-        session.gameState.phase === "collecting"
-      ) {
-        console.log(
-          `All players have submitted statements in session ${sessionId}, starting reveal phase`
-        );
-        startRevealingPhase(sessionId);
-      }
-    } else {
-      // We're in revealing phase, simply acknowledge the submission
-      io.to(sessionId).emit("ongoing-statement-submitted", {
-        playerName: player.name,
-        pendingCount: session.gameState.pendingStatements.length,
-      });
-
-      // Only tell the submitter that their statement was received
-      socket.emit("your-statement-submitted", {
-        text: statement,
-      });
+      startRevealingPhase(sessionId);
     }
   });
 
@@ -1261,8 +1249,6 @@ function handlePlayerDisconnect(socketId) {
     }
   }
 }
-
-// Helper function to start the revealing phase
 function startRevealingPhase(sessionId) {
   const session = sessions[sessionId];
   if (!session) return;
@@ -1289,7 +1275,10 @@ function startRevealingPhase(sessionId) {
   // Change the phase to revealing
   session.gameState.phase = "revealing";
 
-  // Move to the first statement
+  // Shuffle the statements before revealing
+  session.gameState.statements = shuffleArray(session.gameState.statements);
+
+  // Start with the first statement
   session.gameState.currentStatementIndex = 0;
 
   // Make sure we have a first statement
@@ -1364,10 +1353,25 @@ function showMusicGuessResults(sessionId) {
   });
 }
 
+function shuffleArray(array) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
 // Helper function to move to the next statement
+// Modify the moveToNextStatement function to shuffle the statements if we're starting the game
 function moveToNextStatement(sessionId) {
   const session = sessions[sessionId];
   if (!session) return;
+
+  // If this is the first statement (index was -1), shuffle the statements
+  if (session.gameState.currentStatementIndex === -1) {
+    session.gameState.statements = shuffleArray(session.gameState.statements);
+  }
 
   // Increment the statement index
   session.gameState.currentStatementIndex++;

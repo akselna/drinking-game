@@ -1,3 +1,5 @@
+// Modify the NeverHaveIEver.tsx component to allow adding new statements during gameplay
+
 import React, { useState, useEffect } from "react";
 import "../styles/NeverHaveIEver.css";
 import { CustomSocket } from "../types/socket.types";
@@ -35,11 +37,8 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
   const [statementIndex, setStatementIndex] = useState(0);
   const [statements, setStatements] = useState<any[]>([]);
   const [totalStatements, setTotalStatements] = useState(0);
-  const [ongoingStatement, setOngoingStatement] = useState("");
-  const [ongoingSubmitted, setOngoingSubmitted] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
-  const [showOngoingForm, setShowOngoingForm] = useState(false);
-  const [submissionFeedback, setSubmissionFeedback] = useState("");
+  // New state variable to track if a player wants to add a new statement
+  const [addingNewStatement, setAddingNewStatement] = useState(false);
 
   // Kahoot-like colors for different statements
   const kahootColors = [
@@ -52,28 +51,6 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     "#00bcd4", // cyan
     "#ff9800", // orange
   ];
-
-  const handleOngoingStatementSubmitted = (data: any) => {
-    console.log("Ongoing statement submitted:", data);
-    setPendingCount(data.pendingCount || 0);
-
-    // Show a temporary message that a new statement was submitted
-    setSubmissionFeedback(`${data.playerName} sendte inn et nytt spørsmål!`);
-    setTimeout(() => {
-      setSubmissionFeedback("");
-    }, 3000);
-  };
-
-  const handleYourStatementSubmitted = (data: any) => {
-    console.log("Your statement was submitted:", data);
-    setOngoingStatement("");
-    setOngoingSubmitted(true);
-
-    // Reset the submission state after a delay
-    setTimeout(() => {
-      setOngoingSubmitted(false);
-    }, 3000);
-  };
 
   // Get color based on current statement index
   const getCurrentColor = () => {
@@ -136,12 +113,6 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     socket.on("phase-changed", handlePhaseChanged);
     socket.on("next-statement", handleNextStatement);
     socket.on("game-ended", handleGameEnded);
-    socket.on("ongoing-statement-submitted", handleOngoingStatementSubmitted);
-    socket.on("your-statement-submitted", handleYourStatementSubmitted);
-
-    // Og husk å legge dem til i clean-up funksjonen (return):
-    socket.off("ongoing-statement-submitted", handleOngoingStatementSubmitted);
-    socket.off("your-statement-submitted", handleYourStatementSubmitted);
 
     // Clean up on unmount
     return () => {
@@ -177,7 +148,12 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
       }
 
       if (gameState.statements) {
-        setSubmittedCount(gameState.statements.length || 0);
+        // The server now differentiates between total statements and player-submitted ones
+        // We only care about player submissions for the collecting phase
+        setSubmittedCount(
+          gameState.statements.filter((s: any) => s.authorId !== "system")
+            .length || 0
+        );
       }
 
       // Check if we already submitted a statement (on refresh or rejoin)
@@ -202,17 +178,15 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
       console.log("Submitting statement:", statement);
       socket.emit("submit-never-statement", sessionId, statement);
       setStatement("");
-      setSubmitted(true);
-    }
-  };
 
-  const handleSubmitOngoingStatement = () => {
-    if (!socket) return;
+      // Only set submitted to true if we're in the collecting phase
+      // This allows adding new statements during the revealing phase
+      if (currentPhase === "collecting") {
+        setSubmitted(true);
+      }
 
-    if (ongoingStatement.trim()) {
-      console.log("Submitting ongoing statement:", ongoingStatement);
-      socket.emit("submit-never-statement", sessionId, ongoingStatement);
-      // Vi resetter ikke state her fordi vi gjør det når vi får bekreftelse fra serveren
+      // Hide the new statement form
+      setAddingNewStatement(false);
     }
   };
 
@@ -247,6 +221,17 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
       setStatementIndex(prevIndex);
       setCurrentStatement(statements[prevIndex]);
     }
+  };
+
+  // Add a new statement during the game
+  const handleAddNewStatement = () => {
+    setAddingNewStatement(true);
+  };
+
+  // Cancel adding a new statement
+  const handleCancelAddStatement = () => {
+    setAddingNewStatement(false);
+    setStatement("");
   };
 
   // Render appropriate phase
@@ -379,129 +364,6 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
               </button>
             </div>
 
-            {submissionFeedback && (
-              <div
-                className="submission-feedback"
-                style={{
-                  background: "rgba(0,0,0,0.6)",
-                  padding: "10px",
-                  borderRadius: "5px",
-                  marginTop: "10px",
-                  animation: "fadeInOut 3s",
-                }}
-              >
-                {submissionFeedback}
-              </div>
-            )}
-
-            {!showOngoingForm ? (
-              <div
-                className="add-statement-button"
-                style={{ marginTop: "20px" }}
-              >
-                <button
-                  onClick={() => setShowOngoingForm(true)}
-                  style={{
-                    background: "rgba(255,255,255,0.2)",
-                    border: "none",
-                    borderRadius: "5px",
-                    padding: "10px 15px",
-                    color: "white",
-                    cursor: "pointer",
-                  }}
-                >
-                  Legg til et nytt spørsmål
-                </button>
-              </div>
-            ) : (
-              <div
-                className="ongoing-statement-input"
-                style={{
-                  marginTop: "20px",
-                  background: "rgba(0,0,0,0.4)",
-                  padding: "15px",
-                  borderRadius: "8px",
-                }}
-              >
-                {!ongoingSubmitted ? (
-                  <>
-                    <p
-                      style={{
-                        marginTop: 0,
-                        marginBottom: "10px",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Fullfør setningen: "Jeg har aldri..."
-                    </p>
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <input
-                        type="text"
-                        value={ongoingStatement}
-                        onChange={(e) => setOngoingStatement(e.target.value)}
-                        placeholder="...hoppet i fallskjerm"
-                        style={{
-                          flex: 1,
-                          padding: "8px 12px",
-                          backgroundColor: "rgba(255,255,255,0.1)",
-                          border: "1px solid rgba(255,255,255,0.3)",
-                          borderRadius: "4px",
-                          color: "white",
-                        }}
-                      />
-                      <div style={{ display: "flex", gap: "5px" }}>
-                        <button
-                          onClick={handleSubmitOngoingStatement}
-                          style={{
-                            padding: "8px 15px",
-                            backgroundColor: "#26890c",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Send inn
-                        </button>
-                        <button
-                          onClick={() => setShowOngoingForm(false)}
-                          style={{
-                            padding: "8px 15px",
-                            backgroundColor: "rgba(255,255,255,0.2)",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Avbryt
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ textAlign: "center", padding: "10px" }}>
-                    <p>
-                      Takk for bidraget! Det vil bli brukt senere i spillet.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {pendingCount > 0 && (
-              <div
-                className="pending-count"
-                style={{
-                  fontSize: "0.9rem",
-                  marginTop: "10px",
-                  opacity: 0.8,
-                }}
-              >
-                {pendingCount} spørsmål i kø
-              </div>
-            )}
-
             <div className="statement-progress">
               Spørsmål {statementIndex + 1} av {totalStatements}
             </div>
@@ -511,6 +373,40 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
         {!isHost && (
           <div className="statement-progress">
             Spørsmål {statementIndex + 1} av {totalStatements}
+          </div>
+        )}
+
+        {/* New section: Add new statement during gameplay */}
+        {!addingNewStatement ? (
+          <div className="add-statement-button-container">
+            <button
+              onClick={handleAddNewStatement}
+              className="add-statement-button"
+            >
+              Legg til nytt spørsmål
+            </button>
+          </div>
+        ) : (
+          <div className="statement-input revealing-phase-input">
+            <label htmlFor="new-statement">Legg til: "Jeg har aldri..."</label>
+            <textarea
+              id="new-statement"
+              value={statement}
+              onChange={(e) => setStatement(e.target.value)}
+              placeholder="...hoppet i fallskjerm"
+              maxLength={150}
+            />
+            <div className="statement-input-buttons">
+              <button onClick={handleSubmitStatement} className="submit-button">
+                Legg til
+              </button>
+              <button
+                onClick={handleCancelAddStatement}
+                className="cancel-button"
+              >
+                Avbryt
+              </button>
+            </div>
           </div>
         )}
 
