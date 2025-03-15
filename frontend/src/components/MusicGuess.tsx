@@ -29,8 +29,8 @@ interface SpotifyTrack {
   artist: string;
   previewUrl: string | null;
   albumImageUrl: string | null;
-  spotifyUrl?: string; // Optional field that might be in the API response
-  popularity?: number; // Optional field that might be in the API response
+  spotifyUrl?: string;
+  popularity?: number;
 }
 
 const MusicGuess: React.FC<MusicGuessProps> = ({
@@ -44,13 +44,12 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
   returnToLobby,
 }) => {
   // Game state
-  // Make sure you initialize with the right default value
   const [phase, setPhase] = useState<string>(
     gameState?.phase || "topic-selection"
   );
   const [topic, setTopic] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState<boolean>(false);
   const [submittedCount, setSubmittedCount] = useState<number>(0);
@@ -61,12 +60,13 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
   const [hasVoted, setHasVoted] = useState<boolean>(false);
   const [votesReceived, setVotesReceived] = useState<number>(0);
   const [results, setResults] = useState<any[]>([]);
-  const [searchTimer, setSearchTimer] = useState<any>(null);
+  const [searchTimer, setSearchTimer] = useState<NodeJS.Timeout | null>(null);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [playerSongs, setPlayerSongs] = useState<Song[]>([]);
   const [revealedSongs, setRevealedSongs] = useState<Song[]>([]);
   const [songsLeft, setSongsLeft] = useState<number>(0);
   const [songIndex, setSongIndex] = useState<number>(0);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
   // Audio player
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -74,7 +74,19 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
   const [canPlay, setCanPlay] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(60);
   const [timerActive, setTimerActive] = useState<boolean>(false);
-  const timerRef = useRef<any>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Handle phase naming consistency
+  useEffect(() => {
+    if (gameState) {
+      // Convert category-selection to topic-selection for consistency
+      if (gameState.phase === "category-selection") {
+        setPhase("topic-selection");
+      } else {
+        setPhase(gameState.phase || "topic-selection");
+      }
+    }
+  }, [gameState]);
 
   // Initialize state from props
   useEffect(() => {
@@ -279,7 +291,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       timerRef.current = setInterval(() => {
         setTimer((prevTimer) => {
           if (prevTimer <= 1) {
-            clearInterval(timerRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
             setTimerActive(false);
             return 0;
           }
@@ -287,7 +299,9 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
         });
       }, 1000);
 
-      return () => clearInterval(timerRef.current);
+      return () => {
+        if (timerRef.current) clearInterval(timerRef.current);
+      };
     }
   }, [phase, timerActive, timer]);
 
@@ -300,10 +314,11 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     socket.emit("music-guess-set-topic", sessionId, fullTopic);
   };
 
-  // Search for songs
-  // Search for songs using Spotify API
+  // Search for songs - FIXED function
+
   const searchSongs = (query: string) => {
     setSearchQuery(query);
+    setSearchError(null);
 
     // Clear any existing search timer
     if (searchTimer) {
@@ -313,9 +328,11 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     // Set a new timer to prevent too many requests
     if (query.trim().length > 2) {
       setIsSearching(true);
+
       const timer = setTimeout(async () => {
         try {
-          // Call our server endpoint to search Spotify
+          // Call the working API endpoint
+          console.log("Searching for:", query);
           const response = await fetch(
             `/api/spotify/search?q=${encodeURIComponent(query)}`
           );
@@ -326,46 +343,19 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
           }
 
           const data = await response.json();
+          console.log("Search results:", data);
 
           if (data.tracks && Array.isArray(data.tracks)) {
-            // Filter out songs without preview URLs if needed
-            const tracksWithPreviews = data.tracks.filter(
-              (track: SpotifyTrack) => track.previewUrl
-            );
-
-            setSearchResults(
-              tracksWithPreviews.length > 0 ? tracksWithPreviews : data.tracks
-            );
+            setSearchResults(data.tracks);
           } else {
             // Handle case where no tracks are returned
             setSearchResults([]);
+            setSearchError("No songs found matching your search.");
           }
         } catch (error) {
           console.error("Error searching songs:", error);
-
-          // Fallback to some mock data if the API request fails
-          const fallbackResults = [
-            {
-              id: "fallback1",
-              title: "Dancing Queen",
-              artist: "ABBA",
-              previewUrl:
-                "https://p.scdn.co/mp3-preview/cde05d76d0e535a357ea6b5b3263da6eba72541a",
-              albumImageUrl:
-                "https://i.scdn.co/image/ab67616d0000b273b0ce4261c219f5cabb15a3f6",
-            },
-            {
-              id: "fallback2",
-              title: `${query} (No results from API)`,
-              artist: "Demo Artist",
-              previewUrl:
-                "https://p.scdn.co/mp3-preview/9b8c365343b8a7568e312ec13a32cbb17b6a0cc7",
-              albumImageUrl:
-                "https://i.scdn.co/image/ab67616d0000b273b05b0de1c3c579b18e3dd84f",
-            },
-          ];
-
-          setSearchResults(fallbackResults);
+          setSearchError("Failed to search for songs. Try again later.");
+          setSearchResults([]);
         } finally {
           setIsSearching(false);
         }
@@ -378,9 +368,13 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
   };
 
   // Select song
-  const selectSong = (song: any) => {
+  const selectSong = (song: SpotifyTrack) => {
     const newSong: Song = {
-      ...song,
+      id: song.id,
+      title: song.title,
+      artist: song.artist,
+      previewUrl: song.previewUrl,
+      albumImageUrl: song.albumImageUrl,
       selectedBy: socket?.id || "",
       selectedByName:
         players.find((p) => p.id === socket?.id)?.name || "Unknown",
@@ -408,18 +402,18 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
 
     if (isPlaying) {
       audioRef.current.pause();
+      setIsPlaying(false);
     } else {
       audioRef.current
         .play()
         .then(() => {
+          setIsPlaying(true);
           setTimerActive(true);
         })
         .catch((err) => {
           console.error("Error playing audio:", err);
         });
     }
-
-    setIsPlaying(!isPlaying);
   };
 
   // Submit vote
@@ -508,39 +502,44 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
           {!hasSubmitted ? (
             <div className="song-selection-container">
               <div className="search-container">
+                <div className="search-instruction">
+                  Search for a song that fits the theme
+                </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => searchSongs(e.target.value)}
-                  placeholder="Søk etter en sang..."
+                  placeholder="Search for songs..."
                   className="search-input"
                 />
 
                 {isSearching && <div className="search-spinner">Søker...</div>}
 
-                <div className="search-results">
-                  {searchResults.map((song) => (
-                    <div
-                      key={song.id}
-                      className={`search-result ${
-                        selectedSong?.id === song.id ? "selected" : ""
-                      }`}
-                      onClick={() => selectSong(song)}
-                    >
-                      <div className="song-image">
-                        {song.albumImageUrl ? (
-                          <img src={song.albumImageUrl} alt={song.title} />
-                        ) : (
-                          <div className="no-image">🎵</div>
-                        )}
+                {searchResults.length > 0 && (
+                  <div className="search-results">
+                    {searchResults.map((song) => (
+                      <div
+                        key={song.id}
+                        className={`search-result ${
+                          selectedSong?.id === song.id ? "selected" : ""
+                        }`}
+                        onClick={() => selectSong(song)}
+                      >
+                        <div className="song-image">
+                          {song.albumImageUrl ? (
+                            <img src={song.albumImageUrl} alt={song.title} />
+                          ) : (
+                            <div className="no-image">🎵</div>
+                          )}
+                        </div>
+                        <div className="song-info">
+                          <div className="song-title">{song.title}</div>
+                          <div className="song-artist">{song.artist}</div>
+                        </div>
                       </div>
-                      <div className="song-info">
-                        <div className="song-title">{song.title}</div>
-                        <div className="song-artist">{song.artist}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {selectedSong && (
@@ -733,8 +732,11 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
             <h3>Sangen var valgt av:</h3>
             <div className="song-owner">
               <span className="owner-name">
-                {playerSongs.find((s) => s.id === currentPlayingSong?.id)
-                  ?.selectedByName || "Ukjent"}
+                {results.length > 0 &&
+                results[0]?.votedForId === currentPlayingSong?.selectedBy
+                  ? results[0]?.votedForName
+                  : playerSongs.find((s) => s.id === currentPlayingSong?.id)
+                      ?.selectedByName || "Ukjent"}
               </span>
             </div>
           </div>
@@ -879,11 +881,20 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
         <div className="music-guess">
           <h2>Musikkgjetting</h2>
           <div className="loading-container">
-            <p>Laster spill...</p>
+            <p>Laster spill... (Phase: {gameState?.phase})</p>
             <p>
               Hvis denne meldingen vises for lenge, kan det være et problem med
-              tilkoblingen.
+              tilkoblingen eller en uventet spillfase.
             </p>
+            <div className="debug-info">
+              <p>Debug info:</p>
+              <ul>
+                <li>Current phase: {gameState?.phase || "unknown"}</li>
+                <li>Socket connected: {socket ? "Yes" : "No"}</li>
+                <li>Players: {players.length}</li>
+                <li>Is host: {isHost ? "Yes" : "No"}</li>
+              </ul>
+            </div>
             <button
               onClick={returnToLobby}
               className="lobby-button"

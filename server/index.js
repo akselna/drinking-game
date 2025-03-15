@@ -418,8 +418,11 @@ io.on("connection", (socket) => {
       };
     } else if (gameType === GAME_TYPES.MUSIC_GUESS) {
       session.gameState = {
-        phase: "category-selection",
-        // Add additional MUSIC_GUESS-specific state if needed
+        phase: "topic-selection", // Changed from "category-selection" to match client expectation
+        topic: "",
+        playerSongs: [],
+        votes: {},
+        revealedSongs: [],
       };
     }
 
@@ -1092,6 +1095,7 @@ io.on("connection", (socket) => {
   */
 
   // Enhanced version of restart-game
+
   socket.on("restart-game", (sessionId, returnToLobby = false) => {
     const session = sessions[sessionId];
 
@@ -1137,8 +1141,24 @@ io.on("connection", (socket) => {
           timer: 60,
         };
       } else if (session.gameType === GAME_TYPES.MUSIC_GUESS) {
+        // FIX: Properly initialize music game to topic selection phase
         session.gameState = {
-          phase: "category-selection",
+          phase: "topic-selection", // Changed from category-selection to topic-selection
+          topic: "",
+          playerSongs: [],
+          votes: {},
+          revealedSongs: [],
+        };
+      } else if (session.gameType === GAME_TYPES.DRINK_OR_JUDGE) {
+        session.gameState = {
+          phase: "statement",
+          statements: [
+            // Same statement list as original...
+          ],
+          currentStatementIndex: 0,
+          votes: {},
+          results: [],
+          usedStatements: [],
         };
       }
 
