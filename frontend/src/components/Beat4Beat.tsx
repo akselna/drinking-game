@@ -82,18 +82,13 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
       setCurrentPhase("results");
       setRoundActive(false);
       setRoundWinner(data.winnerId || null);
-
-      // In the results phase, we'll keep the order of players as is
-      // and won't sort by score until next round
     };
 
     const handleScoreUpdate = (data: any) => {
       setScores(data.scores);
-      // We don't reorder players here, just update their scores
     };
 
     const handleNextRound = (data: any) => {
-      // When moving to the next round, we now sort the scores
       setRoundNumber(data.roundNumber);
       setCurrentPhase("waiting");
       setBuzzOrder([]);
@@ -174,15 +169,23 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
     socket.emit("beat4beat-reset", sessionId);
   };
 
-  // Render player list with buzz order
+  // Helper function to get host ID
+  const getHostId = () => {
+    return socket?.hostId || players.find((p) => p.isHost)?.id;
+  };
+
+  // Helper function to get non-host players
+  const getNonHostPlayers = () => {
+    const hostId = getHostId();
+    return players.filter((player) => player.id !== hostId);
+  };
+
+  // Render player list with buzz order - excluding the host
   const renderPlayerList = () => {
-    // Find the host ID - either directly from socket.hostId or from players with isHost=true
-    const hostId = socket?.hostId || players.find((p) => p.isHost)?.id;
+    // Only include non-host players
+    const nonHostPlayers = getNonHostPlayers();
 
-    // Filter out the host from the player list
-    const filteredPlayers = players.filter((player) => player.id !== hostId);
-
-    return filteredPlayers.map((player) => {
+    return nonHostPlayers.map((player) => {
       const buzzPosition = buzzOrder.findIndex(
         (item) => item.playerId === player.id
       );
@@ -412,44 +415,36 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
         <div className="scoreboard">
           <h3>Current Scores</h3>
           <div className="player-list score-list">
-            {players
-              // Find the host ID - either directly from socket.hostId or from players with isHost=true
-              .filter((player) => {
-                const hostId =
-                  socket?.hostId || players.find((p) => p.isHost)?.id;
-                return player.id !== hostId;
-              })
-              // Don't sort by score while adjusting - preserve original order
-              .map((player) => (
-                <div key={player.id} className="player-score-item">
-                  <span className="player-name">
-                    {player.name} {player.id === socket?.id ? " (You)" : ""}
+            {getNonHostPlayers().map((player) => (
+              <div key={player.id} className="player-score-item">
+                <span className="player-name">
+                  {player.name} {player.id === socket?.id ? " (You)" : ""}
+                </span>
+                <div className="score-controls">
+                  {isHost && (
+                    <button
+                      onClick={() => adjustPoints(player.id, 1)}
+                      className="adjust-point-button increment"
+                      title="Increase points"
+                    >
+                      +
+                    </button>
+                  )}
+                  <span className="player-score">
+                    {scores[player.id] || 0} pts
                   </span>
-                  <div className="score-controls">
-                    {isHost && (
-                      <button
-                        onClick={() => adjustPoints(player.id, 1)}
-                        className="adjust-point-button increment"
-                        title="Increase points"
-                      >
-                        +
-                      </button>
-                    )}
-                    <span className="player-score">
-                      {scores[player.id] || 0} pts
-                    </span>
-                    {isHost && (
-                      <button
-                        onClick={() => adjustPoints(player.id, -1)}
-                        className="adjust-point-button decrement"
-                        title="Decrease points"
-                      >
-                        -
-                      </button>
-                    )}
-                  </div>
+                  {isHost && (
+                    <button
+                      onClick={() => adjustPoints(player.id, -1)}
+                      className="adjust-point-button decrement"
+                      title="Decrease points"
+                    >
+                      -
+                    </button>
+                  )}
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
         </div>
 
