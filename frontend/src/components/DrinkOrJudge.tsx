@@ -161,15 +161,6 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
             <p>Venter på at verten skal starte spillet...</p>
           </div>
         )}
-
-        <div className="game-controls">
-          <button className="lobby-button" onClick={returnToLobby}>
-            Tilbake til hovedmenyen
-          </button>
-          <button className="leave-button" onClick={leaveSession}>
-            Forlat økt
-          </button>
-        </div>
       </div>
     );
   }
@@ -239,10 +230,6 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
             </button>
           </div>
         )}
-
-        <button className="leave-button" onClick={leaveSession}>
-          Forlat økt
-        </button>
       </div>
     );
   }
@@ -289,9 +276,6 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
             <button onClick={nextStatement} className="next-button">
               Neste påstand
             </button>
-            <button onClick={returnToLobby} className="lobby-button">
-              Tilbake til hovedmenyen
-            </button>
           </div>
         )}
 
@@ -300,10 +284,6 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
             <p>Venter på at verten skal fortsette...</p>
           </div>
         )}
-
-        <button className="leave-button" onClick={leaveSession}>
-          Forlat økt
-        </button>
       </div>
     );
   }

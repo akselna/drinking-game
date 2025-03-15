@@ -40,8 +40,41 @@
   }
 }
 
-/* Add this to src/styles/Game.css */
+/* Host Main Menu button container */
+.host-menu-button-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 90;
+}
 
+.host-menu-button {
+  background-color: #1368ce; /* Blue color */
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 20px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.host-menu-button:hover {
+  background-color: #0d5bb9;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.host-menu-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Leave Session button container */
 .mobile-leave-button-container {
   position: fixed;
   bottom: 20px;
@@ -61,6 +94,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .mobile-leave-button:hover {
@@ -74,23 +108,96 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* Responsive styles */
-@media (min-width: 768px) {
-  /* Hide mobile button on desktop */
+/* Responsive styles for mobile */
+@media (max-width: 767px) {
+  /* Mobile button container layout */
+  .game-mobile-buttons {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 90;
+  }
+
+  /* Reset individual button containers */
+  .host-menu-button-container,
   .mobile-leave-button-container {
-    display: none;
+    position: static;
+  }
+
+  /* Make buttons smaller on mobile */
+  .host-menu-button,
+  .mobile-leave-button {
+    font-size: 14px;
+    padding: 10px 16px;
   }
 }
 
-/* Show on mobile only */
-@media (max-width: 767px) {
-  .mobile-leave-button-container {
-    display: block;
-  }
+/* Confirmation dialog styles */
+.leave-confirmation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-  /* Make the button more visible */
-  .mobile-leave-button {
-    font-size: 16px;
-    padding: 14px 22px;
-  }
+.leave-confirmation-dialog {
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.leave-confirmation-dialog h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.leave-confirmation-dialog p {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.confirmation-buttons {
+  display: flex;
+  gap: 16px;
+}
+
+.confirm-button,
+.cancel-button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.confirm-button {
+  background-color: #cf6679;
+  color: white;
+}
+
+.confirm-button:hover {
+  background-color: #d44a5f;
+}
+
+.cancel-button {
+  background-color: #333;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #444;
 }

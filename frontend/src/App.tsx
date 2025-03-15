@@ -70,6 +70,12 @@ function App() {
       setConnectionError(
         error.message || "An error occurred with the connection"
       );
+
+      // Clear localStorage when we get a "Session not found" error
+      if (error.message === "Session not found") {
+        console.log("Session not found, clearing session data in App");
+        localStorage.removeItem("drinkingGameSession");
+      }
     };
 
     const onConnectError = (error: Error) => {
@@ -108,6 +114,17 @@ function App() {
       }
     };
 
+    // Add handlers for successful session creation/joining
+    const onSessionCreated = () => {
+      console.log("Session created successfully");
+      setConnectionError(null); // Clear any connection errors
+    };
+
+    const onSessionJoined = () => {
+      console.log("Session joined successfully");
+      setConnectionError(null); // Clear any connection errors
+    };
+
     // Register event listeners
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -115,6 +132,8 @@ function App() {
     socket.on("connect_error", onConnectError);
     socket.on("reconnect_attempt", onReconnectAttempt);
     socket.on("reconnect", onReconnect);
+    socket.on("session-created", onSessionCreated);
+    socket.on("session-joined", onSessionJoined);
 
     // If we're already connected, run the connect handler immediately
     if (socket.connected) {
@@ -133,8 +152,15 @@ function App() {
       socket.off("connect_error", onConnectError);
       socket.off("reconnect_attempt", onReconnectAttempt);
       socket.off("reconnect", onReconnect);
+      socket.off("session-created", onSessionCreated);
+      socket.off("session-joined", onSessionJoined);
     };
   }, [reconnectAttempts]);
+
+  // Handler to clear connection error from anywhere in the app
+  const clearConnectionError = () => {
+    setConnectionError(null);
+  };
 
   return (
     <SocketContext.Provider value={socket}>
@@ -145,13 +171,19 @@ function App() {
               Connection Error: {connectionError}
               <button
                 onClick={() => {
-                  socket.connect();
-                  setConnectionError("Retrying connection...");
+                  // If we're seeing a "Session not found" error, don't retry the same action
+                  if (connectionError === "Session not found") {
+                    localStorage.removeItem("drinkingGameSession");
+                    clearConnectionError();
+                  } else {
+                    socket.connect();
+                    setConnectionError("Retrying connection...");
+                  }
                 }}
                 className="retry-button"
                 style={{ marginLeft: "10px", padding: "4px 8px" }}
               >
-                Retry
+                {connectionError === "Session not found" ? "Dismiss" : "Retry"}
               </button>
             </div>
           )}
@@ -164,7 +196,10 @@ function App() {
           )}
 
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route
+              path="/"
+              element={<Home onNavigate={clearConnectionError} />}
+            />
             <Route path="/game" element={<Game />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>

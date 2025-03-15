@@ -30,6 +30,7 @@ const Game: React.FC = () => {
 
   const [error, setError] = useState<string | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
 
   // Use a ref for the timeout to avoid re-renders
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -212,11 +213,20 @@ const Game: React.FC = () => {
     };
   }, [socket, navigate, isReconnecting]); // Removed reconnectionTimeout from dependencies
 
+  const confirmLeaveSession = () => {
+    setShowLeaveConfirmation(true);
+  };
+
+  const cancelLeaveSession = () => {
+    setShowLeaveConfirmation(false);
+  };
+
   const leaveSession = () => {
     if (socket) {
       socket.emit("leave-session");
       localStorage.removeItem("drinkingGameSession");
       hasJoinedRef.current = false; // Reset the joined flag
+      setShowLeaveConfirmation(false);
       navigate("/");
     }
   };
@@ -246,7 +256,7 @@ const Game: React.FC = () => {
         <div className="reconnecting-message">
           <p>Reconnecting to session...</p>
           <button
-            onClick={leaveSession}
+            onClick={confirmLeaveSession}
             className="btn-primary"
             style={{ marginTop: "20px" }}
           >
@@ -261,7 +271,7 @@ const Game: React.FC = () => {
         <div className="error-container">
           <h2>Error</h2>
           <p className="error-message">{error}</p>
-          <button onClick={leaveSession} className="btn-primary">
+          <button onClick={confirmLeaveSession} className="btn-primary">
             Back to Home
           </button>
         </div>
@@ -278,7 +288,7 @@ const Game: React.FC = () => {
             gameState={sessionData.gameState}
             socket={socket}
             restartGame={restartGame}
-            leaveSession={leaveSession}
+            leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
           />
         );
@@ -291,7 +301,7 @@ const Game: React.FC = () => {
             gameState={sessionData.gameState}
             socket={socket}
             restartGame={restartGame}
-            leaveSession={leaveSession}
+            leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
           />
         );
@@ -305,7 +315,7 @@ const Game: React.FC = () => {
             gameState={sessionData.gameState}
             socket={socket}
             restartGame={restartGame}
-            leaveSession={leaveSession}
+            leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
           />
         );
@@ -317,10 +327,35 @@ const Game: React.FC = () => {
             players={sessionData.players}
             isHost={sessionData.isHost}
             onSelectGame={selectGame}
-            onLeaveSession={leaveSession}
+            onLeaveSession={confirmLeaveSession}
           />
         );
     }
+  };
+
+  // Render leave confirmation dialog
+  const renderLeaveConfirmation = () => {
+    if (!showLeaveConfirmation) return null;
+
+    return (
+      <div className="leave-confirmation-overlay">
+        <div className="leave-confirmation-dialog">
+          <h3>Leave Session</h3>
+          <p>
+            Are you sure you want to leave this session? You will not be able to
+            return unless someone shares the code with you again.
+          </p>
+          <div className="confirmation-buttons">
+            <button className="cancel-button" onClick={cancelLeaveSession}>
+              Cancel
+            </button>
+            <button className="confirm-button" onClick={leaveSession}>
+              Leave
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -339,16 +374,35 @@ const Game: React.FC = () => {
       {/* Render game content */}
       <div className="game-content">{renderGame()}</div>
 
-      {/* Persistent Leave Session button */}
-      <div className="mobile-leave-button-container">
-        <button
-          onClick={leaveSession}
-          className="mobile-leave-button"
-          aria-label="Leave Session"
-        >
-          Leave Session
-        </button>
+      {/* Mobile buttons container for better layout */}
+      <div className="game-mobile-buttons">
+        {/* Main Menu button for host */}
+        {sessionData.isHost && sessionData.gameType !== GAME_TYPES.NONE && (
+          <div className="host-menu-button-container">
+            <button
+              onClick={returnToLobby}
+              className="host-menu-button"
+              aria-label="Return to Main Menu"
+            >
+              Main Menu
+            </button>
+          </div>
+        )}
+
+        {/* Leave Session button */}
+        <div className="mobile-leave-button-container">
+          <button
+            onClick={confirmLeaveSession}
+            className="mobile-leave-button"
+            aria-label="Leave Session"
+          >
+            Leave Session
+          </button>
+        </div>
       </div>
+
+      {/* Leave confirmation dialog */}
+      {renderLeaveConfirmation()}
     </div>
   );
 };

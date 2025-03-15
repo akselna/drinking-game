@@ -319,7 +319,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
   };
 
   // Search for songs - FIXED function
-
   const searchSongs = (query: string) => {
     setSearchQuery(query);
     setSearchError(null);
@@ -448,10 +447,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
 
           {isHost ? (
             <div className="topic-container">
-              <p className="topic-instruction">
-                Skriv inn et tema for musikk å gjette på. Startende med "Musikk
-                som..." eller vi legger det til.
-              </p>
+              <p className="topic-instruction">Velg en kategori</p>
 
               <div className="topic-input-group">
                 <div className="topic-prefix">Musikk som</div>
@@ -477,15 +473,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               <p>Venter på at verten skal velge et tema...</p>
             </div>
           )}
-
-          <div className="game-controls">
-            <button className="lobby-button" onClick={returnToLobby}>
-              Tilbake til hovedmenyen
-            </button>
-            <button className="leave-button" onClick={leaveSession}>
-              Forlat økt
-            </button>
-          </div>
         </div>
       );
 
@@ -612,12 +599,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               <p>Du kan starte spillet når alle har valgt en sang.</p>
             </div>
           )}
-
-          <div className="game-controls">
-            <button className="leave-button" onClick={leaveSession}>
-              Forlat økt
-            </button>
-          </div>
         </div>
       );
 
@@ -698,7 +679,9 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               <div className="voting-section">
                 {!hasVoted ? (
                   <div className="voting-container">
-                    <div className="voting-prompt">Who picked this song?</div>
+                    <div className="voting-prompt">
+                      Hvem valgte denne sangen?
+                    </div>
                     <div className="players-vote-grid">
                       {players
                         .filter((player) => player.id !== socket?.id) // Can't vote for yourself
@@ -720,14 +703,14 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
                       className="vote-submit-button"
                       disabled={!votedFor}
                     >
-                      Submit Vote
+                      Send inn stemme
                     </button>
                   </div>
                 ) : (
                   <div className="vote-submitted">
-                    <p>Your vote has been submitted!</p>
+                    <p>Din stemme er sendt inn!</p>
                     <p className="votes-count">
-                      {votesReceived} of {players.length - 1} have voted
+                      {votesReceived} av {players.length - 1} har stemt
                     </p>
                     <div className="votes-progress">
                       <div
@@ -750,7 +733,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
                       className="force-button"
                       disabled={votesReceived === 0}
                     >
-                      Show Results{" "}
+                      Vis resultater{" "}
                       {votesReceived > 0 &&
                         `(${votesReceived}/${players.length - 1})`}
                     </button>
@@ -759,12 +742,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               </div>
             </div>
           )}
-
-          <div className="game-controls">
-            <button className="leave-button" onClick={leaveSession}>
-              Leave Session
-            </button>
-          </div>
         </div>
       );
 
@@ -876,15 +853,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               ) : (
                 <div className="game-end-options">
                   <p className="all-songs-played">🎉 Alle sanger er spilt!</p>
-                  <div className="end-buttons">
-                    <button onClick={restartGame} className="restart-button">
-                      <span className="button-icon">🔄</span> Spill igjen
-                    </button>
-                    <button onClick={returnToLobby} className="lobby-button">
-                      <span className="button-icon">🏠</span> Tilbake til
-                      hovedmenyen
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
@@ -896,13 +864,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               <p>🎉 Alle sanger er spilt! Venter på vertens valg...</p>
             </div>
           )}
-
-          {/* Leave button */}
-          <div className="game-controls">
-            <button className="leave-button" onClick={leaveSession}>
-              Forlat økt
-            </button>
-          </div>
         </div>
       );
 
@@ -944,9 +905,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
                 <button onClick={restartGame} className="restart-button">
                   Spill igjen
                 </button>
-                <button onClick={returnToLobby} className="lobby-button">
-                  Tilbake til hovedmenyen
-                </button>
               </div>
             </div>
           )}
@@ -956,12 +914,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               <p>Venter på vertens valg...</p>
             </div>
           )}
-
-          <div className="game-controls">
-            <button className="leave-button" onClick={leaveSession}>
-              Forlat økt
-            </button>
-          </div>
         </div>
       );
 
@@ -975,22 +927,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
               Hvis denne meldingen vises for lenge, kan det være et problem med
               tilkoblingen eller en uventet spillfase.
             </p>
-            <div className="debug-info">
-              <p>Debug info:</p>
-              <ul>
-                <li>Current phase: {gameState?.phase || "unknown"}</li>
-                <li>Socket connected: {socket ? "Yes" : "No"}</li>
-                <li>Players: {players.length}</li>
-                <li>Is host: {isHost ? "Yes" : "No"}</li>
-              </ul>
-            </div>
-            <button
-              onClick={returnToLobby}
-              className="lobby-button"
-              style={{ marginTop: "20px" }}
-            >
-              Tilbake til hovedmenyen
-            </button>
           </div>
         </div>
       );

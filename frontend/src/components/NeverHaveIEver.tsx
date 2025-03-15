@@ -1,5 +1,3 @@
-// Modify the NeverHaveIEver.tsx component to allow adding new statements during gameplay
-
 import React, { useState, useEffect } from "react";
 import "../styles/NeverHaveIEver.css";
 import { CustomSocket } from "../types/socket.types";
@@ -248,19 +246,11 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
 
         <div className="game-controls">
           {isHost && (
-            <>
-              <button className="lobby-button" onClick={returnToLobby}>
-                Tilbake til hovedmenyen
-              </button>
-              <button className="restart-button" onClick={restartGame}>
-                Spill samme spill igjen
-              </button>
-            </>
+            <button className="restart-button" onClick={restartGame}>
+              Spill samme spill igjen
+            </button>
           )}
           {!isHost && <p>Venter på at verten skal velge neste aktivitet...</p>}
-          <button className="leave-button" onClick={leaveSession}>
-            Forlat økt
-          </button>
         </div>
       </div>
     );
@@ -316,12 +306,6 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
             )}
           </div>
         )}
-
-        <div className="game-controls">
-          <button className="leave-button" onClick={leaveSession}>
-            Forlat økt
-          </button>
-        </div>
       </div>
     );
   }
@@ -409,12 +393,6 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
             </div>
           </div>
         )}
-
-        <div className="game-controls">
-          <button className="leave-button" onClick={leaveSession}>
-            Forlat økt
-          </button>
-        </div>
       </div>
     );
   }

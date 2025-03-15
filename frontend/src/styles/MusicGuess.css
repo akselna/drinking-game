@@ -35,56 +35,315 @@
   margin-bottom: 8px;
 }
 
-.game-controls {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
+/* Improved Topic input styling */
+.topic-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  border-radius: 10px;
+  margin-bottom: 30px;
 }
 
-.lobby-button {
+.topic-instruction {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  color: white;
+  text-align: center;
+}
+
+/* New unified input field design */
+.topic-input-group {
+  display: flex;
+  background-color: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.topic-prefix {
+  background-color: #444;
+  color: white;
+  padding: 14px 16px;
+  font-weight: bold;
+  width: auto;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 120px;
+  justify-content: center;
+}
+
+.topic-input {
   flex: 1;
-  min-width: 150px;
-  padding: 12px;
-  background-color: #1368ce;
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 14px 16px;
+  font-size: 16px;
+  outline: none;
+  width: 100%;
+}
+
+.topic-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.topic-submit-button {
+  background-color: #6200ea;
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
+  padding: 16px 24px;
+  font-size: 18px;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  margin: 0 auto;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(98, 0, 234, 0.3);
 }
 
-.leave-button {
-  flex: 1;
-  min-width: 150px;
-  padding: 12px;
-  background-color: rgba(207, 102, 121, 0.1);
-  color: #cf6679;
-  border: 1px solid #cf6679;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
+.topic-submit-button:hover:not(:disabled) {
+  background-color: #7c4dff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(124, 77, 255, 0.4);
+}
+
+.topic-submit-button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(98, 0, 234, 0.3);
+}
+
+.topic-submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Waiting message styling */
+.waiting-message {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  color: white;
 }
 
 /* Mobile optimizations */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .music-guess {
     padding: 16px;
+    padding-bottom: 80px; /* Add space at bottom for fixed buttons */
   }
 
-  .game-message {
+  .topic-container {
     padding: 16px;
   }
 
-  .game-controls {
-    flex-direction: column;
+  .topic-instruction {
+    font-size: 1rem;
+    margin-bottom: 16px;
   }
 
-  .lobby-button,
-  .leave-button {
-    width: 100%;
-    max-width: none;
+  /* Mobile version of the input field */
+  .topic-input-group {
+    flex-direction: column;
+    border-radius: 8px;
   }
+
+  .topic-prefix {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    justify-content: center;
+    background-color: #444;
+  }
+
+  .topic-input {
+    padding: 16px 12px;
+    text-align: center;
+    font-size: 16px;
+    min-height: 60px;
+  }
+
+  .topic-submit-button {
+    width: 100%;
+    font-size: 16px;
+    padding: 14px;
+  }
+
+  /* Increase spacing around game buttons */
+  .game-controls {
+    margin-bottom: 100px;
+  }
+}
+
+/* The rest of the existing styles... */
+
+/* Topic input styling - Improved mobile version */
+.topic-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 24px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+}
+
+.topic-instruction {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  color: white;
+}
+
+.topic-input-group {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.topic-prefix {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 14px 16px;
+  font-weight: bold;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.topic-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: white;
+  padding: 14px 16px;
+  font-size: 16px;
+  outline: none;
+  width: 100%;
+}
+
+.topic-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.topic-submit-button {
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 24px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  display: block;
+  margin: 0 auto;
+  min-width: 200px;
+}
+
+.topic-submit-button:hover:not(:disabled) {
+  background-color: #7c4dff;
+  transform: translateY(-2px);
+}
+
+.topic-submit-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Waiting message styling */
+.waiting-message {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  color: white;
+}
+
+/* For medium sized screens - convert to row layout */
+@media (min-width: 768px) {
+  .topic-input-group {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .topic-prefix {
+    border-bottom: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    width: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .music-guess {
+    padding: 16px;
+    padding-bottom: 80px; /* Add space at bottom for fixed buttons */
+  }
+
+  .topic-container {
+    padding: 16px;
+  }
+
+  .topic-instruction {
+    font-size: 1rem;
+  }
+
+  .topic-submit-button {
+    width: 100%;
+    font-size: 16px;
+    padding: 14px;
+  }
+
+  /* Forbedret stil for "Musikk som"-etiketten */
+  .topic-prefix {
+    background-color: #4a00b5; /* Mørkere lilla for å matche temaet */
+    color: white;
+    padding: 12px; /* Behold mobilpadding fra media query */
+    font-weight: bold;
+    text-align: left;
+    border-bottom: 1px solid #6200ea; /* Lilla kant for konsistens */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* Tekstskygge for lesbarhet */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Dybdeeffekt */
+  }
+
+  /* Litt justering av input-gruppen for bedre kontrast */
+  .topic-input-group {
+    background-color: rgba(255, 255, 255, 0.15); /* Økt opacitet */
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .topic-input {
+    background: rgba(255, 255, 255, 0.05); /* Lett bakgrunn */
+    border: none;
+    color: white;
+    padding: 12px; /* Mobilpadding */
+    font-size: 14px; /* Mobilskriftstørrelse */
+    outline: none;
+  }
+
+  /* Increase spacing around game buttons */
+  .game-controls {
+    margin-bottom: 100px;
+  }
+}
+
+.lobby-button,
+.leave-button {
+  width: 100%;
+  max-width: none;
 }
 
 .spotify-search-container {

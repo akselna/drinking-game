@@ -3,7 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { SocketContext } from "../context/SocketContext";
 import "../styles/Home.css";
 
-const Home: React.FC = () => {
+interface HomeProps {
+  onNavigate?: () => void; // Optional callback to notify parent component about navigation
+}
+
+const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [playerName, setPlayerName] = useState("");
   const [sessionId, setSessionId] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +33,12 @@ const Home: React.FC = () => {
     if (window.location.search) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+
+    // Call onNavigate to clear any connection errors in the parent component
+    if (onNavigate) {
+      onNavigate();
+    }
+  }, [onNavigate]);
 
   // Check for existing saved session
   useEffect(() => {
@@ -113,9 +122,9 @@ const Home: React.FC = () => {
         setCreateSessionTimeout(null);
       }
 
-      // Only clear localStorage when we have a specific session not found error
+      // Clear localStorage when we get a "Session not found" error
       if (data.message === "Session not found") {
-        console.log("Session not found, clearing session data");
+        console.log("Session not found, clearing session data in Home");
         localStorage.removeItem("drinkingGameSession");
       }
     };
@@ -136,7 +145,7 @@ const Home: React.FC = () => {
         clearTimeout(createSessionTimeout);
       }
     };
-  }, [socket, navigate, playerName, createSessionTimeout]);
+  }, [socket, navigate, playerName, createSessionTimeout, onNavigate]);
 
   const createSession = (event: React.FormEvent) => {
     event.preventDefault();
@@ -156,6 +165,11 @@ const Home: React.FC = () => {
     if (!playerName.trim()) {
       setError("Please enter your name");
       return;
+    }
+
+    // Call onNavigate to clear any connection errors in the parent component
+    if (onNavigate) {
+      onNavigate();
     }
 
     setIsLoading(true);
@@ -199,6 +213,11 @@ const Home: React.FC = () => {
       return;
     }
 
+    // Call onNavigate to clear any connection errors in the parent component
+    if (onNavigate) {
+      onNavigate();
+    }
+
     setIsLoading(true);
     setError(null);
     console.log("Joining session:", sessionId, "as", playerName);
@@ -217,7 +236,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="home-container">
-      <h1>Drinking Game App</h1>
+      <h1>Mine herrer lambo</h1>
 
       {error && <div className="error-message">{error}</div>}
 
