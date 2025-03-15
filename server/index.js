@@ -4,11 +4,57 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 require("dotenv").config();
 const spotifyService = require("./spotify");
-const path = require("path"); // Add this line
+const path = require("path");
 
 const app = express();
 app.use(cors());
+
+// IMPORTANT: Define API routes BEFORE serving static files
+// Spotify API endpoints
+app.get("/api/spotify/search", async (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query) {
+      return res.status(400).json({ error: "Search query is required" });
+    }
+
+    // Optional market parameter, defaults to US if not provided
+    const market = req.query.market || "US";
+
+    // Search tracks using our Spotify service
+    const tracks = await spotifyService.searchTracks(query, market);
+
+    res.json({ tracks });
+  } catch (error) {
+    console.error("Error in Spotify search endpoint:", error.message);
+    res.status(500).json({
+      error: "Failed to search Spotify",
+      message: error.message,
+    });
+  }
+});
+
+app.get("/api/spotify/status", async (req, res) => {
+  try {
+    // Try to get a token to verify API connection
+    await spotifyService.getSpotifyToken();
+    res.json({ status: "ok", message: "Spotify API connection successful" });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Could not connect to Spotify API",
+      error: error.message,
+    });
+  }
+});
+
+// AFTER defining all API routes, THEN serve static files
 app.use(express.static(path.join(__dirname, "../frontend/build")));
+
+// FINALLY, add the catch-all route
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -16,10 +62,6 @@ const io = new Server(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
-});
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
 });
 
 let sessions = {};
@@ -73,44 +115,6 @@ const neverHaveIEverStatements = [
 
 // Modifiser moveToNextStatement for å bruke predefinerte spørsmål når man går tom for brukerspørsmål
 // Finn denne funksjonen og erstatt den med:
-
-app.get("/api/spotify/search", async (req, res) => {
-  try {
-    const query = req.query.q;
-    if (!query) {
-      return res.status(400).json({ error: "Search query is required" });
-    }
-
-    // Optional market parameter, defaults to US if not provided
-    const market = req.query.market || "US";
-
-    // Search tracks using our Spotify service
-    const tracks = await spotifyService.searchTracks(query, market);
-
-    res.json({ tracks });
-  } catch (error) {
-    console.error("Error in Spotify search endpoint:", error.message);
-    res.status(500).json({
-      error: "Failed to search Spotify",
-      message: error.message,
-    });
-  }
-});
-
-// Health check endpoint for Spotify API
-app.get("/api/spotify/status", async (req, res) => {
-  try {
-    // Try to get a token to verify API connection
-    await spotifyService.getSpotifyToken();
-    res.json({ status: "ok", message: "Spotify API connection successful" });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Could not connect to Spotify API",
-      error: error.message,
-    });
-  }
-});
 
 // Helper function to move to the next statement
 function moveToNextStatement(sessionId) {

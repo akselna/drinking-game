@@ -3,10 +3,12 @@ const axios = require("axios");
 
 // Spotify API credentials - should be stored in environment variables
 // Replace these with your actual Spotify Developer credentials
-const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || "YOUR_CLIENT_ID";
-const SPOTIFY_CLIENT_SECRET =
-  process.env.SPOTIFY_CLIENT_SECRET || "YOUR_CLIENT_SECRET";
+const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
+const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
+if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+  console.error("Spotify API credentials not found in environment variables");
+}
 // Store Spotify access token
 let spotifyToken = null;
 let tokenExpirationTime = null;
