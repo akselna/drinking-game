@@ -180,30 +180,40 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
 
         {!hasVoted ? (
           <div className="voting-container">
-            <p className="vote-instruction">Stem på én person:</p>
+            <p className="vote-instruction">Stem på en person:</p>
 
-            <div className="player-list">
-              {players.map((player) => (
-                <button
-                  key={player.id}
-                  className={`player-button ${
-                    selectedPlayer === player.id ? "selected" : ""
-                  }`}
-                  onClick={() => setSelectedPlayer(player.id)}
-                  disabled={player.id === socket?.id} // Can't vote for yourself
-                >
-                  {player.name} {player.id === socket?.id ? "(Deg)" : ""}
-                </button>
-              ))}
+            <div className="player-voting-list">
+              {players.map((player) => {
+                const isSelected = selectedPlayer === player.id;
+                return (
+                  <div key={player.id} className="player-vote-item">
+                    <button
+                      className={`player-vote-button ${
+                        isSelected ? "selected" : ""
+                      }`}
+                      onClick={() => setSelectedPlayer(player.id)}
+                      disabled={player.id === socket?.id} // Can't vote for yourself
+                    >
+                      <span className="player-name">
+                        {player.name} {player.id === socket?.id ? "(Deg)" : ""}
+                      </span>
+
+                      {isSelected && (
+                        <span
+                          className="confirm-vote"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent triggering the outer button
+                            submitVote();
+                          }}
+                        >
+                          Bekreft <span className="confirm-icon">✓</span>
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
-
-            <button
-              onClick={submitVote}
-              className="vote-button"
-              disabled={!selectedPlayer}
-            >
-              Send inn stemme
-            </button>
           </div>
         ) : (
           <div className="vote-submitted">

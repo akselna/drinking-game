@@ -367,3 +367,121 @@
     height: 200px;
   }
 }
+
+/* Add these styles to your DrinkOrJudge.css file */
+
+/* Updated player voting styles */
+.player-voting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.player-vote-item {
+  width: 100%;
+}
+
+.player-vote-button {
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.player-vote-button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.player-vote-button.selected {
+  background-color: rgba(38, 137, 12, 0.3);
+  border: 2px solid rgba(38, 137, 12, 0.8);
+}
+
+.player-vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-name {
+  flex: 1;
+  font-weight: normal;
+}
+
+.confirm-vote {
+  background-color: #26890c;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.confirm-vote:hover {
+  background-color: #1b6606;
+  transform: scale(1.05);
+}
+
+.confirm-vote:active {
+  transform: scale(0.95);
+}
+
+.confirm-icon {
+  font-size: 18px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 480px) {
+  .player-vote-button {
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .confirm-vote {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .confirm-icon {
+    font-size: 16px;
+  }
+
+  .vote-instruction {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+  }
+}
+
+/* Larger touch targets for better mobile experience */
+@media (max-width: 768px) {
+  .player-voting-list {
+    gap: 12px;
+  }
+
+  .player-vote-button {
+    min-height: 54px;
+  }
+
+  .confirm-vote {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
