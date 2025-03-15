@@ -2,6 +2,8 @@ const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
+require("dotenv").config();
+const spotifyService = require("./spotify");
 
 const app = express();
 app.use(cors());
@@ -64,6 +66,44 @@ const neverHaveIEverStatements = [
 
 // Modifiser moveToNextStatement for å bruke predefinerte spørsmål når man går tom for brukerspørsmål
 // Finn denne funksjonen og erstatt den med:
+
+app.get("/api/spotify/search", async (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query) {
+      return res.status(400).json({ error: "Search query is required" });
+    }
+
+    // Optional market parameter, defaults to US if not provided
+    const market = req.query.market || "US";
+
+    // Search tracks using our Spotify service
+    const tracks = await spotifyService.searchTracks(query, market);
+
+    res.json({ tracks });
+  } catch (error) {
+    console.error("Error in Spotify search endpoint:", error.message);
+    res.status(500).json({
+      error: "Failed to search Spotify",
+      message: error.message,
+    });
+  }
+});
+
+// Health check endpoint for Spotify API
+app.get("/api/spotify/status", async (req, res) => {
+  try {
+    // Try to get a token to verify API connection
+    await spotifyService.getSpotifyToken();
+    res.json({ status: "ok", message: "Spotify API connection successful" });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Could not connect to Spotify API",
+      error: error.message,
+    });
+  }
+});
 
 // Helper function to move to the next statement
 function moveToNextStatement(sessionId) {
