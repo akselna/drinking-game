@@ -147,3 +147,128 @@
   cursor: pointer;
   font-weight: bold;
 }
+
+/* Enhanced host styling */
+.participant-item.host {
+  background-color: rgba(255, 215, 0, 0.15);
+  border-left: 4px solid #ffd700;
+  padding-left: 12px;
+  font-weight: bold;
+  position: relative;
+  margin-bottom: 16px;
+}
+
+/* Add slight shadow to make it stand out */
+.participant-item.host {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.host-indicator {
+  display: flex;
+  align-items: center;
+  margin-right: 8px;
+}
+
+.host-label {
+  background-color: #ffd700;
+  color: #000;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  margin-right: 6px;
+  letter-spacing: 0.5px;
+}
+
+.host-badge {
+  font-size: 18px;
+}
+
+/* Create space after the host in the list */
+.participant-item.host::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Make transfer host button more visible */
+.transfer-host-button {
+  background-color: rgba(255, 215, 0, 0.2);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.transfer-host-button:hover {
+  background-color: rgba(255, 215, 0, 0.4);
+  transform: scale(1.1);
+}
+
+/* Disconnected player styling */
+.participant-item.disconnected {
+  opacity: 0.7;
+}
+
+.disconnected-badge {
+  margin-left: 8px;
+  font-size: 16px;
+  color: #ff9800;
+}
+
+/* Ensure the participant info is displayed correctly */
+.participant-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* Add a clear title to the participant panel */
+.participant-panel-header h2 {
+  position: relative;
+  padding-right: 30px;
+}
+
+/* Update the existing styles for the button */
+.participant-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+}
+
+/* Add host indicator to the toggle button when host */
+.participant-toggle.is-host {
+  border: 2px solid #ffd700;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .host-label {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .participant-item.host {
+    margin-bottom: 12px;
+  }
+}

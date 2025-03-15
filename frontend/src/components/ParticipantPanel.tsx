@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-// Endre fra:
-// Til:
 import { CustomSocket } from "../types/socket.types";
 import "../styles/ParticipantPanel.css";
 
@@ -55,6 +53,16 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
     (player) => player.isHost || player.id === socket?.hostId
   );
 
+  // Sort players so host appears at the top
+  const sortedPlayers = [...players].sort((a, b) => {
+    const aIsHost = a.isHost || a.id === socket?.hostId;
+    const bIsHost = b.isHost || b.id === socket?.hostId;
+
+    if (aIsHost && !bIsHost) return -1;
+    if (!aIsHost && bIsHost) return 1;
+    return 0;
+  });
+
   return (
     <>
       {/* Button to toggle participant panel */}
@@ -85,7 +93,7 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
         </div>
 
         <ul className="participant-list">
-          {players.map((player) => {
+          {sortedPlayers.map((player) => {
             const isPlayerHost = hostPlayer && player.id === hostPlayer.id;
             const isCurrentUser = player.id === currentUserId;
 
@@ -94,15 +102,26 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
                 key={player.id}
                 className={`participant-item ${isPlayerHost ? "host" : ""} ${
                   isCurrentUser ? "current-user" : ""
-                }`}
+                } ${player.disconnected ? "disconnected" : ""}`}
               >
                 <div className="participant-info">
+                  {isPlayerHost && (
+                    <div className="host-indicator">
+                      <span className="host-label">VERT</span>
+                      <span className="host-badge" title="Vert">
+                        👑
+                      </span>
+                    </div>
+                  )}
                   <span className="participant-name">
                     {player.name} {isCurrentUser && " (Deg)"}
                   </span>
-                  {isPlayerHost && (
-                    <span className="host-badge" title="Vert">
-                      👑
+                  {player.disconnected && (
+                    <span
+                      className="disconnected-badge"
+                      title="Midlertidig frakoblet"
+                    >
+                      🔄
                     </span>
                   )}
                 </div>
