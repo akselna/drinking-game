@@ -272,36 +272,80 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Check if this is a reconnection (same name coming back)
-    const existingPlayerIndex = sessions[sessionIdUpper].players.findIndex(
-      (player) => player.name === playerName
-    );
+    const session = sessions[sessionIdUpper];
+    let isReconnectingHost = false;
 
-    if (existingPlayerIndex >= 0) {
-      // This is a reconnection - update the player's ID
-      const oldId = sessions[sessionIdUpper].players[existingPlayerIndex].id;
-      sessions[sessionIdUpper].players[existingPlayerIndex].id = socket.id;
+    // Check if this is a reconnecting host
+    if (
+      disconnectedHosts[sessionIdUpper] &&
+      disconnectedHosts[sessionIdUpper].hostName === playerName
+    ) {
+      console.log(
+        `Host ${playerName} reconnected to session ${sessionIdUpper} within grace period`
+      );
 
-      // If this was the host, update the host reference
-      if (sessions[sessionIdUpper].host === oldId) {
-        sessions[sessionIdUpper].host = socket.id;
+      // Clear the timeout that would have transferred host status
+      clearTimeout(disconnectedHosts[sessionIdUpper].timeoutId);
+
+      // Find the disconnected player entry
+      const disconnectedPlayerIndex = session.players.findIndex(
+        (player) => player.disconnected && player.name === playerName
+      );
+
+      if (disconnectedPlayerIndex !== -1) {
+        // Update the player's socket ID and remove disconnected flag
+        session.players[disconnectedPlayerIndex].id = socket.id;
+        delete session.players[disconnectedPlayerIndex].disconnected;
+
+        // Update the host reference to the new socket ID
+        session.host = socket.id;
+        isReconnectingHost = true;
       }
-    } else {
-      // This is a new player - check if name is already taken
-      const nameExists = sessions[sessionIdUpper].players.some(
+
+      // Clean up disconnected host entry
+      delete disconnectedHosts[sessionIdUpper];
+    }
+
+    // If not a reconnecting host, handle as before
+    if (!isReconnectingHost) {
+      // Check if this is a reconnection (same name coming back)
+      const existingPlayerIndex = session.players.findIndex(
         (player) => player.name === playerName
       );
 
-      if (nameExists) {
-        socket.emit("error", { message: "Name already taken in this session" });
-        return;
-      }
+      if (existingPlayerIndex >= 0) {
+        // This is a reconnection - update the player's ID
+        const oldId = session.players[existingPlayerIndex].id;
+        session.players[existingPlayerIndex].id = socket.id;
 
-      // Add new player to the session
-      sessions[sessionIdUpper].players.push({
-        id: socket.id,
-        name: playerName,
-      });
+        // Remove disconnected flag if it exists
+        if (session.players[existingPlayerIndex].disconnected) {
+          delete session.players[existingPlayerIndex].disconnected;
+        }
+
+        // If this was the host, update the host reference
+        if (sessions[sessionIdUpper].host === oldId) {
+          sessions[sessionIdUpper].host = socket.id;
+        }
+      } else {
+        // This is a new player - check if name is already taken
+        const nameExists = session.players.some(
+          (player) => player.name === playerName
+        );
+
+        if (nameExists) {
+          socket.emit("error", {
+            message: "Name already taken in this session",
+          });
+          return;
+        }
+
+        // Add new player to the session
+        session.players.push({
+          id: socket.id,
+          name: playerName,
+        });
+      }
     }
 
     // Track which session this socket belongs to
@@ -315,17 +359,14 @@ io.on("connection", (socket) => {
     // Tell the player they've joined successfully
     socket.emit("session-joined", {
       sessionId: sessionIdUpper,
-      isHost: socket.id === sessions[sessionIdUpper].host,
-      gameType: sessions[sessionIdUpper].gameType,
-      gameState: sessions[sessionIdUpper].gameState,
-      players: sessions[sessionIdUpper].players,
+      isHost: socket.id === session.host,
+      gameType: session.gameType,
+      gameState: session.gameState,
+      players: session.players,
     });
 
     // Update all players in the session
-    io.to(sessionIdUpper).emit(
-      "update-players",
-      sessions[sessionIdUpper].players
-    );
+    io.to(sessionIdUpper).emit("update-players", session.players);
   });
 
   // Beat4Beat - Set Total Rounds
@@ -1610,11 +1651,15 @@ io.on("connection", (socket) => {
   });
 });
 
+const disconnectedHosts = {}; // Track temporarily disconnected hosts
+const HOST_GRACE_PERIOD = 30000; // 30 seconds grace period (in milliseconds)
+
 // Helper function to handle player disconnection
 function handlePlayerDisconnect(socketId) {
   // Check if this socket is associated with a session
   if (playerSessions[socketId]) {
     const sessionId = playerSessions[socketId].sessionId;
+    const playerName = playerSessions[socketId].name;
     const session = sessions[sessionId];
 
     if (session) {
@@ -1623,32 +1668,72 @@ function handlePlayerDisconnect(socketId) {
       );
 
       if (playerIndex !== -1) {
-        // If this was the host, determine a new host or close the session
+        // If this was the host, use grace period instead of immediately transferring host status
         if (socketId === session.host) {
-          if (session.players.length > 1) {
-            // Find the next player who isn't this one
-            const newHostIndex = (playerIndex + 1) % session.players.length;
-            session.host = session.players[newHostIndex].id;
+          console.log(
+            `Host ${playerName} (${socketId}) temporarily disconnected from session ${sessionId}`
+          );
 
-            // Remove the disconnected player
-            session.players.splice(playerIndex, 1);
+          // Mark the player as disconnected but keep them in the list for now
+          session.players[playerIndex].disconnected = true;
 
-            // Notify all players about the host change
-            io.to(sessionId).emit("host-changed", {
-              newHost: session.host,
-              players: session.players,
-            });
-          } else {
-            // Last player left, delete the session
-            if (session.gameState && session.gameState.timerId) {
-              clearInterval(session.gameState.timerId);
-            }
-            delete sessions[sessionId];
-            delete playerSessions[socketId];
-            return; // Skip the rest for this session
-          }
+          // Store information about the disconnected host with a timeout
+          disconnectedHosts[sessionId] = {
+            hostId: socketId,
+            hostName: playerName,
+            playerIndex: playerIndex,
+            disconnectedAt: Date.now(),
+            timeoutId: setTimeout(() => {
+              // This executes if host doesn't reconnect within grace period
+              console.log(
+                `Host ${playerName} did not reconnect within grace period (${HOST_GRACE_PERIOD}ms)`
+              );
+
+              // Now find the session again (in case it was deleted)
+              const session = sessions[sessionId];
+              if (!session) return;
+
+              // Find the disconnected host player (index might have changed)
+              const playerIndex = session.players.findIndex(
+                (p) => p.id === socketId && p.disconnected
+              );
+
+              if (playerIndex !== -1) {
+                // Actually remove the player now
+                session.players.splice(playerIndex, 1);
+
+                // Transfer host to another player if there are any left
+                if (session.players.length > 0) {
+                  const newHostIndex = 0; // Select first player as new host
+                  session.host = session.players[newHostIndex].id;
+
+                  // Notify all players about the host change
+                  io.to(sessionId).emit("host-changed", {
+                    newHost: session.host,
+                    newHostName: session.players[newHostIndex].name,
+                    players: session.players,
+                  });
+                } else {
+                  // No players left, clean up the session
+                  if (session.gameState && session.gameState.timerId) {
+                    clearInterval(session.gameState.timerId);
+                  }
+                  delete sessions[sessionId];
+                }
+              }
+
+              // Clean up the disconnected host entry
+              delete disconnectedHosts[sessionId];
+            }, HOST_GRACE_PERIOD),
+          };
+
+          // Update players with the disconnected status
+          io.to(sessionId).emit("update-players", session.players);
+
+          // Don't delete the player session mapping yet - keep it for grace period
+          return;
         } else {
-          // Regular player disconnected
+          // For regular players, just remove them immediately
           session.players.splice(playerIndex, 1);
         }
 
@@ -1656,7 +1741,7 @@ function handlePlayerDisconnect(socketId) {
         io.to(sessionId).emit("update-players", session.players);
       }
 
-      // Remove the player session mapping
+      // Remove the player session mapping (for non-hosts)
       delete playerSessions[socketId];
     }
   }
