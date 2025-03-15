@@ -7,13 +7,14 @@ import MusicGuess from "./MusicGuess";
 import ParticipantPanel from "./ParticipantPanel";
 import "../styles/Game.css";
 import DrinkOrJudge from "./DrinkOrJudge";
-
+import Beat4Beat from "./Beat4Beat";
 // Game type constants (must match server constants)
 const GAME_TYPES = {
   NONE: "none",
   NEVER_HAVE_I_EVER: "neverHaveIEver",
   MUSIC_GUESS: "musicGuess",
   DRINK_OR_JUDGE: "drinkOrJudge", // Add this new game type
+  BEAT4BEAT: "beat4Beat", // Add this line
 };
 
 const Game: React.FC = () => {
@@ -309,6 +310,19 @@ const Game: React.FC = () => {
       case GAME_TYPES.DRINK_OR_JUDGE:
         return (
           <DrinkOrJudge
+            sessionId={sessionData.sessionId}
+            players={sessionData.players}
+            isHost={sessionData.isHost}
+            gameState={sessionData.gameState}
+            socket={socket}
+            restartGame={restartGame}
+            leaveSession={confirmLeaveSession}
+            returnToLobby={returnToLobby}
+          />
+        );
+      case GAME_TYPES.BEAT4BEAT:
+        return (
+          <Beat4Beat
             sessionId={sessionData.sessionId}
             players={sessionData.players}
             isHost={sessionData.isHost}

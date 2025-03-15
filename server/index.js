@@ -25,6 +25,7 @@ const GAME_TYPES = {
   NEVER_HAVE_I_EVER: "neverHaveIEver",
   MUSIC_GUESS: "musicGuess",
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
+  BEAT4BEAT: "beat4Beat", // Add this line
 };
 
 // Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
@@ -423,6 +424,15 @@ io.on("connection", (socket) => {
         playerSongs: [],
         votes: {},
         revealedSongs: [],
+      };
+    } else if (gameType === GAME_TYPES.BEAT4BEAT) {
+      session.gameState = {
+        phase: "waiting",
+        buzzOrder: [],
+        roundActive: false,
+        roundNumber: 1,
+        scores: {},
+        winnerId: null,
       };
     }
 

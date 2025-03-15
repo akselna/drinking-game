@@ -130,6 +130,9 @@
     width: 100%;
   }
 }
+.game-button.beat4beat {
+  background-color: #e53935; /* Red */
+}
 
 /* Add this to frontend/src/styles/GameLobby.css */
 
