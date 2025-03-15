@@ -1,10 +1,11 @@
 {
   "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
-    "socket.io": "^4.8.1",
     "axios": "^1.8.3",
-    "dotenv": "^16.4.7"
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.17.1",
+    "recharts": "^2.15.1",
+    "socket.io": "^4.8.1"
   },
   "scripts": {
     "start": "node server/index.js",
@@ -12,5 +13,8 @@
   },
   "engines": {
     "node": "18.x"
+  },
+  "devDependencies": {
+    "@types/recharts": "^1.8.29"
   }
 }

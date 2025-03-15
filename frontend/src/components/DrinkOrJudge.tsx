@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/DrinkOrJudge.css";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 interface DrinkOrJudgeProps {
   sessionId: string;
@@ -38,6 +46,20 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
     "#26890c", // green
     "#ffa602", // yellow
     "#9c27b0", // purple
+  ];
+
+  // Additional colors for pie chart (extend if needed for more players)
+  const pieColors = [
+    "#e21b3c", // red
+    "#1368ce", // blue
+    "#26890c", // green
+    "#ffa602", // yellow
+    "#9c27b0", // purple
+    "#00bcd4", // cyan
+    "#ff9800", // orange
+    "#8bc34a", // light green
+    "#f44336", // red
+    "#2196f3", // blue
   ];
 
   // Set random background color
@@ -131,6 +153,39 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
   const forceResults = () => {
     if (!socket || !isHost) return;
     socket.emit("drink-or-judge-force-results", sessionId);
+  };
+
+  // Prepare pie chart data from results
+  const getPieChartData = () => {
+    if (!results || results.length === 0) return [];
+
+    // Filter out players with 0 votes for cleaner chart
+    return results
+      .filter((player) => player.votes > 0)
+      .map((player) => ({
+        name: player.name,
+        value: player.votes,
+        id: player.id,
+      }));
+  };
+
+  // Generate custom tooltip for pie chart
+  const renderCustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="custom-tooltip">
+          <p className="tooltip-name">{payload[0].name}</p>
+          <p className="tooltip-votes">{`${payload[0].value} vote${
+            payload[0].value !== 1 ? "s" : ""
+          }`}</p>
+          <p className="tooltip-percent">{`(${Math.round(
+            (payload[0].value / results.reduce((sum, r) => sum + r.votes, 0)) *
+              100
+          )}%)`}</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   // Render initial screen (waiting for host to start)
@@ -236,6 +291,9 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
 
   // Render results phase
   if (currentPhase === "results") {
+    const pieData = getPieChartData();
+    const totalVotes = results.reduce((sum, r) => sum + r.votes, 0);
+
     return (
       <div
         className="drink-or-judge results-phase"
@@ -246,6 +304,45 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
         <div className="statement-container">
           <h3 className="statement-text">{currentStatement}</h3>
         </div>
+
+        {/* Vote distribution pie chart */}
+        {totalVotes > 0 && (
+          <div className="chart-container">
+            <h3>Fordeling av stemmer</h3>
+            <div className="pie-chart-wrapper">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
+                    label={({ name, percent }) =>
+                      `${name}: ${Math.round(percent * 100)}%`
+                    }
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={pieColors[index % pieColors.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip content={renderCustomTooltip} />
+                  <Legend
+                    layout="vertical"
+                    align="right"
+                    verticalAlign="middle"
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
 
         <div className="results-container">
           {results.map((result, index) => (

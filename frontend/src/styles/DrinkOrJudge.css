@@ -305,3 +305,65 @@
     max-width: none;
   }
 }
+
+/* Add these styles to your DrinkOrJudge.css file */
+
+.chart-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.chart-container h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+}
+
+.pie-chart-wrapper {
+  margin: 0 auto;
+  max-width: 500px;
+  height: 300px;
+  position: relative;
+}
+
+/* Custom tooltip styles */
+.custom-tooltip {
+  background-color: rgba(0, 0, 0, 0.75);
+  border-radius: 5px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-name {
+  font-weight: bold;
+  margin: 0 0 5px 0;
+  font-size: 16px;
+}
+
+.tooltip-votes {
+  margin: 0;
+  font-size: 14px;
+}
+
+.tooltip-percent {
+  margin: 5px 0 0 0;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Mobile optimizations for the chart */
+@media (max-width: 768px) {
+  .pie-chart-wrapper {
+    height: 250px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pie-chart-wrapper {
+    height: 200px;
+  }
+}
