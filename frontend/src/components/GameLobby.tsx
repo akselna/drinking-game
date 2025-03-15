@@ -80,9 +80,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
         </div>
       )}
 
-      <button onClick={onLeaveSession} className="leave-button">
-        Forlat økten
-      </button>
+      {/* Leave button removed from lobby screen */}
     </div>
   );
 };

@@ -810,6 +810,7 @@ io.on("connection", (socket) => {
         results: [],
         usedStatements: [],
       };
+      shuffleArray(session.gameState.statements);
     } else if (gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
       const defaultStatements = [
         "🎤 Møtt en kjendis",
@@ -993,6 +994,7 @@ io.on("connection", (socket) => {
   });
 
   // Start next statement for Drink or Judge
+
   socket.on("drink-or-judge-next-statement", (sessionId) => {
     const session = sessions[sessionId];
 
@@ -1017,15 +1019,16 @@ io.on("connection", (socket) => {
       (statement) => !session.gameState.usedStatements.includes(statement)
     );
 
-    // If we've used all statements, reset the used statements list
+    // If we've used all statements, reset the used statements list and RESHUFFLE
     if (availableStatements.length === 0) {
       session.gameState.usedStatements = [];
+      // Reshuffle all statements for a new random order
+      shuffleArray(session.gameState.statements);
       availableStatements.push(...session.gameState.statements);
     }
 
-    // Pick a random statement
-    const randomIndex = Math.floor(Math.random() * availableStatements.length);
-    const nextStatement = availableStatements[randomIndex];
+    // Pick the first statement (already randomized by previous shuffle)
+    const nextStatement = availableStatements[0];
 
     // Mark this statement as used
     session.gameState.usedStatements.push(nextStatement);
@@ -1171,6 +1174,7 @@ io.on("connection", (socket) => {
   });
 
   // Music Guess - Start guessing phase
+
   socket.on("music-guess-start-guessing", (sessionId) => {
     const session = sessions[sessionId];
 
@@ -1196,11 +1200,18 @@ io.on("connection", (socket) => {
       return;
     }
 
-    // Shuffle the songs to randomize the order
-    const shuffledSongs = [...session.gameState.playerSongs].sort(
-      () => Math.random() - 0.5
-    );
-    session.gameState.playerSongs = shuffledSongs;
+    // IMPROVED SHUFFLING: Use Fisher-Yates shuffle for more random results
+    const playerSongs = [...session.gameState.playerSongs];
+    for (let i = playerSongs.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [playerSongs[i], playerSongs[j]] = [playerSongs[j], playerSongs[i]];
+    }
+
+    // Log the shuffle for debugging
+    console.log(`Shuffled ${playerSongs.length} songs in session ${sessionId}`);
+
+    // Update the game state with shuffled songs
+    session.gameState.playerSongs = playerSongs;
 
     // Set the first song as current
     session.gameState.currentSongIndex = 0;
