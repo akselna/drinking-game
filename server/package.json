@@ -1,18 +1,18 @@
 {
-  "name": "server",
+  "name": "drinking-game-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server/index.js",
+    "heroku-postbuild": "cd frontend && npm install && npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.8.1",
     "axios": "^1.8.3",
     "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "socket.io": "^4.8.1"
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }

@@ -4,9 +4,12 @@ const { Server } = require("socket.io");
 const cors = require("cors");
 require("dotenv").config();
 const spotifyService = require("./spotify");
+const path = require("path"); // Add this line
 
 const app = express();
 app.use(cors());
+app.use(express.static(path.join(__dirname, "../frontend/build")));
+
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -15,7 +18,10 @@ const io = new Server(server, {
   },
 });
 
-// Store session data
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/build", "index.html"));
+});
+
 let sessions = {};
 
 // Keeps track of which socket belongs to which player
