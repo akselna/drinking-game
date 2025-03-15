@@ -67,6 +67,9 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
   const [songsLeft, setSongsLeft] = useState<number>(0);
   const [songIndex, setSongIndex] = useState<number>(0);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [currentSongOwnerName, setCurrentSongOwnerName] = useState<
+    string | null
+  >(null);
 
   // Audio player
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -180,6 +183,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     const handleResults = (data: any) => {
       setPhase("results");
       setResults(data.results);
+      setCurrentSongOwnerName(data.songOwnerName); // Set the owner's name from server data
 
       // Create a new array with the current song (if it exists) and existing revealed songs
       const updatedSongs = [...revealedSongs];
@@ -200,8 +204,8 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       }
     };
 
-    // Handle next song
     const handleNextSong = (data: any) => {
+      setPhase(data.phase || "guessing"); // Use server-provided phase, fallback to "guessing"
       setCurrentPlayingSong(data.currentSong);
       setSongIndex(data.songIndex);
       setSongsLeft(data.songsLeft);
@@ -209,8 +213,8 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       setVotedFor(null);
       setVotesReceived(0);
       setTimer(60);
+      setCurrentSongOwnerName(null); // Clear the owner name for the next song
 
-      // Reset audio player
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
@@ -766,9 +770,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
 
     case "results":
       // Find the song owner's name
-      const songOwnerName =
-        playerSongs.find((s) => s.id === currentPlayingSong?.id)
-          ?.selectedByName || "Ukjent";
+      const songOwnerName = currentSongOwnerName || "Ukjent"; // Fallback to "Ukjent" only if null
 
       // Count correct guesses
       const correctGuesses = results.filter((r) => r.correct).length;

@@ -777,6 +777,7 @@ io.on("connection", (socket) => {
     session.gameState.currentSongIndex = nextIndex;
     session.gameState.currentSong = session.gameState.playerSongs[nextIndex];
     session.gameState.votes = {};
+    session.gameState.phase = "guessing"; // Explicitly set phase
 
     // Notify all players about the next song
     io.to(sessionId).emit("music-guess-next-song", {
@@ -792,6 +793,7 @@ io.on("connection", (socket) => {
       },
       songIndex: nextIndex,
       songsLeft: session.gameState.playerSongs.length - nextIndex - 1,
+      phase: "guessing", // Include phase in payload
     });
   });
 
