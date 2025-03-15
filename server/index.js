@@ -318,6 +318,310 @@ io.on("connection", (socket) => {
     );
   });
 
+  // Beat4Beat - Set Total Rounds
+  socket.on("beat4beat-set-rounds", (sessionId, totalRounds) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.BEAT4BEAT) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can set the number of rounds
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can set the number of rounds",
+      });
+      return;
+    }
+
+    // Validate rounds (ensure between 3-20)
+    const rounds = Math.min(20, Math.max(3, parseInt(totalRounds) || 10));
+
+    // Update game state
+    session.gameState.totalRounds = rounds;
+
+    // Notify all clients about the updated rounds setting
+    io.to(sessionId).emit("beat4beat-rounds-updated", {
+      totalRounds: rounds,
+    });
+  });
+
+  // Beat4Beat - Start Round
+  socket.on("beat4beat-start-round", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.BEAT4BEAT) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can start a round
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can start the round" });
+      return;
+    }
+
+    // Reset game state for a new round
+    session.gameState.buzzOrder = [];
+    session.gameState.roundActive = true;
+    session.gameState.phase = "buzzing";
+    session.gameState.winnerId = null;
+
+    // Calculate the number of potential buzzers (all players except host)
+    const totalBuzzers = session.players.length - 1;
+
+    // Notify all clients about the round start
+    io.to(sessionId).emit("beat4beat-round-start", {
+      roundActive: true,
+      phase: "buzzing",
+      totalBuzzers: totalBuzzers,
+    });
+  });
+
+  // Beat4Beat - Player Buzz
+  // Update this part in the Beat4Beat - Player Buzz handler
+  socket.on("beat4beat-buzz", (sessionId, timestamp) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.BEAT4BEAT) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Make sure the round is active
+    if (!session.gameState.roundActive) {
+      socket.emit("error", { message: "Round is not active" });
+      return;
+    }
+
+    // Host should not be able to buzz
+    if (socket.id === session.host) {
+      socket.emit("error", { message: "The host cannot buzz" });
+      return;
+    }
+
+    // Check if player has already buzzed
+    const alreadyBuzzed = session.gameState.buzzOrder.some(
+      (item) => item.playerId === socket.id
+    );
+    if (alreadyBuzzed) {
+      return;
+    }
+
+    // Find the player
+    const player = session.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    // Add player to buzz order
+    session.gameState.buzzOrder.push({
+      playerId: socket.id,
+      playerName: player.name,
+      timestamp: timestamp,
+    });
+
+    // Sort by timestamp
+    session.gameState.buzzOrder.sort((a, b) => a.timestamp - b.timestamp);
+
+    // Calculate total buzzers (all players except host)
+    const totalBuzzers = session.players.filter(
+      (p) => p.id !== session.host
+    ).length;
+
+    // Notify all clients about the updated buzz order
+    io.to(sessionId).emit("beat4beat-buzz-update", {
+      buzzOrder: session.gameState.buzzOrder,
+      totalBuzzers: totalBuzzers,
+    });
+
+    // If all players have buzzed, automatically end the round after a short delay
+    if (session.gameState.buzzOrder.length >= totalBuzzers) {
+      // Wait 3 seconds then end the round automatically
+      setTimeout(() => {
+        // Check if the session and round are still active before ending
+        if (sessions[sessionId] && sessions[sessionId].gameState.roundActive) {
+          // Set round as inactive
+          session.gameState.roundActive = false;
+          session.gameState.phase = "results";
+
+          // Determine winner (first to buzz)
+          const winnerId =
+            session.gameState.buzzOrder.length > 0
+              ? session.gameState.buzzOrder[0].playerId
+              : null;
+          session.gameState.winnerId = winnerId;
+
+          // Notify all clients about the round end
+          io.to(sessionId).emit("beat4beat-round-end", {
+            roundActive: false,
+            phase: "results",
+            winnerId: winnerId,
+            buzzOrder: session.gameState.buzzOrder,
+          });
+        }
+      }, 3000);
+    }
+  });
+
+  // Beat4Beat - End Round
+  socket.on("beat4beat-end-round", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.BEAT4BEAT) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can end a round
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can end the round" });
+      return;
+    }
+
+    // Set round as inactive
+    session.gameState.roundActive = false;
+    session.gameState.phase = "results";
+
+    // Determine winner (first to buzz)
+    const winnerId =
+      session.gameState.buzzOrder.length > 0
+        ? session.gameState.buzzOrder[0].playerId
+        : null;
+    session.gameState.winnerId = winnerId;
+
+    // Notify all clients about the round end
+    io.to(sessionId).emit("beat4beat-round-end", {
+      roundActive: false,
+      phase: "results",
+      winnerId: winnerId,
+      buzzOrder: session.gameState.buzzOrder,
+    });
+  });
+
+  // Beat4Beat - Award Points
+  socket.on("beat4beat-award-points", (sessionId, playerId, points) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.BEAT4BEAT) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can award points
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can award points" });
+      return;
+    }
+
+    // Make sure the player exists
+    const player = session.players.find((p) => p.id === playerId);
+    if (!player) {
+      socket.emit("error", { message: "Player not found" });
+      return;
+    }
+
+    // Update scores
+    if (!session.gameState.scores) {
+      session.gameState.scores = {};
+    }
+
+    // If player doesn't have a score yet, initialize to 0
+    if (!session.gameState.scores[playerId]) {
+      session.gameState.scores[playerId] = 0;
+    }
+
+    // Add points
+    session.gameState.scores[playerId] += points;
+
+    // Notify all clients about the updated scores
+    io.to(sessionId).emit("beat4beat-score-update", {
+      scores: session.gameState.scores,
+    });
+  });
+
+  // Beat4Beat - Next Round
+  socket.on("beat4beat-next-round", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.BEAT4BEAT) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can move to the next round
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can start the next round",
+      });
+      return;
+    }
+
+    // Increment round number
+    session.gameState.roundNumber++;
+
+    // Update game progress
+    const totalRounds = session.gameState.totalRounds || 10;
+    session.gameState.gameProgress = Math.min(
+      100,
+      ((session.gameState.roundNumber - 1) / totalRounds) * 100
+    );
+
+    // Reset for next round
+    session.gameState.buzzOrder = [];
+    session.gameState.roundActive = false;
+    session.gameState.phase = "waiting";
+    session.gameState.winnerId = null;
+
+    // Notify all clients about the next round
+    io.to(sessionId).emit("beat4beat-next-round", {
+      roundNumber: session.gameState.roundNumber,
+      phase: "waiting",
+      gameProgress: session.gameState.gameProgress,
+      totalRounds: session.gameState.totalRounds,
+    });
+
+    // Check if game is finished
+    if (session.gameState.roundNumber > session.gameState.totalRounds) {
+      // Game is over - move to final results phase
+      session.gameState.phase = "game-end";
+      io.to(sessionId).emit("beat4beat-game-end", {
+        scores: session.gameState.scores,
+        totalRounds: session.gameState.totalRounds,
+      });
+    }
+  });
+
+  // Beat4Beat - Reset Game
+  socket.on("beat4beat-reset", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.BEAT4BEAT) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can reset the game
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can reset the game" });
+      return;
+    }
+
+    // Reset the game state
+    session.gameState = {
+      phase: "waiting",
+      buzzOrder: [],
+      roundActive: false,
+      roundNumber: 1,
+      scores: {},
+      winnerId: null,
+    };
+
+    // Notify all clients about the reset
+    io.to(sessionId).emit("game-restarted", {
+      gameType: session.gameType,
+      gameState: session.gameState,
+    });
+  });
   // Select a game (host only)
   socket.on("select-game", (sessionId, gameType) => {
     const session = sessions[sessionId];
