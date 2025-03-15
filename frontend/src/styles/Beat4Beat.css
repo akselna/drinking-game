@@ -103,10 +103,62 @@
   font-size: 0.8rem;
 }
 
+.score-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .player-score {
   font-weight: bold;
   min-width: 60px;
   text-align: right;
+}
+
+/* Point adjustment button styles */
+.point-adjustment-controls {
+  display: flex;
+  align-items: center;
+}
+
+.adjust-point-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.adjust-point-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.adjust-point-button.increment {
+  background-color: rgba(76, 175, 80, 0.5);
+}
+
+.adjust-point-button.increment:hover {
+  background-color: rgba(76, 175, 80, 0.7);
+}
+
+.adjust-point-button.decrement {
+  background-color: rgba(244, 67, 54, 0.5);
+}
+
+.adjust-point-button.decrement:hover {
+  background-color: rgba(244, 67, 54, 0.7);
 }
 
 .host-controls {
@@ -161,15 +213,6 @@
 
 .next-button:hover {
   background-color: #0b7dda;
-}
-
-.lobby-button {
-  background-color: #9c27b0;
-  color: white;
-}
-
-.lobby-button:hover {
-  background-color: #7b1fa2;
 }
 
 .player-message {
@@ -344,6 +387,7 @@
 .player-score-item {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 12px;
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
@@ -435,6 +479,11 @@
     width: 100%;
     margin-bottom: 10px;
   }
+
+  .score-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 /* Extra styles for small screens */
@@ -463,4 +512,17 @@
     padding: 12px;
     font-size: 1rem;
   }
+}
+.control-button.end-round-button {
+  background-color: #ff4444; /* Red to indicate ending the round */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.control-button.end-round-button:hover {
+  background-color: #cc0000;
 }

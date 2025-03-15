@@ -66,15 +66,13 @@
 }
 
 .game-buttons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
   margin-top: 16px;
 }
 
 .game-button {
-  flex: 1;
-  min-width: 200px;
   padding: 20px;
   font-size: 18px;
   font-weight: bold;
@@ -82,14 +80,39 @@
   border-radius: 8px;
   cursor: pointer;
   color: white;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
-.never-have-i-ever {
+.game-button.never-have-i-ever {
   background-color: #e21b3c;
 }
 
-.music-guess {
+.game-button.music-guess {
   background-color: #1368ce;
+}
+
+.game-button.drink-or-judge {
+  background-color: #9c27b0; /* Purple */
+}
+
+.game-button.beat4beat {
+  background-color: #e53935; /* Red */
+  position: relative;
+  overflow: hidden;
+}
+
+.game-button.beat4beat::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  bottom: 0;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .waiting-message {
@@ -123,19 +146,10 @@
   }
 
   .game-buttons {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .game-button {
     width: 100%;
   }
-}
-.game-button.beat4beat {
-  background-color: #e53935; /* Red */
-}
-
-/* Add this to frontend/src/styles/GameLobby.css */
-
-.game-button.drink-or-judge {
-  background-color: #9c27b0; /* Purple */
 }

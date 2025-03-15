@@ -82,13 +82,18 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
       setCurrentPhase("results");
       setRoundActive(false);
       setRoundWinner(data.winnerId || null);
+
+      // In the results phase, we'll keep the order of players as is
+      // and won't sort by score until next round
     };
 
     const handleScoreUpdate = (data: any) => {
       setScores(data.scores);
+      // We don't reorder players here, just update their scores
     };
 
     const handleNextRound = (data: any) => {
+      // When moving to the next round, we now sort the scores
       setRoundNumber(data.roundNumber);
       setCurrentPhase("waiting");
       setBuzzOrder([]);
@@ -116,7 +121,7 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
 
   // Handle buzzing
   const handleBuzz = () => {
-    if (!socket || hasBuzzed || !roundActive) return;
+    if (!socket || !roundActive) return;
 
     const timestamp = Date.now();
     setBuzzTime(timestamp);
@@ -144,6 +149,19 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
     socket.emit("beat4beat-award-points", sessionId, playerId, points);
   };
 
+  // Adjust points (increment/decrement) for a player (host only)
+  const adjustPoints = (playerId: string, adjustment: number) => {
+    if (!socket || !isHost) return;
+    const currentPoints = scores[playerId] || 0;
+    const newPoints = Math.max(0, currentPoints + adjustment); // Prevent negative scores
+    socket.emit(
+      "beat4beat-award-points",
+      sessionId,
+      playerId,
+      newPoints - currentPoints
+    );
+  };
+
   // Start next round (host only)
   const nextRound = () => {
     if (!socket || !isHost) return;
@@ -158,7 +176,13 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
 
   // Render player list with buzz order
   const renderPlayerList = () => {
-    return players.map((player) => {
+    // Find the host ID - either directly from socket.hostId or from players with isHost=true
+    const hostId = socket?.hostId || players.find((p) => p.isHost)?.id;
+
+    // Filter out the host from the player list
+    const filteredPlayers = players.filter((player) => player.id !== hostId);
+
+    return filteredPlayers.map((player) => {
       const buzzPosition = buzzOrder.findIndex(
         (item) => item.playerId === player.id
       );
@@ -179,7 +203,34 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
             {hasPlayerBuzzed && (
               <span className="buzz-position">#{buzzPosition + 1}</span>
             )}
+          </div>
+
+          <div className="score-controls">
+            {isHost && (
+              <div className="point-adjustment-controls">
+                <button
+                  onClick={() => adjustPoints(player.id, 1)}
+                  className="adjust-point-button increment"
+                  title="Increase points"
+                >
+                  +
+                </button>
+              </div>
+            )}
+
             <span className="player-score">{playerScore} pts</span>
+
+            {isHost && (
+              <div className="point-adjustment-controls">
+                <button
+                  onClick={() => adjustPoints(player.id, -1)}
+                  className="adjust-point-button decrement"
+                  title="Decrease points"
+                >
+                  -
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Only show award buttons for the host during results phase */}
@@ -270,15 +321,14 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
 
         {!isHost ? (
           <div className="buzz-container">
-            {!hasBuzzed ? (
-              <button
-                onClick={handleBuzz}
-                className="buzz-button"
-                disabled={!roundActive}
-              >
-                BUZZ!
-              </button>
-            ) : (
+            <button
+              onClick={handleBuzz}
+              className="buzz-button"
+              disabled={!roundActive}
+            >
+              BUZZ!
+            </button>
+            {hasBuzzed && (
               <div className="buzz-confirmation">
                 <div className="confirmation-icon">✓</div>
                 <p>{waitingMessage}</p>
@@ -307,7 +357,10 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
                 <p>No one has buzzed yet</p>
               )}
             </div>
-            <button onClick={endRound} className="control-button end-button">
+            <button
+              onClick={endRound}
+              className="control-button end-round-button"
+            >
               End Round
             </button>
           </div>
@@ -360,15 +413,41 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
           <h3>Current Scores</h3>
           <div className="player-list score-list">
             {players
-              .sort((a, b) => (scores[b.id] || 0) - (scores[a.id] || 0))
+              // Find the host ID - either directly from socket.hostId or from players with isHost=true
+              .filter((player) => {
+                const hostId =
+                  socket?.hostId || players.find((p) => p.isHost)?.id;
+                return player.id !== hostId;
+              })
+              // Don't sort by score while adjusting - preserve original order
               .map((player) => (
                 <div key={player.id} className="player-score-item">
                   <span className="player-name">
                     {player.name} {player.id === socket?.id ? " (You)" : ""}
                   </span>
-                  <span className="player-score">
-                    {scores[player.id] || 0} pts
-                  </span>
+                  <div className="score-controls">
+                    {isHost && (
+                      <button
+                        onClick={() => adjustPoints(player.id, 1)}
+                        className="adjust-point-button increment"
+                        title="Increase points"
+                      >
+                        +
+                      </button>
+                    )}
+                    <span className="player-score">
+                      {scores[player.id] || 0} pts
+                    </span>
+                    {isHost && (
+                      <button
+                        onClick={() => adjustPoints(player.id, -1)}
+                        className="adjust-point-button decrement"
+                        title="Decrease points"
+                      >
+                        -
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
           </div>
@@ -378,12 +457,6 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
           <div className="host-controls">
             <button onClick={nextRound} className="control-button next-button">
               Next Round
-            </button>
-            <button
-              onClick={returnToLobby}
-              className="control-button lobby-button"
-            >
-              Return to Lobby
             </button>
           </div>
         )}
