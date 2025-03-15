@@ -258,27 +258,38 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
         </div>
 
         <div className="results-container">
-          {results.map((result, index) => (
-            <div
-              key={result.id}
-              className={`result-item ${index === 0 ? "winner" : ""} ${
-                result.id === socket?.id ? "current-user" : ""
-              }`}
-            >
-              <div className="result-name">
-                {result.name} {result.id === socket?.id ? "(Deg)" : ""}
-              </div>
-              <div className="result-votes">
-                <span className="vote-count">{result.votes}</span>
-                <span className="vote-text">stemmer</span>
-              </div>
-              {index === 0 && result.votes > 0 && (
-                <div className="drinking-instruction">
-                  Drikk {result.votes} slurker!
+          {results.map((result, index) => {
+            // Calculate drinks: 2 times the number of votes
+            const drinkAmount = result.votes * 2;
+
+            return (
+              <div
+                key={result.id}
+                className={`result-item ${index === 0 ? "winner" : ""} ${
+                  result.id === socket?.id ? "current-user" : ""
+                }`}
+              >
+                <div className="result-name">
+                  {result.name} {result.id === socket?.id ? "(Deg)" : ""}
                 </div>
-              )}
-            </div>
-          ))}
+                <div className="result-votes">
+                  <span className="vote-count">{result.votes}</span>
+                  <span className="vote-text">stemmer</span>
+                </div>
+
+                {/* Show drinking instruction for anyone with votes */}
+                {result.votes > 0 && (
+                  <div
+                    className={`drinking-instruction ${
+                      index === 0 ? "winner-drink" : ""
+                    }`}
+                  >
+                    Drikk {drinkAmount} slurker!
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {isHost && (

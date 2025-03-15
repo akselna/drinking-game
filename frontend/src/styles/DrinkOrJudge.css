@@ -235,11 +235,13 @@
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   position: relative;
+  margin-bottom: 24px; /* Add more margin to make room for drinking instruction */
+  padding-bottom: 28px; /* Extra padding at bottom for the instruction */
 }
 
 .result-item.winner {
   background-color: rgba(255, 215, 0, 0.3);
-  padding: 20px 16px;
+  border-left: 4px solid gold;
 }
 
 .result-item.current-user {
@@ -269,16 +271,23 @@
 
 .drinking-instruction {
   position: absolute;
-  top: -14px;
+  bottom: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #e21b3c;
+  background-color: #e21b3c; /* Red for standard */
   color: white;
   padding: 4px 12px;
   border-radius: 12px;
   font-weight: bold;
   font-size: 0.9rem;
   white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.drinking-instruction.winner-drink {
+  background-color: #ffa602; /* Gold/yellow for winner */
+  font-size: 1rem;
+  padding: 5px 14px;
 }
 
 /* Responsive design */
@@ -303,6 +312,15 @@
   .leave-button {
     width: 100%;
     max-width: none;
+  }
+  .drinking-instruction {
+    font-size: 0.8rem;
+    padding: 3px 10px;
+  }
+
+  .drinking-instruction.winner-drink {
+    font-size: 0.9rem;
+    padding: 4px 12px;
   }
 }
 
