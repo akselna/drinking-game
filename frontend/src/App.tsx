@@ -12,8 +12,11 @@ import "./App.css";
 import { SocketContext } from "./context/SocketContext";
 import "./styles/global.css";
 
+// Determine the server URL dynamically
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || window.location.origin;
+
 // Initialize socket connection with reconnection settings
-const socket: Socket = io("http://localhost:3001", {
+const socket: Socket = io(SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
