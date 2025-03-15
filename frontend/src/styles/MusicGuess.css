@@ -564,3 +564,992 @@
   text-align: left;
   color: white;
 }
+
+.players-vote-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.player-vote-button {
+  padding: 16px;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-vote-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.player-vote-button.selected {
+  background-color: #6200ea;
+  box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.5);
+  transform: scale(1.05);
+}
+
+.vote-submit-button {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 16px auto;
+  padding: 16px;
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.vote-submit-button:disabled {
+  background-color: rgba(98, 0, 234, 0.5);
+  cursor: not-allowed;
+}
+
+.vote-submit-button:hover:not(:disabled) {
+  background-color: #7c4dff;
+}
+
+.votes-progress {
+  height: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 8px 0 16px;
+}
+
+.votes-bar {
+  height: 100%;
+  background-color: #6200ea;
+  transition: width 0.3s ease;
+}
+
+.votes-count {
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.force-button {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 20px auto;
+  padding: 16px;
+  background-color: #e21b3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.force-button:disabled {
+  background-color: rgba(226, 27, 60, 0.5);
+  cursor: not-allowed;
+}
+
+.force-button:hover:not(:disabled) {
+  background-color: #f43f5e;
+  transform: translateY(-2px);
+}
+
+/* ===== Song Selection UI Improvements ===== */
+
+.search-result {
+  position: relative;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.search-result:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.search-result.selected {
+  background-color: rgba(98, 0, 234, 0.3);
+  border: 2px solid rgba(98, 0, 234, 0.8);
+}
+
+.song-image {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #333;
+}
+
+.song-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.song-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.song-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-artist {
+  font-size: 14px;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.song-confirm-container {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.song-confirm-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+.song-confirm-button:hover {
+  background-color: #45a049;
+  transform: scale(1.1);
+}
+
+.song-submit-button {
+  width: 100%;
+  padding: 14px;
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 16px;
+  transition: all 0.2s ease;
+}
+
+.song-submit-button:hover {
+  background-color: #7c4dff;
+  transform: translateY(-2px);
+}
+
+.search-error {
+  padding: 12px;
+  background-color: rgba(255, 87, 87, 0.2);
+  border-radius: 8px;
+  margin: 12px 0;
+  color: #ff5757;
+}
+
+.search-spinner {
+  text-align: center;
+  padding: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 20px;
+  background-color: #444;
+}
+
+/* Make touch targets larger for mobile */
+@media (max-width: 768px) {
+  .player-vote-button {
+    padding: 16px 12px;
+    min-height: 70px;
+    font-size: 16px;
+  }
+
+  .search-result {
+    padding: 16px;
+  }
+
+  .song-confirm-button {
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+  }
+
+  .vote-submit-button,
+  .song-submit-button,
+  .force-button {
+    padding: 16px;
+    font-size: 18px;
+  }
+
+  .search-input {
+    height: 48px;
+    font-size: 16px;
+  }
+
+  /* Improve scrolling experience on touch devices */
+  .search-results {
+    -webkit-overflow-scrolling: touch;
+    padding: 8px;
+  }
+}
+
+/* Results Phase Styles */
+.music-guess.results-phase {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  color: white;
+}
+
+.music-guess.results-phase h2 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 12px;
+}
+
+/* Song Information */
+.result-song-container {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.result-song-details {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.result-album-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  margin-right: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  object-fit: cover;
+}
+
+.result-song-text {
+  flex: 1;
+}
+
+.result-song-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.result-song-artist {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Song Owner Card */
+.song-owner-card {
+  position: relative;
+  background-color: rgba(98, 0, 234, 0.1);
+  border: 2px solid rgba(98, 0, 234, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.song-owner-crown {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #ffc107;
+  color: #000;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.song-owner-label {
+  font-size: 14px;
+  margin-bottom: 4px;
+  opacity: 0.8;
+}
+
+.song-owner-name {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.song-owner-punishment {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.punishment-drinks {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.drink-count {
+  font-size: 22px;
+  color: #ff5722;
+}
+
+.punishment-reason {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Voting Results */
+.voting-results-container {
+  margin-bottom: 24px;
+}
+
+.voting-results-title {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.title-icon {
+  margin-right: 8px;
+}
+
+.votes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vote-result-card {
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 16px;
+  transition: transform 0.2s ease;
+}
+
+.vote-result-card:hover {
+  transform: translateY(-2px);
+}
+
+.vote-result-card.correct {
+  background-color: rgba(76, 175, 80, 0.2);
+  border-left: 4px solid #4caf50;
+}
+
+.vote-result-card.incorrect {
+  background-color: rgba(244, 67, 54, 0.2);
+  border-left: 4px solid #f44336;
+}
+
+.vote-players {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.voter-name {
+  font-weight: bold;
+}
+
+.vote-arrow {
+  margin: 0 8px;
+  opacity: 0.7;
+}
+
+.voted-for-name {
+  font-weight: bold;
+}
+
+.vote-outcome {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.outcome-icon {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.vote-result-card.correct .outcome-icon {
+  color: #4caf50;
+}
+
+.vote-result-card.incorrect .outcome-icon {
+  color: #f44336;
+}
+
+.outcome-text {
+  font-weight: bold;
+  margin-right: 12px;
+}
+
+.drink-consequence {
+  margin-left: auto;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.vote-result-card.correct .drink-consequence {
+  background-color: rgba(76, 175, 80, 0.2);
+}
+
+.vote-result-card.incorrect .drink-consequence {
+  background-color: rgba(244, 67, 54, 0.2);
+}
+
+.drink-highlight {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Host Controls */
+.next-song-button {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 20px auto;
+  padding: 16px;
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.next-song-button:hover {
+  background-color: #7c4dff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.button-arrow {
+  margin-left: 8px;
+}
+
+.all-songs-played {
+  text-align: center;
+  font-size: 18px;
+  margin-bottom: 16px;
+  font-weight: bold;
+}
+
+.end-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.restart-button,
+.lobby-button {
+  flex: 1;
+  padding: 14px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.restart-button {
+  background-color: #6200ea;
+  color: white;
+}
+
+.lobby-button {
+  background-color: #1368ce;
+  color: white;
+}
+
+.button-icon {
+  margin-right: 8px;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .vote-players {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .vote-arrow {
+    font-size: 18px;
+    transform: rotate(90deg);
+    margin: 4px 0;
+  }
+
+  .vote-outcome {
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .outcome-text {
+    margin-right: 4px;
+  }
+
+  .drink-consequence {
+    margin-top: 4px;
+    width: 100%;
+    text-align: center;
+    padding: 8px;
+  }
+
+  .end-buttons {
+    flex-direction: column;
+  }
+
+  .song-owner-punishment {
+    padding: 8px;
+  }
+
+  .result-album-image {
+    width: 60px;
+    height: 60px;
+  }
+
+  .result-song-title {
+    font-size: 16px;
+  }
+}
+
+/* For very small screens */
+@media (max-width: 360px) {
+  .result-song-details {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .result-album-image {
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+}
+
+/* Add these styles to frontend/src/styles/MusicGuess.css */
+
+/* Guessing Phase - Improved UI */
+.music-guess.guessing-phase {
+  padding: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  background-color: #1e1e1e;
+  border-radius: 12px;
+  color: white;
+}
+
+/* Song Progress Bar */
+.song-progress-bar {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.song-progress-fill {
+  height: 100%;
+  background-color: #1db954; /* Spotify green */
+  transition: width 0.5s ease;
+}
+
+/* Centered Song Info */
+.song-info-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+/* Album Cover */
+.album-cover-container {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+.album-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Spotify Play Button - Always visible */
+.spotify-play-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.play-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: scale(1);
+  transition: transform 0.2s ease;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.play-icon:hover {
+  transform: scale(1.1);
+}
+
+.play-icon:active {
+  transform: scale(0.95);
+}
+
+/* Album Placeholder */
+.album-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.music-icon {
+  font-size: 64px;
+}
+
+/* Song Details */
+.song-details-centered {
+  text-align: center;
+  padding: 0 16px;
+}
+
+.song-title {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.song-artist {
+  font-size: 18px;
+  opacity: 0.8;
+  margin-bottom: 0;
+}
+
+/* Audio Player */
+.audio-player {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.play-preview-button {
+  background-color: #1db954; /* Spotify green */
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.play-preview-button:hover {
+  background-color: #1ed760;
+  transform: translateY(-2px);
+}
+
+.play-preview-button.playing {
+  background-color: #333;
+}
+
+/* Timer */
+.timer-container {
+  margin-top: 12px;
+}
+
+.timer-bar {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.timer-progress {
+  height: 100%;
+  background-color: #ff5722;
+  transition: width 1s linear;
+}
+
+.timer-text {
+  font-size: 12px;
+  text-align: right;
+}
+
+/* Voting Section */
+.voting-section {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.voting-prompt {
+  font-size: 18px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Improved voting grid */
+.players-vote-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.player-vote-button {
+  padding: 14px 10px;
+  font-size: 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-vote-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.player-vote-button.selected {
+  background-color: #6200ea;
+  box-shadow: 0 0 0 2px rgba(98, 0, 234, 0.5);
+}
+
+.vote-submit-button {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+  padding: 14px;
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.vote-submit-button:disabled {
+  background-color: rgba(98, 0, 234, 0.5);
+  cursor: not-allowed;
+}
+
+.vote-submit-button:hover:not(:disabled) {
+  background-color: #7c4dff;
+}
+
+/* Vote submitted feedback */
+.vote-submitted {
+  text-align: center;
+  padding: 16px;
+  background-color: rgba(98, 0, 234, 0.1);
+  border-radius: 8px;
+}
+
+.votes-progress {
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.votes-bar {
+  height: 100%;
+  background-color: #6200ea;
+  transition: width 0.3s ease;
+}
+
+.votes-count {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+/* Host Controls */
+.force-button {
+  display: block;
+  width: 100%;
+  max-width: 240px;
+  margin: 20px auto 0;
+  padding: 12px;
+  background-color: #e21b3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.force-button:disabled {
+  background-color: rgba(226, 27, 60, 0.5);
+  cursor: not-allowed;
+}
+
+.force-button:hover:not(:disabled) {
+  background-color: #f43f5e;
+}
+
+/* Game Controls */
+.game-controls {
+  text-align: center;
+}
+
+.leave-button {
+  padding: 10px 16px;
+  background-color: rgba(207, 102, 121, 0.1);
+  color: #cf6679;
+  border: 1px solid #cf6679;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 480px) {
+  .album-cover-container {
+    width: 180px;
+    height: 180px;
+  }
+
+  .song-title {
+    font-size: 20px;
+  }
+
+  .song-artist {
+    font-size: 16px;
+  }
+
+  .players-vote-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .player-vote-button {
+    padding: 12px 8px;
+    font-size: 14px;
+    min-height: 44px;
+  }
+
+  .voting-section {
+    padding: 16px;
+  }
+
+  .voting-prompt {
+    font-size: 16px;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 350px) {
+  .album-cover-container {
+    width: 150px;
+    height: 150px;
+  }
+
+  .players-vote-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -503,17 +503,20 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
             <div className="song-selection-container">
               <div className="search-container">
                 <div className="search-instruction">
-                  Search for a song that fits the theme
+                  Søk etter en sang som passer til temaet
                 </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => searchSongs(e.target.value)}
-                  placeholder="Search for songs..."
+                  placeholder="Søk etter sanger..."
                   className="search-input"
                 />
 
                 {isSearching && <div className="search-spinner">Søker...</div>}
+                {searchError && (
+                  <div className="search-error">{searchError}</div>
+                )}
 
                 {searchResults.length > 0 && (
                   <div className="search-results">
@@ -536,6 +539,22 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
                           <div className="song-title">{song.title}</div>
                           <div className="song-artist">{song.artist}</div>
                         </div>
+
+                        {/* Add confirm button that appears when this song is selected */}
+                        {selectedSong?.id === song.id && (
+                          <div className="song-confirm-container">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent triggering the outer div's onClick
+                                submitSong();
+                              }}
+                              className="song-confirm-button"
+                              aria-label="Bekreft valg av sang"
+                            >
+                              ✓
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -599,203 +618,269 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       );
 
     case "guessing":
+      // Calculate progress percentage
+      const progressPercentage = (songIndex / playerSongs.length) * 100;
+
       return (
         <div className="music-guess guessing-phase">
-          <h2>Hvem valgte denne sangen?</h2>
-
           {currentPlayingSong && (
-            <div className="current-song">
-              <div className="song-info">
-                <div className="song-image">
+            <div className="current-song-container">
+              {/* Progress bar */}
+              <div className="song-progress-bar">
+                <div
+                  className="song-progress-fill"
+                  style={{ width: `${progressPercentage}%` }}
+                ></div>
+              </div>
+
+              {/* Song info with centered album art */}
+              <div className="song-info-centered">
+                <div className="album-cover-container">
                   {currentPlayingSong.albumImageUrl ? (
-                    <img src={currentPlayingSong.albumImageUrl} alt="Album" />
+                    <>
+                      <img
+                        src={currentPlayingSong.albumImageUrl}
+                        alt="Album"
+                        className="album-cover"
+                      />
+                      {/* Always visible Spotify play button */}
+                      <a
+                        href={`spotify:track:${currentPlayingSong.id}`}
+                        className="spotify-play-button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          // Try to open in Spotify app first
+                          window.location.href = `spotify:track:${currentPlayingSong.id}`;
+
+                          // Fallback to web version after a short delay
+                          setTimeout(() => {
+                            window.open(
+                              `https://open.spotify.com/track/${currentPlayingSong.id}`,
+                              "_blank"
+                            );
+                          }, 500);
+                        }}
+                      >
+                        <div className="play-icon">
+                          <svg viewBox="0 0 24 24" width="48" height="48">
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="12"
+                              fill="rgba(0,0,0,0.7)"
+                            />
+                            <path
+                              d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18a1 1 0 0 0 0-1.69L9.54 5.98A.998.998 0 0 0 8 6.82z"
+                              fill="#1DB954"
+                            />
+                          </svg>
+                        </div>
+                      </a>
+                    </>
                   ) : (
-                    <div className="no-image">🎵</div>
+                    <div className="album-placeholder">
+                      <span className="music-icon">🎵</span>
+                    </div>
                   )}
                 </div>
-                <div className="song-details">
+
+                <div className="song-details-centered">
                   <h3 className="song-title">{currentPlayingSong.title}</h3>
                   <p className="song-artist">{currentPlayingSong.artist}</p>
                 </div>
               </div>
 
-              <div className="audio-player">
-                <audio
-                  ref={audioRef}
-                  src={currentPlayingSong.previewUrl || ""}
-                  preload="auto"
-                />
-                <button
-                  onClick={togglePlay}
-                  className={`play-button ${isPlaying ? "playing" : ""}`}
-                  disabled={!currentPlayingSong.previewUrl}
-                >
-                  {isPlaying ? "⏸ Pause" : "▶️ Spill av"}
-                </button>
+              {/* Voting section - with improved mobile UI */}
+              <div className="voting-section">
+                {!hasVoted ? (
+                  <div className="voting-container">
+                    <div className="voting-prompt">Who picked this song?</div>
+                    <div className="players-vote-grid">
+                      {players
+                        .filter((player) => player.id !== socket?.id) // Can't vote for yourself
+                        .map((player) => (
+                          <button
+                            key={player.id}
+                            className={`player-vote-button ${
+                              votedFor === player.id ? "selected" : ""
+                            }`}
+                            onClick={() => setVotedFor(player.id)}
+                          >
+                            {player.name}
+                          </button>
+                        ))}
+                    </div>
 
-                {!currentPlayingSong.previewUrl && (
-                  <p className="no-preview">
-                    Forhåndsvisning ikke tilgjengelig
-                  </p>
-                )}
-
-                {timerActive && (
-                  <div className="timer-container">
-                    <div className="timer-bar">
+                    <button
+                      onClick={submitVote}
+                      className="vote-submit-button"
+                      disabled={!votedFor}
+                    >
+                      Submit Vote
+                    </button>
+                  </div>
+                ) : (
+                  <div className="vote-submitted">
+                    <p>Your vote has been submitted!</p>
+                    <p className="votes-count">
+                      {votesReceived} of {players.length - 1} have voted
+                    </p>
+                    <div className="votes-progress">
                       <div
-                        className="timer-progress"
-                        style={{ width: `${(timer / 60) * 100}%` }}
+                        className="votes-bar"
+                        style={{
+                          width: `${
+                            (votesReceived / (players.length - 1)) * 100
+                          }%`,
+                        }}
                       ></div>
                     </div>
-                    <div className="timer-text">{timer} sekunder igjen</div>
+                  </div>
+                )}
+
+                {/* Host controls */}
+                {isHost && (
+                  <div className="host-controls">
+                    <button
+                      onClick={forceShowResults}
+                      className="force-button"
+                      disabled={votesReceived === 0}
+                    >
+                      Show Results{" "}
+                      {votesReceived > 0 &&
+                        `(${votesReceived}/${players.length - 1})`}
+                    </button>
                   </div>
                 )}
               </div>
-
-              {isPlaying && !hasVoted ? (
-                <div className="voting-container">
-                  <h3>Hvem tror du valgte denne sangen?</h3>
-                  <div className="players-grid">
-                    {players
-                      .filter((player) => player.id !== socket?.id) // Can't vote for yourself
-                      .map((player) => (
-                        <button
-                          key={player.id}
-                          className={`player-button ${
-                            votedFor === player.id ? "selected" : ""
-                          }`}
-                          onClick={() => setVotedFor(player.id)}
-                        >
-                          {player.name}
-                        </button>
-                      ))}
-                  </div>
-
-                  <button
-                    onClick={submitVote}
-                    className="vote-button"
-                    disabled={!votedFor}
-                  >
-                    Send inn stemme
-                  </button>
-                </div>
-              ) : hasVoted ? (
-                <div className="vote-submitted">
-                  <p>Din stemme er registrert!</p>
-                  <p className="votes-count">
-                    {votesReceived} av {players.length - 1} har stemt
-                  </p>
-                  <div className="votes-progress">
-                    <div
-                      className="votes-bar"
-                      style={{
-                        width: `${
-                          (votesReceived / (players.length - 1)) * 100
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              ) : null}
-
-              <div className="song-progress">
-                <p>
-                  Sang {songIndex + 1} av {playerSongs.length}
-                </p>
-                <p>{songsLeft} sanger gjenstår</p>
-              </div>
-
-              {isHost && (
-                <div className="host-controls">
-                  <button onClick={forceShowResults} className="force-button">
-                    Vis resultater
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
           <div className="game-controls">
             <button className="leave-button" onClick={leaveSession}>
-              Forlat økt
+              Leave Session
             </button>
           </div>
         </div>
       );
 
     case "results":
+      // Find the song owner's name
+      const songOwnerName =
+        playerSongs.find((s) => s.id === currentPlayingSong?.id)
+          ?.selectedByName || "Ukjent";
+
+      // Count correct guesses
+      const correctGuesses = results.filter((r) => r.correct).length;
+
       return (
         <div className="music-guess results-phase">
           <h2>Resultat</h2>
 
-          <div className="result-song-info">
-            <h3>Sangen var valgt av:</h3>
-            <div className="song-owner">
-              <span className="owner-name">
-                {results.length > 0 &&
-                results[0]?.votedForId === currentPlayingSong?.selectedBy
-                  ? results[0]?.votedForName
-                  : playerSongs.find((s) => s.id === currentPlayingSong?.id)
-                      ?.selectedByName || "Ukjent"}
-              </span>
+          {/* Song Information */}
+          <div className="result-song-container">
+            <div className="result-song-details">
+              {currentPlayingSong?.albumImageUrl && (
+                <img
+                  src={currentPlayingSong.albumImageUrl}
+                  alt="Album"
+                  className="result-album-image"
+                />
+              )}
+              <div className="result-song-text">
+                <div className="result-song-title">
+                  {currentPlayingSong?.title}
+                </div>
+                <div className="result-song-artist">
+                  {currentPlayingSong?.artist}
+                </div>
+              </div>
+            </div>
+
+            {/* Song Owner Section */}
+            <div className="song-owner-card">
+              <div className="song-owner-crown">👑</div>
+              <div className="song-owner-label">Valgt av:</div>
+              <div className="song-owner-name">{songOwnerName}</div>
+
+              {/* Drinking punishment for song owner */}
+              <div className="song-owner-punishment">
+                <div className="punishment-drinks">
+                  {correctGuesses > 0 ? (
+                    <>
+                      <span className="drink-count">{correctGuesses * 2}</span>{" "}
+                      slurker
+                    </>
+                  ) : (
+                    "Ingen straff"
+                  )}
+                </div>
+                <div className="punishment-reason">
+                  (2 slurker for hver riktig gjetning)
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="voting-results">
-            <h3>Slik stemte dere:</h3>
+          {/* Voting Results */}
+          <div className="voting-results-container">
+            <h3 className="voting-results-title">
+              <span className="title-icon">🗳️</span> Avstemningsresultater
+            </h3>
+
             <div className="votes-list">
               {results.map((result, index) => (
                 <div
                   key={index}
-                  className={`vote-item ${
+                  className={`vote-result-card ${
                     result.correct ? "correct" : "incorrect"
                   }`}
                 >
-                  <div className="voter">
-                    <span className="voter-name">{result.voterName}</span>{" "}
-                    stemte på
+                  <div className="vote-players">
+                    <div className="voter-name">{result.voterName}</div>
+                    <div className="vote-arrow">→</div>
+                    <div className="voted-for-name">{result.votedForName}</div>
                   </div>
-                  <div className="vote-target">
-                    <span className="target-name">{result.votedForName}</span>
-                  </div>
-                  <div className="vote-result">
-                    {result.correct ? "✓ Riktig!" : "✗ Feil!"}
-                  </div>
-                  <div className="drinking-rule">
-                    {result.correct
-                      ? "Riktig! Ingen straff."
-                      : "2 slurker for feil gjetning!"}
+
+                  <div className="vote-outcome">
+                    <div className="outcome-icon">
+                      {result.correct ? "✓" : "✗"}
+                    </div>
+                    <div className="outcome-text">
+                      {result.correct ? "Riktig!" : "Feil!"}
+                    </div>
+                    <div className="drink-consequence">
+                      {result.correct ? (
+                        "Del ut 2 slurker"
+                      ) : (
+                        <>
+                          <span className="drink-highlight">2</span> slurker!
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="song-owner-punishment">
-            <h3>Straff for sangvelgeren:</h3>
-            <p>
-              {playerSongs.find((s) => s.id === currentPlayingSong?.id)
-                ?.selectedByName || "Ukjent"}
-              får {results.filter((r) => r.correct).length * 2} slurker! (2
-              slurker for hver riktig gjetning)
-            </p>
-          </div>
-
+          {/* Host controls */}
           {isHost && (
             <div className="host-controls">
               {songsLeft > 0 ? (
-                <button onClick={nextSong} className="next-button">
-                  Neste sang
+                <button onClick={nextSong} className="next-song-button">
+                  Neste sang <span className="button-arrow">→</span>
                 </button>
               ) : (
                 <div className="game-end-options">
-                  <p>Alle sanger er spilt!</p>
+                  <p className="all-songs-played">🎉 Alle sanger er spilt!</p>
                   <div className="end-buttons">
                     <button onClick={restartGame} className="restart-button">
-                      Spill igjen
+                      <span className="button-icon">🔄</span> Spill igjen
                     </button>
                     <button onClick={returnToLobby} className="lobby-button">
-                      Tilbake til hovedmenyen
+                      <span className="button-icon">🏠</span> Tilbake til
+                      hovedmenyen
                     </button>
                   </div>
                 </div>
@@ -803,12 +888,14 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
             </div>
           )}
 
+          {/* Non-host waiting message */}
           {!isHost && songsLeft === 0 && (
             <div className="waiting-message">
-              <p>Alle sanger er spilt! Venter på vertens valg...</p>
+              <p>🎉 Alle sanger er spilt! Venter på vertens valg...</p>
             </div>
           )}
 
+          {/* Leave button */}
           <div className="game-controls">
             <button className="leave-button" onClick={leaveSession}>
               Forlat økt
