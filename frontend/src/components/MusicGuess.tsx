@@ -314,7 +314,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     if (!socket || !isHost || !topic.trim()) return;
     const fullTopic = topic.startsWith("Music that")
       ? topic
-      : `Music that ${topic}`;
+      : `Musikk som ${topic}`;
     socket.emit("music-guess-set-topic", sessionId, fullTopic);
   };
 
