@@ -23,6 +23,16 @@ interface MusicGuessProps {
   returnToLobby: () => void;
 }
 
+interface SpotifyTrack {
+  id: string;
+  title: string;
+  artist: string;
+  previewUrl: string | null;
+  albumImageUrl: string | null;
+  spotifyUrl?: string; // Optional field that might be in the API response
+  popularity?: number; // Optional field that might be in the API response
+}
+
 const MusicGuess: React.FC<MusicGuessProps> = ({
   sessionId,
   players,
@@ -291,6 +301,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
   };
 
   // Search for songs
+  // Search for songs using Spotify API
   const searchSongs = (query: string) => {
     setSearchQuery(query);
 
@@ -302,51 +313,63 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     // Set a new timer to prevent too many requests
     if (query.trim().length > 2) {
       setIsSearching(true);
-      const timer = setTimeout(() => {
-        // Simulate API call for now
-        // In a real implementation, you would call a backend API to search Spotify
-        const mockResults = [
-          {
-            id: "track1",
-            title: "Dancing Queen",
-            artist: "ABBA",
-            previewUrl:
-              "https://p.scdn.co/mp3-preview/cde05d76d0e535a357ea6b5b3263da6eba72541a",
-            albumImageUrl:
-              "https://i.scdn.co/image/ab67616d0000b273b0ce4261c219f5cabb15a3f6",
-          },
-          {
-            id: "track2",
-            title: "Stayin' Alive",
-            artist: "Bee Gees",
-            previewUrl:
-              "https://p.scdn.co/mp3-preview/1dfcd8efbb5e4c2f5b6f9f8a73796aad7933de70",
-            albumImageUrl:
-              "https://i.scdn.co/image/ab67616d0000b273e1ef7a5c1b57037e00f91e26",
-          },
-          {
-            id: "track3",
-            title: "Get Lucky",
-            artist: "Daft Punk",
-            previewUrl:
-              "https://p.scdn.co/mp3-preview/9b8c365343b8a7568e312ec13a32cbb17b6a0cc7",
-            albumImageUrl:
-              "https://i.scdn.co/image/ab67616d0000b273b05b0de1c3c579b18e3dd84f",
-          },
-          {
-            id: "track4",
-            title: `${query}`,
-            artist: "Custom Result",
-            previewUrl:
-              "https://p.scdn.co/mp3-preview/9b8c365343b8a7568e312ec13a32cbb17b6a0cc7",
-            albumImageUrl:
-              "https://i.scdn.co/image/ab67616d0000b273b05b0de1c3c579b18e3dd84f",
-          },
-        ];
+      const timer = setTimeout(async () => {
+        try {
+          // Call our server endpoint to search Spotify
+          const response = await fetch(
+            `/api/spotify/search?q=${encodeURIComponent(query)}`
+          );
 
-        setSearchResults(mockResults);
-        setIsSearching(false);
-      }, 500);
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Failed to search for songs");
+          }
+
+          const data = await response.json();
+
+          if (data.tracks && Array.isArray(data.tracks)) {
+            // Filter out songs without preview URLs if needed
+            const tracksWithPreviews = data.tracks.filter(
+              (track: SpotifyTrack) => track.previewUrl
+            );
+
+            setSearchResults(
+              tracksWithPreviews.length > 0 ? tracksWithPreviews : data.tracks
+            );
+          } else {
+            // Handle case where no tracks are returned
+            setSearchResults([]);
+          }
+        } catch (error) {
+          console.error("Error searching songs:", error);
+
+          // Fallback to some mock data if the API request fails
+          const fallbackResults = [
+            {
+              id: "fallback1",
+              title: "Dancing Queen",
+              artist: "ABBA",
+              previewUrl:
+                "https://p.scdn.co/mp3-preview/cde05d76d0e535a357ea6b5b3263da6eba72541a",
+              albumImageUrl:
+                "https://i.scdn.co/image/ab67616d0000b273b0ce4261c219f5cabb15a3f6",
+            },
+            {
+              id: "fallback2",
+              title: `${query} (No results from API)`,
+              artist: "Demo Artist",
+              previewUrl:
+                "https://p.scdn.co/mp3-preview/9b8c365343b8a7568e312ec13a32cbb17b6a0cc7",
+              albumImageUrl:
+                "https://i.scdn.co/image/ab67616d0000b273b05b0de1c3c579b18e3dd84f",
+            },
+          ];
+
+          setSearchResults(fallbackResults);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 500); // Debounce for 500ms
 
       setSearchTimer(timer);
     } else {
