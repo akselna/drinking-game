@@ -8,13 +8,15 @@ import ParticipantPanel from "./ParticipantPanel";
 import "../styles/Game.css";
 import DrinkOrJudge from "./DrinkOrJudge";
 import Beat4Beat from "./Beat4Beat";
+import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
+
 // Game type constants (must match server constants)
 const GAME_TYPES = {
   NONE: "none",
   NEVER_HAVE_I_EVER: "neverHaveIEver",
   MUSIC_GUESS: "musicGuess",
-  DRINK_OR_JUDGE: "drinkOrJudge", // Add this new game type
-  BEAT4BEAT: "beat4Beat", // Add this line
+  DRINK_OR_JUDGE: "drinkOrJudge",
+  BEAT4BEAT: "beat4Beat",
 };
 
 const Game: React.FC = () => {
@@ -32,6 +34,13 @@ const Game: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
+
+  // Lambo feature states
+  const [lamboVotes, setLamboVotes] = useState<string[]>([]);
+  const [showLambo, setShowLambo] = useState<boolean>(false);
+  const [lamboSelectedDrinker, setLamboSelectedDrinker] = useState<
+    string | null
+  >(null);
 
   // Use a ref for the timeout to avoid re-renders
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -180,6 +189,25 @@ const Game: React.FC = () => {
       }
     };
 
+    // Lambo event handlers
+    const handleLamboVotesUpdate = (data: any) => {
+      console.log("Lambo votes updated:", data);
+      setLamboVotes(data.voters || []);
+    };
+
+    const handleLamboActivated = (data: any) => {
+      console.log("Lambo activated:", data);
+      setShowLambo(true);
+      setLamboSelectedDrinker(data.selectedDrinker);
+    };
+
+    const handleLamboEnded = () => {
+      console.log("Lambo ended");
+      setShowLambo(false);
+      setLamboVotes([]);
+      setLamboSelectedDrinker(null);
+    };
+
     // Register event listeners
     socket.on("session-joined", handleSessionJoined);
     socket.on("update-players", handleUpdatePlayers);
@@ -189,6 +217,11 @@ const Game: React.FC = () => {
     socket.on("error", handleError);
     socket.on("game-restarted", handleGameRestarted);
     socket.on("disconnect", handleDisconnect);
+
+    // Lambo event listeners
+    socket.on("lambo-votes-update", handleLamboVotesUpdate);
+    socket.on("lambo-activated", handleLamboActivated);
+    socket.on("lambo-ended", handleLamboEnded);
 
     // Attempt to join the session only if we haven't already
     if (!hasJoinedRef.current) {
@@ -206,13 +239,18 @@ const Game: React.FC = () => {
       socket.off("game-restarted", handleGameRestarted);
       socket.off("disconnect", handleDisconnect);
 
+      // Lambo cleanup
+      socket.off("lambo-votes-update", handleLamboVotesUpdate);
+      socket.off("lambo-activated", handleLamboActivated);
+      socket.off("lambo-ended", handleLamboEnded);
+
       // Clear the timeout if it exists
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
       }
     };
-  }, [socket, navigate, isReconnecting]); // Removed reconnectionTimeout from dependencies
+  }, [socket, navigate, isReconnecting]);
 
   const confirmLeaveSession = () => {
     setShowLeaveConfirmation(true);
@@ -247,6 +285,18 @@ const Game: React.FC = () => {
   const returnToLobby = () => {
     if (socket && sessionData.isHost) {
       socket.emit("restart-game", sessionData.sessionId, true);
+    }
+  };
+
+  // Handle Lambo vote
+  const handleLamboVote = () => {
+    if (!socket || !sessionData.sessionId) return;
+
+    // Check if user already voted
+    const hasVoted = lamboVotes.includes(socket.id || "");
+
+    if (!hasVoted) {
+      socket.emit("lambo-vote", sessionData.sessionId);
     }
   };
 
@@ -382,11 +432,30 @@ const Game: React.FC = () => {
           currentUserId={socket?.id || ""}
           socket={socket}
           sessionId={sessionData.sessionId}
+          lamboVotes={lamboVotes}
         />
       )}
 
       {/* Render game content */}
       <div className="game-content">{renderGame()}</div>
+
+      {/* Lambo button */}
+      {!isReconnecting && !error && sessionData.sessionId && (
+        <button
+          onClick={handleLamboVote}
+          className={`lambo-button ${
+            lamboVotes.includes(socket?.id || "") ? "voted" : ""
+          }`}
+          aria-label="Lambo"
+        >
+          🎉 Lambo 🎉
+          {lamboVotes.length > 0 && (
+            <span className="lambo-vote-count">
+              {lamboVotes.length}/{sessionData.players.length}
+            </span>
+          )}
+        </button>
+      )}
 
       {/* Mobile buttons container for better layout */}
       <div className="game-mobile-buttons">
@@ -417,6 +486,18 @@ const Game: React.FC = () => {
 
       {/* Leave confirmation dialog */}
       {renderLeaveConfirmation()}
+
+      {/* Lambo screen overlay */}
+      {showLambo && (
+        <LamboScreen
+          sessionId={sessionData.sessionId}
+          socket={socket}
+          isHost={sessionData.isHost}
+          players={sessionData.players}
+          selectedDrinker={lamboSelectedDrinker}
+          onClose={() => setShowLambo(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,0 +1,203 @@
+/* LamboScreen.css */
+.lambo-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #9c27b0; /* Purple background */
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  overflow: hidden;
+}
+
+.lambo-content {
+  position: relative;
+  z-index: 5;
+  text-align: center;
+  max-width: 600px;
+  padding: 24px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.lambo-title {
+  font-size: 4rem;
+  margin-bottom: 32px;
+  color: #ffeb3b; /* Yellow text */
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  animation: pulse 1.5s infinite;
+}
+
+.lambo-drinker {
+  margin-bottom: 32px;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.lambo-instruction {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.drinker-name {
+  color: #ffeb3b; /* Yellow text */
+  font-size: 2.5rem;
+  display: block;
+  margin: 8px 0;
+}
+
+.lambo-lyrics {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  text-align: left;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+/* Lyrics label styling */
+.lyrics-label {
+  font-weight: bold;
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: inline-block;
+}
+
+.drinker-label {
+  background-color: #4caf50; /* Green */
+  color: white;
+}
+
+.spectator-label {
+  background-color: #4caf50; /* Green */
+  color: white;
+}
+
+.drinker-lyrics,
+.spectator-lyrics {
+  margin-bottom: 24px;
+}
+
+.instruction-text {
+  font-style: italic;
+  font-size: 1.2rem;
+  opacity: 0.8;
+  margin-top: 10px;
+}
+
+.lambo-closing {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.lambo-close-button {
+  background-color: #f44336; /* Red */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.lambo-close-button:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+}
+
+.waiting-for-host {
+  font-size: 1.2rem;
+  opacity: 0.8;
+  margin-top: 24px;
+}
+
+.emoji-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.flying-emoji {
+  position: absolute;
+  font-size: 2rem;
+  animation: flyUp 5s linear infinite;
+}
+
+@keyframes flyUp {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-20vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .lambo-content {
+    padding: 16px;
+    width: 90%;
+  }
+
+  .lambo-title {
+    font-size: 3rem;
+  }
+
+  .lambo-instruction {
+    font-size: 1.5rem;
+  }
+
+  .drinker-name {
+    font-size: 2rem;
+  }
+
+  .lambo-lyrics {
+    font-size: 1.2rem;
+    padding: 12px;
+  }
+
+  .lyrics-label {
+    font-size: 1rem;
+    padding: 4px 8px;
+  }
+
+  .instruction-text {
+    font-size: 1rem;
+  }
+}

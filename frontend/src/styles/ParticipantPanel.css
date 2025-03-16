@@ -272,3 +272,21 @@
     margin-bottom: 12px;
   }
 }
+
+/* Add to ParticipantPanel.css */
+.lambo-vote-indicator {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 14px;
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}

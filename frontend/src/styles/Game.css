@@ -201,3 +201,77 @@
 .cancel-button:hover {
   background-color: #444;
 }
+/* Add to Game.css */
+.lambo-button {
+  position: fixed;
+  bottom: 20px; /* Same height as Leave Session button */
+  left: 10%;
+  transform: translateX(-50%);
+  background-color: #9c27b0; /* Purple */
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 12px 20px;
+  font-weight: bold;
+  font-size: 16px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  z-index: 95;
+}
+
+.lambo-button:hover {
+  background-color: #8e24aa;
+  transform: translateX(-50%) translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.lambo-button:active {
+  transform: translateX(-50%) translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.lambo-button.voted {
+  background-color: #6a1b9a; /* Darker purple when voted */
+}
+
+.lambo-vote-count {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* Adjust positions for mobile to keep all buttons at the same height */
+@media (max-width: 767px) {
+  .lambo-button {
+    bottom: 20px; /* Same height as other buttons */
+    width: auto;
+    left: 20%;
+    transform: translateX(-50%);
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .mobile-leave-button-container {
+    z-index: 95; /* Make sure it's on same z-index level */
+  }
+
+  .host-menu-button-container {
+    z-index: 95; /* Make sure it's on same z-index level */
+  }
+
+  /* Set fixed width for main buttons to avoid overlap */
+  .mobile-leave-button,
+  .host-menu-button {
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

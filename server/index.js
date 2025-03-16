@@ -241,6 +241,7 @@ io.on("connection", (socket) => {
       gameState: null,
       neverHaveIEverStatements: [],
       activeRound: null,
+      lamboVotes: [], // Track who voted for Lambo
     };
 
     // Track which session this socket belongs to
@@ -1851,6 +1852,76 @@ io.on("connection", (socket) => {
       newHostName: newHostPlayer.name,
       players: session.players,
     });
+  });
+  socket.on("lambo-vote", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session) {
+      socket.emit("error", { message: "Session not found" });
+      return;
+    }
+
+    // Check if user already voted
+    if (session.lamboVotes.includes(socket.id)) {
+      return; // Already voted
+    }
+
+    // Add vote
+    session.lamboVotes.push(socket.id);
+
+    console.log(`Player ${socket.id} voted for Lambo in session ${sessionId}`);
+
+    // Calculate threshold
+    const votePercentage =
+      (session.lamboVotes.length / session.players.length) * 100;
+
+    // Notify all clients about vote update
+    io.to(sessionId).emit("lambo-votes-update", {
+      voters: session.lamboVotes,
+      percentage: votePercentage,
+    });
+
+    // Check if threshold is reached (75%)
+    if (votePercentage >= 75) {
+      console.log(
+        `Lambo threshold reached in session ${sessionId}, activating Lambo!`
+      );
+
+      // Select random player to drink
+      const randomPlayerIndex = Math.floor(
+        Math.random() * session.players.length
+      );
+      const selectedDrinker = session.players[randomPlayerIndex].id;
+
+      // Notify all clients that Lambo is activated
+      io.to(sessionId).emit("lambo-activated", {
+        selectedDrinker: selectedDrinker,
+      });
+    }
+  });
+
+  // End Lambo (host only)
+  socket.on("end-lambo", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session) {
+      socket.emit("error", { message: "Session not found" });
+      return;
+    }
+
+    // Only host can end Lambo
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can end Lambo" });
+      return;
+    }
+
+    console.log(`Host ended Lambo in session ${sessionId}`);
+
+    // Reset Lambo votes
+    session.lamboVotes = [];
+
+    // Notify all clients that Lambo is ended
+    io.to(sessionId).emit("lambo-ended");
   });
 });
 

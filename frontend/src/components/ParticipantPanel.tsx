@@ -8,6 +8,7 @@ interface ParticipantPanelProps {
   currentUserId: string;
   socket: CustomSocket | null;
   sessionId: string;
+  lamboVotes: string[]; // Added prop for lambo votes
 }
 
 const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
@@ -16,6 +17,7 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
   currentUserId,
   socket,
   sessionId,
+  lamboVotes,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -96,6 +98,7 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
           {sortedPlayers.map((player) => {
             const isPlayerHost = hostPlayer && player.id === hostPlayer.id;
             const isCurrentUser = player.id === currentUserId;
+            const hasVotedLambo = lamboVotes.includes(player.id);
 
             return (
               <li
@@ -115,6 +118,14 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
                   )}
                   <span className="participant-name">
                     {player.name} {isCurrentUser && " (Deg)"}
+                    {hasVotedLambo && (
+                      <span
+                        className="lambo-vote-indicator"
+                        title="Stemt for Lambo"
+                      >
+                        🎉
+                      </span>
+                    )}
                   </span>
                   {player.disconnected && (
                     <span
