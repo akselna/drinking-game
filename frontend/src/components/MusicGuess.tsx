@@ -179,6 +179,8 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     // Handle voting updates
     const handleVoteUpdate = (data: any) => {
       setVotesReceived(data.votedCount);
+      // Totalt antall mulige stemmer er antall spillere minus sangeieren
+      // (dette håndteres nå på serversiden, så vi trenger ikke gjøre beregningen her)
     };
     const handleResults = (data: any) => {
       setPhase("results");
@@ -677,14 +679,38 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
 
               {/* Voting section - with improved mobile UI */}
               <div className="voting-section">
-                {!hasVoted ? (
+                {/* Sjekk om brukeren er eieren av sangen */}
+                {currentPlayingSong &&
+                currentPlayingSong.selectedBy === socket?.id ? (
+                  <div className="own-song-message">
+                    <div className="own-song-icon">🎵</div>
+                    <p>Dette er din sang!</p>
+                    <p className="votes-count">
+                      {votesReceived} av {players.length - 1} har stemt
+                    </p>
+                    <div className="votes-progress">
+                      <div
+                        className="votes-bar"
+                        style={{
+                          width: `${
+                            (votesReceived / (players.length - 1)) * 100
+                          }%`,
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                ) : !hasVoted ? (
                   <div className="voting-container">
                     <div className="voting-prompt">
                       Hvem valgte denne sangen?
                     </div>
                     <div className="player-voting-list">
                       {players
-                        .filter((player) => player.id !== socket?.id) // Can't vote for yourself
+                        .filter((player) => player.id !== socket?.id) // Kan ikke stemme på deg selv
+                        .filter(
+                          (player) =>
+                            player.id !== currentPlayingSong?.selectedBy
+                        ) // Filtrer bort sangeieren (selv om den er skjult for brukeren)
                         .map((player) => {
                           const isSelected = votedFor === player.id;
                           return (
@@ -721,14 +747,24 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
                   <div className="vote-submitted">
                     <p>Din stemme er sendt inn!</p>
                     <p className="votes-count">
-                      {votesReceived} av {players.length - 1} har stemt
+                      {votesReceived} av{" "}
+                      {players.length -
+                        (currentPlayingSong?.selectedBy === socket?.id
+                          ? 0
+                          : 1)}{" "}
+                      har stemt
                     </p>
                     <div className="votes-progress">
                       <div
                         className="votes-bar"
                         style={{
                           width: `${
-                            (votesReceived / (players.length - 1)) * 100
+                            (votesReceived /
+                              (players.length -
+                                (currentPlayingSong?.selectedBy === socket?.id
+                                  ? 0
+                                  : 1))) *
+                            100
                           }%`,
                         }}
                       ></div>
@@ -746,7 +782,10 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
                     >
                       Vis resultater{" "}
                       {votesReceived > 0 &&
-                        `(${votesReceived}/${players.length - 1})`}
+                        `(${votesReceived}/${
+                          players.length -
+                          (currentPlayingSong?.selectedBy ? 1 : 0)
+                        })`}
                     </button>
                   </div>
                 )}
