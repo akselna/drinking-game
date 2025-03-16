@@ -279,6 +279,21 @@
     width: auto;
     white-space: nowrap;
   }
+
+  .player-voting-list {
+    gap: 12px;
+  }
+
+  .player-vote-button {
+    min-height: 54px;
+  }
+
+  .confirm-vote {
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* Mobile optimizations */
@@ -831,20 +846,32 @@
   margin: 20px 0;
 }
 
-.player-vote-button {
-  padding: 16px;
-  font-size: 16px;
-  border: none;
-  border-radius: 10px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 60px;
+.player-voting-list {
   display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.player-vote-item {
+  width: 100%;
+}
+
+.player-vote-button {
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .player-vote-button:hover {
@@ -855,6 +882,11 @@
   background-color: #6200ea;
   box-shadow: 0 0 0 3px rgba(98, 0, 234, 0.5);
   transform: scale(1.05);
+}
+
+.player-vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .vote-submit-button {
@@ -1059,6 +1091,81 @@
   height: 100%;
   font-size: 20px;
   background-color: #444;
+}
+
+.player-voting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.player-vote-item {
+  width: 100%;
+}
+
+.player-vote-button {
+  width: 100%;
+  padding: 16px;
+  text-align: left;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.player-vote-button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.player-vote-button.selected {
+  background-color: rgba(98, 0, 234, 0.3);
+  border: 2px solid rgba(98, 0, 234, 0.8);
+}
+
+.player-vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-name {
+  flex: 1;
+  font-weight: normal;
+}
+
+.confirm-vote {
+  background-color: #6200ea;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.confirm-vote:hover {
+  background-color: #7c4dff;
+  transform: scale(1.05);
+}
+
+.confirm-vote:active {
+  transform: scale(0.95);
+}
+
+.confirm-icon {
+  font-size: 18px;
 }
 
 /* Make touch targets larger for mobile */
@@ -1666,10 +1773,13 @@
 .player-vote-button:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
+.player-vote-button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.2);
+}
 
 .player-vote-button.selected {
-  background-color: #6200ea;
-  box-shadow: 0 0 0 2px rgba(98, 0, 234, 0.5);
+  background-color: rgba(98, 0, 234, 0.3);
+  border: 2px solid rgba(98, 0, 234, 0.8);
 }
 
 .vote-submit-button {
@@ -1784,6 +1894,26 @@
   .players-vote-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
+  }
+
+  .player-vote-button {
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .confirm-vote {
+    padding: 6px 12px;
+    font-size: 14px;
+  }
+
+  .confirm-icon {
+    font-size: 16px;
+  }
+
+  .voting-prompt {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
   }
 
   .player-vote-button {

@@ -682,29 +682,40 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
                     <div className="voting-prompt">
                       Hvem valgte denne sangen?
                     </div>
-                    <div className="players-vote-grid">
+                    <div className="player-voting-list">
                       {players
                         .filter((player) => player.id !== socket?.id) // Can't vote for yourself
-                        .map((player) => (
-                          <button
-                            key={player.id}
-                            className={`player-vote-button ${
-                              votedFor === player.id ? "selected" : ""
-                            }`}
-                            onClick={() => setVotedFor(player.id)}
-                          >
-                            {player.name}
-                          </button>
-                        ))}
-                    </div>
+                        .map((player) => {
+                          const isSelected = votedFor === player.id;
+                          return (
+                            <div key={player.id} className="player-vote-item">
+                              <button
+                                className={`player-vote-button ${
+                                  isSelected ? "selected" : ""
+                                }`}
+                                onClick={() => setVotedFor(player.id)}
+                              >
+                                <span className="player-name">
+                                  {player.name}
+                                </span>
 
-                    <button
-                      onClick={submitVote}
-                      className="vote-submit-button"
-                      disabled={!votedFor}
-                    >
-                      Send inn stemme
-                    </button>
+                                {isSelected && (
+                                  <span
+                                    className="confirm-vote"
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Prevent triggering the outer button
+                                      submitVote();
+                                    }}
+                                  >
+                                    Bekreft{" "}
+                                    <span className="confirm-icon">✓</span>
+                                  </span>
+                                )}
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
                   </div>
                 ) : (
                   <div className="vote-submitted">
