@@ -1257,27 +1257,28 @@ io.on("connection", (socket) => {
       `Player ${currentPlayer.name} voted for ${votedForId} in session ${sessionId}`
     );
 
-    // Calculate how many votes received
-    const votesReceived = Object.keys(session.gameState.votes).length;
-
     // Find the current song owner
     const currentSong =
       session.gameState.playerSongs[session.gameState.currentSongIndex];
     const songOwnerId = currentSong?.selectedBy;
 
-    // Calculate total voters (everyone except the song owner)
-    const totalVoters = session.players.filter(
-      (p) => p.id !== songOwnerId
+    // Calculate eligible voters (everyone except the song owner)
+    const eligibleVoters = session.players.filter((p) => p.id !== songOwnerId);
+    const eligibleVoterIds = eligibleVoters.map((p) => p.id);
+
+    // Calculate how many eligible voters have voted
+    const eligibleVotesReceived = Object.keys(session.gameState.votes).filter(
+      (voterId) => eligibleVoterIds.includes(voterId)
     ).length;
 
     // Notify all players about the voting progress
     io.to(sessionId).emit("music-guess-vote-update", {
-      votedCount: votesReceived,
-      totalPlayers: totalVoters,
+      votedCount: eligibleVotesReceived,
+      totalPlayers: eligibleVoters.length,
     });
 
-    // If everyone except the song owner has voted, show results automatically
-    if (votesReceived >= totalVoters) {
+    // If all eligible voters have voted, show results automatically
+    if (eligibleVotesReceived >= eligibleVoters.length) {
       showMusicGuessResults(sessionId);
     }
   });
