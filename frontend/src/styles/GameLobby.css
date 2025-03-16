@@ -85,6 +85,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  aspect-ratio: 1.5 / 1; /* Add fixed aspect ratio */
 }
 
 .game-button.never-have-i-ever {
@@ -146,10 +147,21 @@
   }
 
   .game-buttons {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr); /* Two columns on mobile */
+    gap: 12px;
   }
 
   .game-button {
     width: 100%;
+    min-height: 80px; /* Smaller height on mobile */
+    font-size: 16px;
+    padding: 16px 8px;
+  }
+}
+
+/* Even smaller screens */
+@media (max-width: 480px) {
+  .game-buttons {
+    grid-template-columns: 1fr; /* One column on very small screens */
   }
 }

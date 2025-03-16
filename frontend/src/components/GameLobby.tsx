@@ -18,7 +18,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 }) => {
   return (
     <div className="game-lobby">
-      <h1>Spillobby</h1>
+      <h1>Lobby</h1>
 
       <div className="session-info">
         <p className="session-code">
@@ -79,8 +79,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
           <h2>Venter på at verten skal velge et spill...</h2>
         </div>
       )}
-
-      {/* Leave button removed from lobby screen */}
     </div>
   );
 };
