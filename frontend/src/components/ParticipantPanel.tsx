@@ -67,14 +67,15 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
 
   return (
     <>
-      {/* Button to toggle participant panel */}
-      <button
-        className="participant-toggle"
-        onClick={togglePanel}
-        aria-label="Vis deltakere"
-      >
-        👥
-      </button>
+      {!isOpen && (
+        <button
+          className="participant-toggle"
+          onClick={togglePanel}
+          aria-label="Vis deltakere"
+        >
+          👥
+        </button>
+      )}
 
       {/* Overlay shown when panel is open */}
       <div
