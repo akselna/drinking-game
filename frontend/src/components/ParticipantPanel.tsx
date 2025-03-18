@@ -161,7 +161,7 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
           <button
             onClick={() => {
               navigator.clipboard.writeText(
-                `Bli med i drikkeleken min! Kode: ${sessionId}`
+                `Bli med i drikkeleken min! \n Lenke: https://www.fyllehund.no \n Kode: ${sessionId}`
               );
               alert("Invitasjonstekst kopiert til utklippstavlen!");
             }}
