@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/NotAllowedToLaugh.css";
+import {
+  MemeTemplate,
+  MemeResponse,
+  TextResponse,
+  GameResponse,
+} from "../types/meme.types";
+import { memeTemplates } from "../data/memeTemplates";
 
 interface NotAllowedToLaughProps {
   sessionId: string;
@@ -46,6 +53,13 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
     timeRemaining: 60,
   });
   const responseInputRef = useRef<HTMLInputElement>(null);
+
+  // Meme-relaterte state-variabler
+  const [responseType, setResponseType] = useState<"text" | "meme">("text");
+  const [selectedMeme, setSelectedMeme] = useState<string | null>(null);
+  const [memeTopText, setMemeTopText] = useState<string>("");
+  const [memeBottomText, setMemeBottomText] = useState<string>("");
+  const [showMemeSelector, setShowMemeSelector] = useState<boolean>(false);
 
   // Initialize state from gameState prop
   useEffect(() => {
@@ -136,10 +150,36 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   // Handle response submission
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!socket || !newResponse.trim()) return;
+    if (!socket) return;
 
-    socket.emit("laugh-submit-response", sessionId, newResponse.trim());
-    setNewResponse("");
+    if (responseType === "text") {
+      // Handle text response as before
+      if (!newResponse.trim()) return;
+
+      socket.emit("laugh-submit-response", sessionId, {
+        type: "text",
+        text: newResponse.trim(),
+      });
+      setNewResponse("");
+    } else if (responseType === "meme" && selectedMeme) {
+      // Handle meme response
+      if (!memeTopText.trim() && !memeBottomText.trim()) {
+        return; // Don't submit empty memes
+      }
+
+      socket.emit("laugh-submit-response", sessionId, {
+        type: "meme",
+        templateId: selectedMeme,
+        topText: memeTopText.trim(),
+        bottomText: memeBottomText.trim(),
+      });
+
+      // Reset meme state
+      setMemeTopText("");
+      setMemeBottomText("");
+      setSelectedMeme(null);
+      setShowMemeSelector(false);
+    }
 
     // Focus back on input after submission
     if (responseInputRef.current) {
@@ -282,22 +322,145 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
 
         {/* Response submission form */}
         <div className="submission-container">
-          <form onSubmit={handleSubmitResponse}>
-            <div className="input-group">
-              <label>Submit a funny response:</label>
-              <input
-                type="text"
-                ref={responseInputRef}
-                value={newResponse}
-                onChange={(e) => setNewResponse(e.target.value)}
-                placeholder="Type something funny..."
-                className="response-input"
-              />
+          <div className="response-type-toggle">
+            <div
+              className={`response-type-option ${
+                responseType === "text" ? "active" : ""
+              }`}
+              onClick={() => setResponseType("text")}
+            >
+              Text
             </div>
-            <button type="submit" className="submit-button">
-              Submit Response
-            </button>
-          </form>
+            <div
+              className={`response-type-option ${
+                responseType === "meme" ? "active" : ""
+              }`}
+              onClick={() => setResponseType("meme")}
+            >
+              Meme
+            </div>
+          </div>
+
+          {responseType === "text" ? (
+            <form onSubmit={handleSubmitResponse}>
+              <div className="input-group">
+                <label>Submit a funny response:</label>
+                <input
+                  type="text"
+                  ref={responseInputRef}
+                  value={newResponse}
+                  onChange={(e) => setNewResponse(e.target.value)}
+                  placeholder="Type something funny..."
+                  className="response-input"
+                />
+              </div>
+              <button type="submit" className="submit-button">
+                Submit Response
+              </button>
+            </form>
+          ) : (
+            <div className="meme-submission">
+              {!selectedMeme ? (
+                <button
+                  onClick={() => setShowMemeSelector(true)}
+                  className="select-meme-button"
+                >
+                  Select a Meme Template
+                </button>
+              ) : (
+                <>
+                  <div className="meme-editor">
+                    <h3>Add Text to Your Meme</h3>
+
+                    <div className="meme-preview">
+                      <div className="meme-image-container">
+                        <img
+                          src={
+                            memeTemplates.find((t) => t.id === selectedMeme)
+                              ?.url
+                          }
+                          alt="Meme template"
+                        />
+                        <div className="meme-text top">{memeTopText}</div>
+                        <div className="meme-text bottom">{memeBottomText}</div>
+                      </div>
+                    </div>
+
+                    <div className="meme-text-inputs">
+                      <div className="input-group">
+                        <label>Top Text:</label>
+                        <input
+                          type="text"
+                          value={memeTopText}
+                          onChange={(e) => setMemeTopText(e.target.value)}
+                          className="meme-text-input"
+                          placeholder="Add top text"
+                        />
+                      </div>
+
+                      <div className="input-group">
+                        <label>Bottom Text:</label>
+                        <input
+                          type="text"
+                          value={memeBottomText}
+                          onChange={(e) => setMemeBottomText(e.target.value)}
+                          className="meme-text-input"
+                          placeholder="Add bottom text"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="meme-buttons">
+                    <button
+                      onClick={() => setSelectedMeme(null)}
+                      className="cancel-button"
+                    >
+                      Choose Different Meme
+                    </button>
+                    <button
+                      onClick={handleSubmitResponse}
+                      className="submit-button"
+                    >
+                      Submit Meme
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {showMemeSelector && (
+                <div className="meme-selector-modal">
+                  <div className="meme-selector-content">
+                    <button
+                      className="close-selector"
+                      onClick={() => setShowMemeSelector(false)}
+                    >
+                      ✕
+                    </button>
+                    <div className="meme-selector">
+                      <h3>Select a Meme Template</h3>
+                      <div className="meme-grid">
+                        {memeTemplates.map((template) => (
+                          <div
+                            key={template.id}
+                            className={`meme-item ${
+                              selectedMeme === template.id ? "selected" : ""
+                            }`}
+                            onClick={() => {
+                              setSelectedMeme(template.id);
+                              setShowMemeSelector(false);
+                            }}
+                          >
+                            <img src={template.url} alt={template.name} />
+                            <span>{template.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="submission-info">
             <p>Submit as many responses as you want before the timer ends!</p>
@@ -324,11 +487,34 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
         <div className="response-display">
           {currentResponse ? (
             <div
-              className={`current-response ${fadeIn ? "fade-in" : ""} ${
+              className={`response-content ${fadeIn ? "fade-in" : ""} ${
                 shakeAnimation ? "shake" : ""
               }`}
             >
-              {currentResponse}
+              {typeof currentResponse === "string" ? (
+                <div className="text-response">{currentResponse}</div>
+              ) : currentResponse.type === "meme" ? (
+                <div className="meme-response">
+                  <div className="meme-image-container">
+                    <img
+                      src={
+                        memeTemplates.find(
+                          (t) => t.id === currentResponse.templateId
+                        )?.url
+                      }
+                      alt="Meme"
+                    />
+                    <div className="meme-text top">
+                      {currentResponse.topText}
+                    </div>
+                    <div className="meme-text bottom">
+                      {currentResponse.bottomText}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-response">{currentResponse.text}</div>
+              )}
             </div>
           ) : (
             <div className="no-response">
