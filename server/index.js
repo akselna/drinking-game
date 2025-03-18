@@ -74,6 +74,7 @@ const GAME_TYPES = {
   MUSIC_GUESS: "musicGuess",
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
   BEAT4BEAT: "beat4Beat", // Add this line
+  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
 };
 
 // Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
@@ -985,6 +986,15 @@ io.on("connection", (socket) => {
         scores: {},
         winnerId: null,
       };
+    } else if (gameType === GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
+      session.gameState = {
+        phase: "setup",
+        responses: [],
+        currentResponse: null,
+        currentResponseIndex: 0,
+        timerDuration: 60,
+        timeRemaining: 60,
+      };
     }
 
     // Notify all players about the game selection
@@ -994,6 +1004,200 @@ io.on("connection", (socket) => {
     });
   });
 
+  // Set timer duration (host only)
+  socket.on("laugh-set-duration", (sessionId, duration) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can set the duration
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can set the timer duration",
+      });
+      return;
+    }
+
+    // Update timer duration (between 10 and 300 seconds)
+    session.gameState.timerDuration = Math.min(300, Math.max(10, duration));
+    session.gameState.timeRemaining = session.gameState.timerDuration;
+
+    // Notify all clients about the updated duration
+    io.to(sessionId).emit("laugh-timer-update", {
+      timerDuration: session.gameState.timerDuration,
+      timeRemaining: session.gameState.timeRemaining,
+    });
+  });
+
+  // Start the game (host only)
+  socket.on("laugh-start-game", (sessionId, duration) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can start the game
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can start the game",
+      });
+      return;
+    }
+
+    // Set timer duration if provided, otherwise use the existing one
+    if (duration) {
+      session.gameState.timerDuration = Math.min(300, Math.max(10, duration));
+    }
+
+    // Reset game state
+    session.gameState.phase = "submission";
+    session.gameState.responses = [];
+    session.gameState.currentResponse = null;
+    session.gameState.currentResponseIndex = 0;
+    session.gameState.timeRemaining = session.gameState.timerDuration;
+
+    // Start the timer
+    let timer = setInterval(() => {
+      // Get the session again to ensure it still exists
+      const currentSession = sessions[sessionId];
+      if (
+        !currentSession ||
+        currentSession.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH
+      ) {
+        clearInterval(timer);
+        return;
+      }
+
+      currentSession.gameState.timeRemaining--;
+
+      // Update clients about timer
+      io.to(sessionId).emit("laugh-timer-update", {
+        timeRemaining: currentSession.gameState.timeRemaining,
+        timerDuration: currentSession.gameState.timerDuration,
+      });
+
+      // If timer is up, move to reveal phase
+      if (currentSession.gameState.timeRemaining <= 0) {
+        clearInterval(timer);
+
+        // Shuffle responses
+        if (currentSession.gameState.responses.length > 0) {
+          currentSession.gameState.responses = shuffleArray([
+            ...currentSession.gameState.responses,
+          ]);
+        }
+
+        // Move to reveal phase
+        currentSession.gameState.phase = "reveal";
+
+        // Notify clients about phase change
+        io.to(sessionId).emit("laugh-phase-changed", {
+          phase: "reveal",
+          responses: currentSession.gameState.responses,
+          currentResponseIndex: 0,
+          currentResponse: null,
+        });
+      }
+    }, 1000);
+
+    // Store timer ID for cleanup
+    session.gameState.timerId = timer;
+
+    // Notify clients about game start
+    io.to(sessionId).emit("laugh-phase-changed", {
+      phase: "submission",
+      timerDuration: session.gameState.timerDuration,
+      timeRemaining: session.gameState.timeRemaining,
+      responses: [],
+    });
+  });
+
+  // Submit a response
+  socket.on("laugh-submit-response", (sessionId, response) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Check that we're in submission phase
+    if (session.gameState.phase !== "submission") {
+      socket.emit("error", {
+        message: "Responses can only be submitted during the submission phase",
+      });
+      return;
+    }
+
+    // Find the player
+    const player = session.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    // Add the response
+    session.gameState.responses.push(response);
+
+    console.log(
+      `Player ${player.name} submitted response in session ${sessionId}`
+    );
+
+    // Notify all clients about the new response
+    io.to(sessionId).emit("laugh-response-submitted", {
+      responseCount: session.gameState.responses.length,
+    });
+  });
+
+  // Show next response (host only)
+  socket.on("laugh-next-response", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can reveal responses
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can reveal responses",
+      });
+      return;
+    }
+
+    // Check if we have any more responses to show
+    if (
+      session.gameState.currentResponseIndex <
+      session.gameState.responses.length
+    ) {
+      // Get the next response
+      const nextResponse =
+        session.gameState.responses[session.gameState.currentResponseIndex];
+
+      // Update game state
+      session.gameState.currentResponse = nextResponse;
+      session.gameState.currentResponseIndex++;
+
+      // Notify clients about the new response
+      io.to(sessionId).emit("laugh-next-response", {
+        currentResponse: nextResponse,
+        currentResponseIndex: session.gameState.currentResponseIndex,
+      });
+    }
+  });
+
+  // Add to your existing functions or create if missing
+  function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+  }
   // Start next statement for Drink or Judge
 
   socket.on("drink-or-judge-next-statement", (sessionId) => {
