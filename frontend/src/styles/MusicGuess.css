@@ -300,7 +300,6 @@
 @media (max-width: 767px) {
   .music-guess {
     padding: 16px;
-    padding-bottom: 80px; /* Add space at bottom for fixed buttons */
   }
 
   .topic-container {

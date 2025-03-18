@@ -232,18 +232,18 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   if (phase === "setup") {
     return (
       <div className="not-allowed-to-laugh setup-phase">
-        <h2>Not Allowed to Laugh</h2>
+        <h2>Ikke lov å le på vors</h2>
 
         {/* Response counter */}
         <div className="response-counter">
-          <div className="counter-label">Responses</div>
+          <div className="counter-label">Antall svar</div>
           <div className="counter-value">{responses?.length || 0}</div>
         </div>
 
         {isHost ? (
           <div className="setup-container">
             <div className="timer-setup">
-              <label>Set Timer Duration (seconds):</label>
+              <label>Tid for å sende inn svar (sekunder):</label>
               <input
                 type="number"
                 min="10"
@@ -269,7 +269,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
               onClick={() => startGame(timerDuration)}
               className="start-button"
             >
-              Start Game
+              Start spillet
             </button>
           </div>
         ) : (
@@ -279,14 +279,12 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
         )}
 
         <div className="game-instructions">
-          <h3>How to Play:</h3>
+          <h3>Hvordan spille:</h3>
           <ol>
-            <li>The host sets a timer for submissions</li>
-            <li>Everyone submits funny or absurd responses</li>
-            <li>
-              When the timer ends, try not to laugh as responses are revealed
-            </li>
-            <li>If you laugh, you drink!</li>
+            <li>Verten setter en timer for svar.</li>
+            <li>Alle sender inn memes eller tekst.</li>
+            <li>Når tiden er ute, leses svarene opp – ingen latter.</li>
+            <li>Ler du, drikker du.</li>
           </ol>
         </div>
       </div>
@@ -297,11 +295,11 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   if (phase === "submission") {
     return (
       <div className="not-allowed-to-laugh submission-phase">
-        <h2>Not Allowed to Laugh</h2>
+        <h2>Ikke lov å le på vors</h2>
 
         {/* Response counter */}
         <div className="response-counter">
-          <div className="counter-label">Responses</div>
+          <div className="counter-label">Antall svar</div>
           <div className="counter-value">{responses?.length || 0}</div>
         </div>
 
@@ -344,7 +342,6 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
           {responseType === "text" ? (
             <form onSubmit={handleSubmitResponse}>
               <div className="input-group">
-                <label>Submit a funny response:</label>
                 <input
                   type="text"
                   ref={responseInputRef}
@@ -355,7 +352,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                 />
               </div>
               <button type="submit" className="submit-button">
-                Submit Response
+                Send svar
               </button>
             </form>
           ) : (
@@ -365,12 +362,12 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                   onClick={() => setShowMemeSelector(true)}
                   className="select-meme-button"
                 >
-                  Select a Meme Template
+                  Velg en meme template
                 </button>
               ) : (
                 <>
                   <div className="meme-editor">
-                    <h3>Add Text to Your Meme</h3>
+                    <h3>Legg til tekst</h3>
 
                     <div className="meme-preview">
                       <div className="meme-image-container">
@@ -388,7 +385,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
 
                     <div className="meme-text-inputs">
                       <div className="input-group">
-                        <label>Top Text:</label>
+                        <label>Topptekst:</label>
                         <input
                           type="text"
                           value={memeTopText}
@@ -399,7 +396,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                       </div>
 
                       <div className="input-group">
-                        <label>Bottom Text:</label>
+                        <label>Bunntekst:</label>
                         <input
                           type="text"
                           value={memeBottomText}
@@ -415,13 +412,13 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                       onClick={() => setSelectedMeme(null)}
                       className="cancel-button"
                     >
-                      Choose Different Meme
+                      Velg en annen meme
                     </button>
                     <button
                       onClick={handleSubmitResponse}
                       className="submit-button"
                     >
-                      Submit Meme
+                      Send inn meme
                     </button>
                   </div>
                 </>
@@ -437,7 +434,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                       ✕
                     </button>
                     <div className="meme-selector">
-                      <h3>Select a Meme Template</h3>
+                      <h3>Velg en meme template</h3>
                       <div className="meme-grid">
                         {memeTemplates.map((template) => (
                           <div
@@ -475,11 +472,11 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   if (phase === "reveal") {
     return (
       <div className="not-allowed-to-laugh reveal-phase">
-        <h2>Time to Not Laugh!</h2>
+        <h2>Husk å ikke le!</h2>
 
         {/* Response counter */}
         <div className="response-counter">
-          <div className="counter-label">Responses</div>
+          <div className="counter-label">Antall svar</div>
           <div className="counter-value">{responses?.length || 0}</div>
         </div>
 
@@ -532,20 +529,20 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
               className="next-button"
             >
               {currentResponseIndex >= (responses?.length || 0)
-                ? "No More Responses"
-                : "Next Response"}
+                ? "Ingen flere svar"
+                : "Neste svar"}
             </button>
           )}
 
           <div className="response-progress">
             <span>
-              Revealed: {currentResponseIndex} / {responses?.length || 0}
+              {currentResponseIndex} / {responses?.length || 0}
             </span>
           </div>
 
           {isHost && (
             <button onClick={handleRestartGame} className="reset-button">
-              Play Again
+              Spill igjen
             </button>
           )}
         </div>
@@ -562,7 +559,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   // Default fallback
   return (
     <div className="not-allowed-to-laugh">
-      <h2>Not Allowed to Laugh</h2>
+      <h2>Ikke lov å le på vors</h2>
       <p>Loading game...</p>
     </div>
   );

@@ -137,7 +137,7 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
   if (currentPhase === "statement") {
     return (
       <div className="drink-or-judge statement-phase">
-        <h2>Drikk eller Dømmes</h2>
+        <h2>Hvem i rommet?</h2>
 
         <div className="game-message">
           <p>
@@ -172,7 +172,7 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
         className="drink-or-judge voting-phase"
         style={{ backgroundColor: bgColor }}
       >
-        <h2>Drikk eller Dømmes</h2>
+        <h2>Hvem i rommet?</h2>
 
         <div className="statement-container">
           <h3 className="statement-text">{currentStatement}</h3>

@@ -445,7 +445,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     case "topic-selection":
       return (
         <div className="music-guess topic-phase">
-          <h2>Musikkgjetting</h2>
+          <h2>Hvem satte på sangen?</h2>
 
           {isHost ? (
             <div className="topic-container">
@@ -970,7 +970,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     default:
       return (
         <div className="music-guess">
-          <h2>Musikkgjetting</h2>
+          <h2>Hvem satte på sangen?</h2>
           <div className="loading-container">
             <p>Laster spill... (Phase: {gameState?.phase})</p>
             <p>

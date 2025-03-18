@@ -4,8 +4,7 @@
   display: flex;
   flex-direction: column;
   color: white;
-  min-height: 100vh;
-  padding-top: 80px; /* Space for participant panel */
+  text-align: center;
 }
 
 .beat4beat h2 {
@@ -446,7 +445,6 @@
 @media (max-width: 768px) {
   .beat4beat {
     padding: 15px;
-    padding-top: 70px;
   }
 
   .buzz-button {

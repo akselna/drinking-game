@@ -58,13 +58,13 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               onClick={() => onSelectGame("musicGuess")}
               className="game-button music-guess"
             >
-              Musikkgjetting
+              Hvem satte på sangen?
             </button>
             <button
               onClick={() => onSelectGame("drinkOrJudge")}
               className="game-button drink-or-judge"
             >
-              Drikk eller Dømmes
+              Hvem i rommet?
             </button>
             <button
               onClick={() => onSelectGame("beat4Beat")}
@@ -76,7 +76,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               onClick={() => onSelectGame("notAllowedToLaugh")}
               className="game-button not-allowed-to-laugh"
             >
-              Not Allowed to Laugh
+              Ikke lov å le på vors
             </button>
           </div>
         </div>
