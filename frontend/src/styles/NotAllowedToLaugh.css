@@ -213,12 +213,6 @@
 .current-response {
   font-size: 2rem;
   font-weight: bold;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.current-response.fade-in {
-  opacity: 1;
 }
 
 .no-response {

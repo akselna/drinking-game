@@ -73,6 +73,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               Beat4Beat
             </button>
           </div>
+          <button
+            onClick={() => onSelectGame("notAllowedToLaugh")}
+            className="game-button not-allowed-to-laugh"
+          >
+            Not Allowed to Laugh
+          </button>
         </div>
       ) : (
         <div className="waiting-message">

@@ -1118,6 +1118,7 @@ io.on("connection", (socket) => {
   });
 
   // Submit a response
+  // Submit a response
   socket.on("laugh-submit-response", (sessionId, response) => {
     const session = sessions[sessionId];
 
@@ -1148,6 +1149,7 @@ io.on("connection", (socket) => {
     // Notify all clients about the new response
     io.to(sessionId).emit("laugh-response-submitted", {
       responseCount: session.gameState.responses.length,
+      responses: session.gameState.responses, // ADD THIS LINE to send the full responses array
     });
   });
 
@@ -1189,6 +1191,52 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Restart game (host only)
+  socket.on("laugh-restart-game", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can restart the game
+    if (socket.id !== session.host) {
+      socket.emit("error", {
+        message: "Only the host can restart the game",
+      });
+      return;
+    }
+
+    // Clear any existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+      session.gameState.timerId = null;
+    }
+
+    // Reset game state
+    session.gameState = {
+      phase: "setup",
+      responses: [],
+      currentResponse: null,
+      currentResponseIndex: 0,
+      timerDuration: 60,
+      timeRemaining: 60,
+    };
+
+    // Notify all clients about the game restart
+    io.to(sessionId).emit("laugh-phase-changed", {
+      phase: "setup",
+      responses: [],
+      currentResponse: null,
+      currentResponseIndex: 0,
+      timerDuration: 60,
+      timeRemaining: 60,
+    });
+
+    console.log(`Game restarted in session ${sessionId}`);
+  });
+
   // Add to your existing functions or create if missing
   function shuffleArray(array) {
     const newArray = [...array];
@@ -1198,6 +1246,7 @@ io.on("connection", (socket) => {
     }
     return newArray;
   }
+
   // Start next statement for Drink or Judge
 
   socket.on("drink-or-judge-next-statement", (sessionId) => {

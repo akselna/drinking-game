@@ -165,3 +165,18 @@
     grid-template-columns: 1fr; /* One column on very small screens */
   }
 }
+
+.game-button.not-allowed-to-laugh {
+  background-color: #6200ea; /* Purple */
+  background-image: linear-gradient(135deg, #6200ea, #b388ff);
+  position: relative;
+  overflow: hidden;
+}
+
+.game-button.not-allowed-to-laugh::after {
+  content: "🤐";
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 24px;
+}

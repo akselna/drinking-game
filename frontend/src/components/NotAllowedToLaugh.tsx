@@ -13,6 +13,16 @@ interface NotAllowedToLaughProps {
   returnToLobby: () => void;
 }
 
+interface GameState {
+  phase: "setup" | "submission" | "reveal";
+  responses: string[];
+  currentResponse: string | null;
+  currentResponseIndex: number;
+  timerDuration: number;
+  timeRemaining: number;
+  responseCount?: number;
+}
+
 const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   sessionId,
   players,
@@ -52,7 +62,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
     // Handle timer updates
     const handleTimerUpdate = (data: any) => {
       console.log("Timer update:", data);
-      setLocalGameState((prev) => ({
+      setLocalGameState((prev: GameState) => ({
         ...prev,
         timeRemaining: data.timeRemaining,
         timerDuration: data.timerDuration || prev.timerDuration,
@@ -62,7 +72,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
     // Handle new response submitted
     const handleResponseSubmitted = (data: any) => {
       console.log("Response submitted:", data);
-      setLocalGameState((prev) => ({
+      setLocalGameState((prev: GameState) => ({
         ...prev,
         responses: Array.isArray(data.responses)
           ? data.responses
@@ -74,7 +84,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
     // Handle phase changes
     const handlePhaseChanged = (data: any) => {
       console.log("Phase changed:", data);
-      setLocalGameState((prev) => ({
+      setLocalGameState((prev: GameState) => ({
         ...prev,
         phase: data.phase,
         responses: data.responses || prev.responses,
@@ -91,7 +101,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
       setFadeIn(false);
 
       setTimeout(() => {
-        setLocalGameState((prev) => ({
+        setLocalGameState((prev: GameState) => ({
           ...prev,
           currentResponse: data.currentResponse,
           currentResponseIndex: data.currentResponseIndex,
@@ -206,7 +216,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                     socket.emit("laugh-set-duration", sessionId, value);
 
                   // Update local state immediately for better UI feedback
-                  setLocalGameState((prev) => ({
+                  setLocalGameState((prev: GameState) => ({
                     ...prev,
                     timerDuration: value,
                     timeRemaining: value,

@@ -17,6 +17,7 @@ const GAME_TYPES = {
   MUSIC_GUESS: "musicGuess",
   DRINK_OR_JUDGE: "drinkOrJudge",
   BEAT4BEAT: "beat4Beat",
+  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
 };
 
 const Game: React.FC = () => {
@@ -373,6 +374,19 @@ const Game: React.FC = () => {
       case GAME_TYPES.BEAT4BEAT:
         return (
           <Beat4Beat
+            sessionId={sessionData.sessionId}
+            players={sessionData.players}
+            isHost={sessionData.isHost}
+            gameState={sessionData.gameState}
+            socket={socket}
+            restartGame={restartGame}
+            leaveSession={confirmLeaveSession}
+            returnToLobby={returnToLobby}
+          />
+        );
+      case GAME_TYPES.NOT_ALLOWED_TO_LAUGH:
+        return (
+          <NotAllowedToLaugh
             sessionId={sessionData.sessionId}
             players={sessionData.players}
             isHost={sessionData.isHost}
