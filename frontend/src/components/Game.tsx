@@ -9,6 +9,7 @@ import "../styles/Game.css";
 import DrinkOrJudge from "./DrinkOrJudge";
 import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
+import NotAllowedToLaugh from "./NotAllowedToLaugh";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
