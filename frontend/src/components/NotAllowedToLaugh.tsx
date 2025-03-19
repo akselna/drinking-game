@@ -1,12 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/NotAllowedToLaugh.css";
-import {
-  MemeTemplate,
-  MemeResponse,
-  TextResponse,
-  GameResponse,
-} from "../types/meme.types";
+import { MemeTemplate } from "../types/meme.types";
 import { memeTemplates } from "../data/memeTemplates";
 
 interface NotAllowedToLaughProps {
