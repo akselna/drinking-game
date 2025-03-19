@@ -651,16 +651,15 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
           )}
 
           <div className="response-progress">
+            {isHost && (
+              <button onClick={handleRestartGame} className="reset-button">
+                Spill igjen
+              </button>
+            )}
             <span>
               {currentResponseIndex} / {responses?.length || 0}
             </span>
           </div>
-
-          {isHost && (
-            <button onClick={handleRestartGame} className="reset-button">
-              Spill igjen
-            </button>
-          )}
         </div>
 
         {!isHost && (
