@@ -782,3 +782,38 @@
     margin-left: auto;
   }
 }
+/* Add this to your NotAllowedToLaugh.css file */
+
+.meme-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Ensure GIFs can animate */
+  image-rendering: auto;
+}
+
+/* For GIF images specifically */
+.gif-image {
+  image-rendering: auto !important;
+  /* Remove the border if you want a cleaner look with animation */
+  border: none;
+}
+
+/* Optional: add a subtle indicator instead of the "GIF" badge */
+.meme-item.gif-meme {
+  position: relative;
+  overflow: hidden;
+}
+
+.meme-item.gif-meme::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 20px 20px 0;
+  border-color: transparent rgba(255, 105, 180, 0.8) transparent transparent;
+  z-index: 1;
+}

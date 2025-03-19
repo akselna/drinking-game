@@ -151,11 +151,12 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   const renderMemeTemplate = (template: MemeTemplate | undefined) => {
     if (!template) return null;
 
-    // Check if URL ends with video extensions
+    // Check if URL ends with video extensions or gif
     const isVideo =
       template.type === "video" ||
       template.url.endsWith(".mp4") ||
       template.url.endsWith(".webm");
+    const isGif = template.url.endsWith(".gif"); // New check for GIFs
 
     return (
       <div className="meme-image-container">
@@ -169,7 +170,11 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <img src={template.url} alt="Meme template" />
+          <img
+            src={template.url}
+            alt="Meme template"
+            className={isGif ? "gif-image" : ""}
+          />
         )}
         <div className="meme-text top">{memeTopText}</div>
         <div className="meme-text bottom">{memeBottomText}</div>
@@ -462,12 +467,15 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                             template.type === "video" ||
                             template.url.endsWith(".mp4") ||
                             template.url.endsWith(".webm");
+                          const isGif = template.url.endsWith(".gif");
 
                           return (
                             <div
                               key={template.id}
                               className={`meme-item ${
                                 selectedMeme === template.id ? "selected" : ""
+                              } ${isVideo ? "video-meme" : ""} ${
+                                isGif ? "gif-meme" : ""
                               }`}
                               onClick={() => {
                                 setSelectedMeme(template.id);
@@ -478,11 +486,21 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                                 <video
                                   src={template.url}
                                   muted
+                                  autoPlay
+                                  loop
                                   style={{
                                     width: "100%",
                                     height: "100%",
                                     objectFit: "cover",
                                   }}
+                                />
+                              ) : isGif ? (
+                                // Special handling for GIFs to ensure animation
+                                <img
+                                  src={template.url}
+                                  alt={template.name}
+                                  loading="eager"
+                                  decoding="async"
                                 />
                               ) : (
                                 <img src={template.url} alt={template.name} />
@@ -541,6 +559,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                         template?.type === "video" ||
                         template?.url.endsWith(".mp4") ||
                         template?.url.endsWith(".webm");
+                      const isGif = template?.url.endsWith(".gif"); // New check for GIFs
 
                       return isVideo ? (
                         <video
@@ -555,7 +574,11 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                           }}
                         />
                       ) : (
-                        <img src={template?.url} alt="Meme" />
+                        <img
+                          src={template?.url}
+                          alt="Meme"
+                          className={isGif ? "gif-image" : ""}
+                        />
                       );
                     })()}
                     <div className="meme-text top">
