@@ -205,7 +205,7 @@
 .lambo-button {
   position: fixed;
   bottom: 20px; /* Same height as Leave Session button */
-  left: 10%;
+  left: 50%;
   transform: translateX(-50%);
   background-color: #9c27b0; /* Purple */
   color: white;
