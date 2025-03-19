@@ -283,10 +283,4 @@ export const memeTemplates: MemeTemplate[] = [
     name: "Falling Kermit the frog",
     type: "video",
   },
-  {
-    id: "ronaldo-drinking",
-    url: "https://i.imgflip.com/65exzi.mp4",
-    name: "Ronaldo drinking",
-    type: "video",
-  },
 ];

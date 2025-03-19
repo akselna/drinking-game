@@ -56,28 +56,6 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   const [memeBottomText, setMemeBottomText] = useState<string>("");
   const [showMemeSelector, setShowMemeSelector] = useState<boolean>(false);
 
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-
-  // Check if user is on mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      const userAgent =
-        navigator.userAgent || navigator.vendor || (window as any).opera;
-      const isMobileDevice =
-        /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-          userAgent.toLowerCase()
-        );
-      setIsMobile(isMobileDevice);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => {
-      window.removeEventListener("resize", checkMobile);
-    };
-  }, []);
-
   // Initialize state from gameState prop
   useEffect(() => {
     if (gameState) {
@@ -178,25 +156,14 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
     return (
       <div className="meme-image-container">
         {isVideo ? (
-          // For videos on mobile, just show a placeholder with play icon
-          // instead of actually loading the video
-          isMobile ? (
-            <div className="video-placeholder">
-              <span className="play-icon">▶</span>
-            </div>
-          ) : (
-            <video
-              src={template.url}
-              muted
-              playsInline
-              preload="metadata"
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-            />
-          )
+          <video
+            src={template.url}
+            controls={false}
+            loop
+            muted
+            autoPlay
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
         ) : (
           <img
             src={template.url}
@@ -513,11 +480,9 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                               {isVideo ? (
                                 <video
                                   src={template.url}
-                                  controls={!isMobile} // Only show controls on desktop
-                                  loop
                                   muted
-                                  playsInline // Important for iOS
-                                  autoPlay={!isMobile} // Don't autoplay on mobile
+                                  autoPlay
+                                  loop
                                   style={{
                                     width: "100%",
                                     height: "100%",
@@ -529,7 +494,8 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                                 <img
                                   src={template.url}
                                   alt={template.name}
-                                  loading="lazy"
+                                  loading="eager"
+                                  decoding="async"
                                 />
                               ) : (
                                 <img src={template.url} alt={template.name} />
