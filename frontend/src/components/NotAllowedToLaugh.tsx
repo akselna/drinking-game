@@ -56,6 +56,46 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
   const [memeBottomText, setMemeBottomText] = useState<string>("");
   const [showMemeSelector, setShowMemeSelector] = useState<boolean>(false);
 
+  // Add this useEffect to prevent unwanted GIF autoplay on mobile
+  useEffect(() => {
+    // Find all GIF images and add a handler to control animation
+    const gifImages = document.querySelectorAll(".gif-image");
+
+    // Function to check if element is in viewport
+    const isInViewport = (element: Element) => {
+      const rect = element.getBoundingClientRect();
+      return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <=
+          (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <=
+          (window.innerWidth || document.documentElement.clientWidth)
+      );
+    };
+
+    // Add intersection observer to only animate GIFs when visible
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // GIF is visible, allow animation by removing static class
+            entry.target.classList.remove("gif-static");
+          } else {
+            // GIF is not visible, pause animation
+            entry.target.classList.add("gif-static");
+          }
+        });
+      });
+
+      gifImages.forEach((img) => observer.observe(img));
+
+      return () => {
+        gifImages.forEach((img) => observer.unobserve(img));
+      };
+    }
+  }, []);
+
   // Initialize state from gameState prop
   useEffect(() => {
     if (gameState) {
@@ -151,7 +191,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
       template.type === "video" ||
       template.url.endsWith(".mp4") ||
       template.url.endsWith(".webm");
-    const isGif = template.url.endsWith(".gif"); // New check for GIFs
+    const isGif = template.url.endsWith(".gif");
 
     return (
       <div className="meme-image-container">
@@ -162,6 +202,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
             loop
             muted
             autoPlay
+            playsInline
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
@@ -481,24 +522,21 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                                 <video
                                   src={template.url}
                                   muted
-                                  autoPlay
                                   loop
+                                  autoPlay
+                                  playsInline
                                   style={{
                                     width: "100%",
                                     height: "100%",
                                     objectFit: "cover",
                                   }}
                                 />
-                              ) : isGif ? (
-                                // Special handling for GIFs to ensure animation
+                              ) : (
                                 <img
                                   src={template.url}
                                   alt={template.name}
-                                  loading="eager"
-                                  decoding="async"
+                                  className={isGif ? "gif-image" : ""}
                                 />
-                              ) : (
-                                <img src={template.url} alt={template.name} />
                               )}
                               <span>{template.name}</span>
                             </div>
@@ -554,7 +592,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                         template?.type === "video" ||
                         template?.url.endsWith(".mp4") ||
                         template?.url.endsWith(".webm");
-                      const isGif = template?.url.endsWith(".gif"); // New check for GIFs
+                      const isGif = template?.url.endsWith(".gif");
 
                       return isVideo ? (
                         <video
@@ -562,6 +600,8 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                           controls
                           loop
                           autoPlay
+                          muted
+                          playsInline
                           style={{
                             width: "100%",
                             height: "100%",

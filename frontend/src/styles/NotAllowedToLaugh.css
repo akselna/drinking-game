@@ -742,7 +742,6 @@
 
 /* Video badge to indicate the meme is a video */
 .meme-item.video-meme::after {
-  content: "▶";
   position: absolute;
   top: 5px;
   right: 5px;
@@ -792,11 +791,11 @@
   image-rendering: auto;
 }
 
-/* For GIF images specifically */
+/* GIF styling */
 .gif-image {
-  image-rendering: auto !important;
-  /* Remove the border if you want a cleaner look with animation */
-  border: none;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Optional: add a subtle indicator instead of the "GIF" badge */
@@ -816,4 +815,78 @@
   border-width: 0 20px 20px 0;
   border-color: transparent rgba(255, 105, 180, 0.8) transparent transparent;
   z-index: 1;
+}
+/* Add this to the bottom of your NotAllowedToLaugh.css file */
+
+/* Control GIF animations */
+.gif-static {
+  background-position: 0 0 !important;
+  background-repeat: no-repeat !important;
+  background-size: cover !important;
+}
+
+/* When in selector grid - keep GIFs static */
+.meme-item .gif-image {
+  /* This makes GIFs initially static in the selector */
+  object-position: 0 0;
+  object-fit: cover;
+}
+
+/* Only animate GIFs when selected or in preview/display */
+.selected .gif-image,
+.meme-preview .gif-image,
+.meme-response .gif-image {
+  animation: gifPlay 100s infinite;
+}
+
+/* Define a placeholder frame animation to ensure animation plays only when visible */
+@keyframes gifPlay {
+  0% {
+    opacity: 1;
+  }
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Remove video styling for GIFs */
+.meme-item.gif-meme::after {
+  display: none;
+}
+
+.meme-item.gif-meme::before {
+  content: "GIF";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 105, 180, 0.8);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+/* Mark GIF items in the selector */
+.meme-item.gif-meme::before {
+  content: "GIF";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: rgba(255, 105, 180, 0.8);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 10px;
+  font-weight: bold;
+  z-index: 2;
+}
+
+/* Remove any video-like indicators from GIFs */
+.meme-item.gif-meme::after {
+  display: none;
 }
