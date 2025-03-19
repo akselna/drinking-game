@@ -588,18 +588,19 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                       const template = memeTemplates.find(
                         (t) => t.id === currentResponse.templateId
                       );
+                      // Important change: Make sure GIFs aren't treated as videos
                       const isVideo =
-                        template?.type === "video" ||
-                        template?.url.endsWith(".mp4") ||
-                        template?.url.endsWith(".webm");
+                        (template?.type === "video" ||
+                          template?.url.endsWith(".mp4") ||
+                          template?.url.endsWith(".webm")) &&
+                        !template?.url.endsWith(".gif");
                       const isGif = template?.url.endsWith(".gif");
 
                       return isVideo ? (
                         <video
                           src={template?.url}
-                          controls
-                          loop
                           autoPlay
+                          loop
                           muted
                           playsInline
                           style={{
