@@ -147,6 +147,35 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
     socket.emit("laugh-start-game", sessionId, seconds);
   };
 
+  // Add this function before your return statements, around line 150
+  const renderMemeTemplate = (template: MemeTemplate | undefined) => {
+    if (!template) return null;
+
+    // Check if URL ends with video extensions
+    const isVideo =
+      template.type === "video" ||
+      template.url.endsWith(".mp4") ||
+      template.url.endsWith(".webm");
+
+    return (
+      <div className="meme-image-container">
+        {isVideo ? (
+          <video
+            src={template.url}
+            controls={false}
+            loop
+            muted
+            autoPlay
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        ) : (
+          <img src={template.url} alt="Meme template" />
+        )}
+        <div className="meme-text top">{memeTopText}</div>
+        <div className="meme-text bottom">{memeBottomText}</div>
+      </div>
+    );
+  };
   // Handle response submission
   const handleSubmitResponse = (e: React.FormEvent) => {
     e.preventDefault();
@@ -370,17 +399,9 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                     <h3>Legg til tekst</h3>
 
                     <div className="meme-preview">
-                      <div className="meme-image-container">
-                        <img
-                          src={
-                            memeTemplates.find((t) => t.id === selectedMeme)
-                              ?.url
-                          }
-                          alt="Meme template"
-                        />
-                        <div className="meme-text top">{memeTopText}</div>
-                        <div className="meme-text bottom">{memeBottomText}</div>
-                      </div>
+                      {renderMemeTemplate(
+                        memeTemplates.find((t) => t.id === selectedMeme)
+                      )}
                     </div>
 
                     <div className="meme-text-inputs">
@@ -436,21 +457,40 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
                     <div className="meme-selector">
                       <h3>Velg en meme template</h3>
                       <div className="meme-grid">
-                        {memeTemplates.map((template) => (
-                          <div
-                            key={template.id}
-                            className={`meme-item ${
-                              selectedMeme === template.id ? "selected" : ""
-                            }`}
-                            onClick={() => {
-                              setSelectedMeme(template.id);
-                              setShowMemeSelector(false);
-                            }}
-                          >
-                            <img src={template.url} alt={template.name} />
-                            <span>{template.name}</span>
-                          </div>
-                        ))}
+                        {memeTemplates.map((template) => {
+                          const isVideo =
+                            template.type === "video" ||
+                            template.url.endsWith(".mp4") ||
+                            template.url.endsWith(".webm");
+
+                          return (
+                            <div
+                              key={template.id}
+                              className={`meme-item ${
+                                selectedMeme === template.id ? "selected" : ""
+                              }`}
+                              onClick={() => {
+                                setSelectedMeme(template.id);
+                                setShowMemeSelector(false);
+                              }}
+                            >
+                              {isVideo ? (
+                                <video
+                                  src={template.url}
+                                  muted
+                                  style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              ) : (
+                                <img src={template.url} alt={template.name} />
+                              )}
+                              <span>{template.name}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -493,14 +533,31 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
               ) : currentResponse.type === "meme" ? (
                 <div className="meme-response">
                   <div className="meme-image-container">
-                    <img
-                      src={
-                        memeTemplates.find(
-                          (t) => t.id === currentResponse.templateId
-                        )?.url
-                      }
-                      alt="Meme"
-                    />
+                    {(() => {
+                      const template = memeTemplates.find(
+                        (t) => t.id === currentResponse.templateId
+                      );
+                      const isVideo =
+                        template?.type === "video" ||
+                        template?.url.endsWith(".mp4") ||
+                        template?.url.endsWith(".webm");
+
+                      return isVideo ? (
+                        <video
+                          src={template?.url}
+                          controls
+                          loop
+                          autoPlay
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      ) : (
+                        <img src={template?.url} alt="Meme" />
+                      );
+                    })()}
                     <div className="meme-text top">
                       {currentResponse.topText}
                     </div>
