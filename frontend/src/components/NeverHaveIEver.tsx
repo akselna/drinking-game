@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import "../styles/NeverHaveIEver.css";
+import React, { useState, useEffect, useRef } from "react";
+import "../styles/NeverHaveIEver.css"; // This will use the updated CSS
 import { CustomSocket } from "../types/socket.types";
 
 interface NeverHaveIEverProps {
@@ -24,8 +24,8 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
   returnToLobby,
 }) => {
   const [statement, setStatement] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(60);
+  const [timerDuration, setTimerDuration] = useState(60);
   const [currentStatement, setCurrentStatement] = useState<any>(null);
   const [submittedCount, setSubmittedCount] = useState(0);
   const [gameEnded, setGameEnded] = useState(false);
@@ -34,9 +34,13 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
   );
   const [statementIndex, setStatementIndex] = useState(0);
   const [statements, setStatements] = useState<any[]>([]);
+  const [userStatements, setUserStatements] = useState<any[]>([]);
   const [totalStatements, setTotalStatements] = useState(0);
-  // New state variable to track if a player wants to add a new statement
   const [addingNewStatement, setAddingNewStatement] = useState(false);
+  const [timerActive, setTimerActive] = useState(false);
+
+  // Interval ref for the timer
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Kahoot-like colors for different statements
   const kahootColors = [
@@ -60,6 +64,15 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     (player) => player.id === players.find((p) => p.isHost)?.id
   );
 
+  // Format time as MM:SS
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
+  };
+
   useEffect(() => {
     if (!socket) return;
 
@@ -67,12 +80,24 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     const handleTimerUpdate = (data: any) => {
       console.log("Timer update:", data);
       setTimeLeft(data.timeLeft);
+      if (data.timerDuration) {
+        setTimerDuration(data.timerDuration);
+      }
+      setTimerActive(true);
     };
 
     // Statement submission updates
     const handleStatementSubmitted = (data: any) => {
       console.log("Statement submitted:", data);
       setSubmittedCount(data.submittedCount);
+
+      // Update with the full statements array if available
+      if (data.statements) {
+        const userSubmitted = data.statements.filter(
+          (s: any) => s.authorId !== "system" && s.authorId === socket.id
+        );
+        setUserStatements(userSubmitted);
+      }
     };
 
     // Phase changes
@@ -85,8 +110,8 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
         setTotalStatements(data.totalStatements || 0);
 
         // Store all statements locally for easier navigation
-        if (gameState && gameState.statements) {
-          setStatements(gameState.statements);
+        if (data.statements) {
+          setStatements(data.statements);
         }
       }
     };
@@ -103,6 +128,11 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     const handleGameEnded = (data: any) => {
       console.log("Game ended:", data);
       setGameEnded(true);
+      setTimerActive(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
 
     // Register event listeners
@@ -119,8 +149,39 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
       socket.off("phase-changed", handlePhaseChanged);
       socket.off("next-statement", handleNextStatement);
       socket.off("game-ended", handleGameEnded);
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     };
-  }, [socket, gameState]);
+  }, [socket]);
+
+  // Timer effect
+  useEffect(() => {
+    if (timerActive && timeLeft > 0) {
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current!);
+            setTimerActive(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else if (timeLeft === 0) {
+      setTimerActive(false);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [timerActive, timeLeft]);
 
   // Set initial state based on gameState from props
   useEffect(() => {
@@ -152,14 +213,26 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
           gameState.statements.filter((s: any) => s.authorId !== "system")
             .length || 0
         );
+
+        // Track user's own submitted statements
+        if (socket) {
+          const userSubmitted = gameState.statements.filter(
+            (s: any) => s.authorId !== "system" && s.authorId === socket.id
+          );
+          setUserStatements(userSubmitted);
+        }
       }
 
-      // Check if we already submitted a statement (on refresh or rejoin)
-      if (
-        gameState.statements &&
-        gameState.statements.some((s: any) => s.authorId === socket?.id)
-      ) {
-        setSubmitted(true);
+      // Get timer duration from gameState if available
+      if (gameState.timerDuration) {
+        setTimerDuration(gameState.timerDuration);
+      }
+
+      if (gameState.timeLeft) {
+        setTimeLeft(gameState.timeLeft);
+        if (gameState.timeLeft < gameState.timerDuration) {
+          setTimerActive(true);
+        }
       }
 
       // Check if game ended
@@ -177,21 +250,29 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
       socket.emit("submit-never-statement", sessionId, statement);
       setStatement("");
 
-      // Only set submitted to true if we're in the collecting phase
-      // This allows adding new statements during the revealing phase
-      if (currentPhase === "collecting") {
-        setSubmitted(true);
-      }
-
       // Hide the new statement form
       setAddingNewStatement(false);
     }
   };
 
   const handleStartTimer = () => {
-    if (!socket) return;
-    console.log("Starting timer");
-    socket.emit("start-never-timer", sessionId);
+    if (!socket || !isHost) return;
+    console.log("Starting timer with duration:", timerDuration);
+    socket.emit("start-never-timer", sessionId, timerDuration);
+    setTimerActive(true);
+  };
+
+  // Handle timer duration change (host only)
+  const handleTimerDurationChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setTimerDuration(value);
+      if (socket && isHost) {
+        socket.emit("never-set-timer-duration", sessionId, value);
+      }
+    }
   };
 
   // Manually trigger revealing phase
@@ -259,16 +340,51 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
   if (currentPhase === "collecting") {
     return (
       <div className="never-have-i-ever collecting">
-        <h2>Never Have I Ever</h2>
+        <h2>Jeg har aldri...</h2>
 
-        <div className="game-status">
-          <p>
-            Samler inn setninger: {submittedCount}/{players.length}
-          </p>
-          {timeLeft < 60 && <p>Tid igjen: {timeLeft} sekunder</p>}
+        {/* Submission Counter */}
+        <div className="submission-counter">
+          <div className="counter-display">{submittedCount}</div>
+          <div className="counter-label">Innsendte spørsmål</div>
         </div>
 
-        {!submitted ? (
+        <div className="card-container">
+          {/* Timer section */}
+          {timerActive && (
+            <div className="timer-container">
+              <div className="timer-progress">
+                <div
+                  className="timer-bar"
+                  style={{
+                    width: `${(timeLeft / timerDuration) * 100}%`,
+                  }}
+                ></div>
+              </div>
+              <div className="timer-display">{formatTime(timeLeft)}</div>
+            </div>
+          )}
+
+          {isHost && !timerActive && (
+            <div className="timer-setup">
+              <h3>Innstillinger for nedtelling</h3>
+              <div className="timer-input-container">
+                <input
+                  type="number"
+                  min="10"
+                  max="300"
+                  value={timerDuration}
+                  onChange={handleTimerDurationChange}
+                  className="timer-input"
+                />
+                <span className="timer-label">sekunder</span>
+              </div>
+              <button onClick={handleStartTimer} className="timer-button">
+                Start nedtelling
+              </button>
+            </div>
+          )}
+
+          {/* Statement input form */}
           <div className="statement-input">
             <label htmlFor="never-statement">
               Fullfør setningen: "Jeg har aldri..."
@@ -284,28 +400,30 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
               Send inn
             </button>
           </div>
-        ) : (
-          <div className="waiting">
-            <p>Takk for bidraget ditt! Venter på andre...</p>
-          </div>
-        )}
 
-        {isHost && (
-          <div className="host-controls">
-            {timeLeft === 60 && (
-              <button onClick={handleStartTimer} className="timer-button">
-                Start 60-sekunders nedtelling
-              </button>
-            )}
+          {/* User's submitted statements */}
+          {userStatements.length > 0 && (
+            <div className="user-statements">
+              <h3>Dine innsendte spørsmål:</h3>
+              <ul className="statements-list">
+                {userStatements.map((stmt, index) => (
+                  <li key={index} className="statement-item">
+                    {stmt.text}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
-            {/* This button is always shown to host if at least one player has submitted a statement */}
-            {submittedCount > 0 && (
+          {/* Force start button (host only) */}
+          {isHost && submittedCount > 0 && (
+            <div className="host-controls">
               <button onClick={handleForceReveal} className="force-button">
                 START SPILLET NÅ
               </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     );
   }

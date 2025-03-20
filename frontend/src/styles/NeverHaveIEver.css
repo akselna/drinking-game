@@ -1,111 +1,336 @@
-/* Never Have I Ever game styles */
+/* Updated Never Have I Ever game styles - GameLobby aesthetic */
 
-/* Collecting phase */
-.never-have-i-ever.collecting {
+/* Base game container */
+.never-have-i-ever {
+  padding: 2rem;
+  color: white;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Common card styles - matching GameLobby */
+.card-container {
   background-color: #1e1e1e;
-  padding: 24px;
-  border-radius: 10px;
-  max-width: 800px;
-  margin: 0 auto;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 1.5rem;
 }
 
-.never-have-i-ever h2 {
-  margin-top: 0;
-  text-align: center;
-  margin-bottom: 24px;
-  font-size: 2rem;
+.card-container:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
 }
 
-.game-status {
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+  padding-bottom: 0.75rem;
   display: flex;
   justify-content: space-between;
-  background-color: #272727;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  align-items: center;
 }
 
-.game-status p {
-  margin: 0;
+.card-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2rem;
+  height: 2px;
+  background-color: #7c4dff;
 }
 
+/* Game title */
+.never-have-i-ever h2 {
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  letter-spacing: -0.5px;
+}
+
+/* =============== COLLECTING PHASE =============== */
+.never-have-i-ever.collecting {
+  background-color: #121212;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+/* Game status styling */
+.game-status {
+  background-color: rgba(0, 0, 0, 0.15);
+  padding: 1rem 1.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Make all buttons have bold font */
+.submit-button,
+.timer-button,
+.force-button,
+.prev-button,
+.next-button,
+.add-statement-button,
+.restart-button,
+.cancel-button {
+  font-weight: bold !important;
+}
+
+/* Statement input styling */
 .statement-input {
-  background-color: #272727;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 1.5rem;
 }
 
 .statement-input label {
   display: block;
-  font-weight: bold;
-  margin-bottom: 12px;
-  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
 }
 
 .statement-input textarea {
   width: 100%;
-  height: 120px;
-  padding: 12px;
-  background-color: #333;
+  padding: 1rem;
+  background-color: rgba(0, 0, 0, 0.15);
   color: white;
-  border: 1px solid #555;
-  border-radius: 5px;
-  font-size: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  font-size: 1rem;
   resize: vertical;
-  margin-bottom: 16px;
-  box-sizing: border-box;
+  min-height: 100px;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statement-input textarea:focus {
+  border-color: #7c4dff;
+  box-shadow: 0 0 0 2px rgba(124, 77, 255, 0.25);
+  outline: none;
 }
 
 .statement-input .submit-button {
+  background-color: #7c4dff;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
   width: 100%;
-  padding: 12px;
-  background-color: #6200ea;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.waiting {
-  background-color: #272727;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-  text-align: center;
-}
-
-.host-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.timer-button {
-  padding: 12px;
-  background-color: #1e88e5;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.force-button {
-  padding: 16px;
-  background-color: #e21b3c;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
+.statement-input .submit-button:hover {
+  background-color: #9575ff;
+  transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Revealing phase */
+.statement-input .submit-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Waiting message styling */
+.waiting {
+  background-color: rgba(0, 0, 0, 0.15);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Host controls styling */
+.host-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Timer setup styling */
+.timer-setup {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.timer-setup h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.timer-input-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.timer-input {
+  flex: 1;
+  padding: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  color: white;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.timer-input:focus {
+  outline: none;
+  border-color: #7c4dff;
+}
+
+.timer-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Timer display & countdown */
+.timer-container {
+  margin-bottom: 1.5rem;
+}
+
+.timer-progress {
+  height: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.timer-bar {
+  height: 100%;
+  background-color: #7c4dff;
+  transition: width 1s linear;
+}
+
+.timer-display {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.timer-button {
+  background-color: #1e88e5;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  width: 100%;
+}
+
+.timer-button:hover {
+  background-color: #42a5f5;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.force-button {
+  background-color: #e21b3c;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.force-button:hover {
+  background-color: #f73452;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Submission counter */
+.submission-counter {
+  background-color: #6200ea;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.counter-display {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.counter-label {
+  font-size: 1rem;
+  opacity: 0.8;
+}
+
+/* User statements list */
+.user-statements {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.user-statements h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.user-statements h3::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 3rem;
+  height: 2px;
+  background-color: #7c4dff;
+}
+
+.statements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.statement-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.statement-item:last-child {
+  border-bottom: none;
+}
+
+/* =============== REVEALING PHASE - Keep the colorful design =============== */
 .never-have-i-ever.revealing {
   min-height: 100vh;
   display: flex;
@@ -113,33 +338,40 @@
   padding: 24px;
   padding-top: 80px; /* Space for the participant panel button */
   text-align: center;
-}
-
-.never-have-i-ever.revealing h2 {
-  font-size: 2.5rem;
-  margin-bottom: 2rem;
+  /* Background color is set dynamically */
 }
 
 .current-statement {
   margin-bottom: 2rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.current-statement:hover {
+  transform: translateY(-5px);
 }
 
 .statement-text {
-  font-size: 3rem;
+  font-size: 2.5rem;
   font-weight: bold;
   margin-bottom: 1rem;
+  line-height: 1.3;
 }
 
 .author {
   font-size: 1.2rem;
   opacity: 0.8;
+  font-style: italic;
 }
 
 .navigation-buttons {
   display: flex;
   justify-content: center;
   gap: 1rem;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .prev-button {
@@ -147,9 +379,16 @@
   background-color: rgba(255, 255, 255, 0.2);
   color: white;
   border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.prev-button:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 
 .prev-button:disabled {
@@ -159,246 +398,310 @@
 
 .next-button {
   padding: 0.8rem 1.5rem;
-  background-color: #4caf50;
+  background-color: rgba(255, 255, 255, 0.3);
   color: white;
   border: none;
-  border-radius: 5px;
-  font-size: 1.2rem;
+  border-radius: 0.5rem;
+  font-size: 1rem;
   font-weight: bold;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.next-button:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
 }
 
 .statement-progress {
   font-size: 1.2rem;
   margin-top: 1rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  display: inline-block;
 }
 
-/* Game ended phase */
-.never-have-i-ever.game-ended {
-  background-color: #1e1e1e;
-  padding: 24px;
-  border-radius: 10px;
-  max-width: 800px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.game-results {
-  background-color: #272727;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
-
-.game-results h3 {
-  margin-top: 0;
-  font-size: 1.5rem;
-}
-
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  .never-have-i-ever.collecting,
-  .never-have-i-ever.game-ended {
-    padding: 16px;
-  }
-
-  .game-status {
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .never-have-i-ever.revealing {
-    padding: 16px;
-    padding-top: 70px;
-  }
-
-  .never-have-i-ever.revealing h2 {
-    font-size: 1.8rem;
-  }
-
-  .statement-text {
-    font-size: 2rem;
-  }
-
-  .navigation-buttons {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .prev-button,
-  .next-button {
-    width: 100%;
-  }
-}
-
-/* Legg til disse CSS-reglene i frontend/src/styles/NeverHaveIEver.css */
-
-/* Fade-in/fade-out animasjon for meldinger */
-@keyframes fadeInOut {
-  0% {
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-.submission-feedback {
-  animation: fadeInOut 3s ease;
-}
-
-/* Styling for innsendingsskjemaet under avsløringsrunden */
-.ongoing-statement-input {
-  margin-top: 20px;
-  background: rgba(0, 0, 0, 0.4);
-  padding: 15px;
-  border-radius: 8px;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.ongoing-statement-input input {
-  width: 100%;
-  padding: 10px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  color: white;
-  margin-bottom: 10px;
-}
-
-.ongoing-statement-input .button-group {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.add-statement-button {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.add-statement-button button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 5px;
-  padding: 10px 15px;
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.add-statement-button button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.pending-count {
-  font-size: 0.9rem;
-  margin-top: 10px;
-  opacity: 0.8;
-  text-align: center;
-}
-
-/* Responsivitet for mobile enheter */
-@media (max-width: 768px) {
-  .ongoing-statement-input {
-    padding: 10px;
-  }
-
-  .ongoing-statement-input .button-group {
-    flex-direction: column;
-  }
-}
-
-/* Add these styles to frontend/src/styles/NeverHaveIEver.css */
-
-/* Styles for the "Add new statement" button in revealing phase */
+/* Add new statement during revealing */
 .add-statement-button-container {
-  margin-top: 24px;
-  text-align: center;
+  margin-top: 2rem;
 }
 
 .add-statement-button {
-  padding: 12px 24px;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(0, 0, 0, 0.2);
   color: white;
-  border: 2px solid white;
-  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
   font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .add-statement-button:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.3);
   transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
-/* Styles for the statement input in revealing phase */
 .statement-input.revealing-phase-input {
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 16px;
-  border-radius: 8px;
-  margin: 24px auto;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  margin: 2rem auto;
   max-width: 90%;
   width: 600px;
-}
-
-.statement-input.revealing-phase-input label {
-  color: white;
-}
-
-.statement-input.revealing-phase-input textarea {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .statement-input-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 1rem;
 }
 
 .statement-input-buttons .submit-button,
 .statement-input-buttons .cancel-button {
   flex: 1;
-  padding: 10px;
+  padding: 0.8rem;
+  font-weight: bold;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
 }
 
 .statement-input-buttons .submit-button {
   background-color: rgba(255, 255, 255, 0.3);
   color: white;
   border: none;
-  border-radius: 5px;
-  font-weight: bold;
-  cursor: pointer;
+}
+
+.statement-input-buttons .submit-button:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
 }
 
 .statement-input-buttons .cancel-button {
   background-color: rgba(0, 0, 0, 0.3);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 5px;
-  cursor: pointer;
 }
 
-/* Responsive design improvements */
+.statement-input-buttons .cancel-button:hover {
+  background-color: rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+/* =============== GAME ENDED PHASE =============== */
+.never-have-i-ever.game-ended {
+  background-color: #121212;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+.game-results {
+  background-color: #1e1e1e;
+  padding: 2rem;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
+}
+
+.game-results:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.game-results h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.75rem;
+  display: inline-block;
+}
+
+.game-results h3::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 25%;
+  width: 50%;
+  height: 2px;
+  background-color: #7c4dff;
+}
+
+.game-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.restart-button {
+  background-color: #7c4dff;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.restart-button:hover {
+  background-color: #9575ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* =============== RESPONSIVE DESIGN =============== */
 @media (max-width: 768px) {
+  .never-have-i-ever {
+    padding: 1rem;
+  }
+
+  .never-have-i-ever h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-container {
+    padding: 1rem;
+  }
+
+  .statement-text {
+    font-size: 1.8rem;
+  }
+
+  .game-status {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .navigation-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.75rem;
+  }
+
+  .prev-button,
+  .next-button {
+    width: 100%;
+  }
+
   .statement-input.revealing-phase-input {
-    padding: 12px;
-    margin: 16px auto;
+    padding: 1rem;
+    width: 95%;
+  }
+
+  .statement-input-buttons {
+    flex-direction: column;
   }
 
   .add-statement-button {
-    padding: 10px 18px;
-    font-size: 0.9rem;
+    width: 100%;
   }
+
+  .timer-input-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .counter-display {
+    font-size: 2rem;
+  }
+}
+
+/* This section preserves but improves the fade-in/fade-out animations */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.submission-feedback {
+  animation: fadeInOut 3s ease;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+}
+
+/* Enhance the ongoing statement input */
+.ongoing-statement-input {
+  margin-top: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1.5rem;
+  border-radius: 1rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.ongoing-statement-input input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0.5rem;
+  color: white;
+  margin-bottom: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.ongoing-statement-input input:focus {
+  border-color: rgba(255, 255, 255, 0.5);
+  outline: none;
+}
+
+.ongoing-statement-input .button-group {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.add-statement-button button {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 2rem;
+  padding: 0.75rem 1.5rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-statement-button button:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.pending-count {
+  font-size: 0.9rem;
+  margin-top: 0.75rem;
+  opacity: 0.8;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: inline-block;
 }
