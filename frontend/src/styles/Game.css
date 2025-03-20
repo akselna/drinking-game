@@ -9,7 +9,6 @@
 .game-content {
   flex: 1;
   /* Add padding to prevent content being hidden behind buttons */
-  padding-bottom: 80px;
 }
 
 .reconnecting-message {
