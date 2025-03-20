@@ -1022,7 +1022,7 @@ io.on("connection", (socket) => {
     }
 
     // Update timer duration (between 10 and 300 seconds)
-    session.gameState.timerDuration = Math.min(300, Math.max(10, duration));
+    session.gameState.timerDuration = Math.min(600, Math.max(10, duration));
     session.gameState.timeRemaining = session.gameState.timerDuration;
 
     // Notify all clients about the updated duration
@@ -1051,7 +1051,7 @@ io.on("connection", (socket) => {
 
     // Set timer duration if provided, otherwise use the existing one
     if (duration) {
-      session.gameState.timerDuration = Math.min(300, Math.max(10, duration));
+      session.gameState.timerDuration = Math.min(600, Math.max(10, duration));
     }
 
     // Reset game state
