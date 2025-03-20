@@ -358,10 +358,12 @@ io.on("connection", (socket) => {
 
     socket.join(sessionIdUpper);
 
-    // Tell the player they've joined successfully
+    // CHANGE: Explicitly send the host ID to all players
+    // This is the critical change that ensures all players know who the host is
     socket.emit("session-joined", {
       sessionId: sessionIdUpper,
       isHost: socket.id === session.host,
+      hostId: session.host, // Add this line to send the host ID
       gameType: session.gameType,
       gameState: session.gameState,
       players: session.players,

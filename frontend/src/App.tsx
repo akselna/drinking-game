@@ -5,24 +5,26 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 import Home from "./components/Home";
 import Game from "./components/Game";
 import "./App.css";
 import { SocketContext } from "./context/SocketContext";
 import "./styles/global.css";
+import { CustomSocket } from "./types/socket.types";
 
 // Determine the server URL dynamically
 const SERVER_URL = process.env.REACT_APP_SERVER_URL || window.location.origin;
 
 // Initialize socket connection with reconnection settings
-const socket: Socket = io(SERVER_URL, {
+// Use type assertion to tell TypeScript this is a CustomSocket
+const socket = io(SERVER_URL, {
   reconnection: true,
   reconnectionAttempts: Infinity,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
   timeout: 20000,
-});
+}) as CustomSocket;
 
 function App() {
   const [isConnected, setIsConnected] = useState(socket.connected);
@@ -118,14 +120,39 @@ function App() {
     };
 
     // Add handlers for successful session creation/joining
-    const onSessionCreated = () => {
-      console.log("Session created successfully");
+    const onSessionCreated = (data: any) => {
+      console.log("Session created successfully", data);
       setConnectionError(null); // Clear any connection errors
+
+      // Store host ID when creating a session (creator is the host)
+      socket.hostId = socket.id;
     };
 
-    const onSessionJoined = () => {
-      console.log("Session joined successfully");
+    const onSessionJoined = (data: any) => {
+      console.log("Session joined successfully", data);
       setConnectionError(null); // Clear any connection errors
+
+      // Store the host ID when joining a session
+      if (data.isHost) {
+        socket.hostId = socket.id;
+      } else if (data.hostId) {
+        // If the server provides the host ID directly
+        socket.hostId = data.hostId;
+      } else {
+        // Find the host by checking if they're marked as host in players array
+        // This is a fallback that might not work in all cases
+        const hostPlayer = data.players.find((p: any) => p.isHost);
+        if (hostPlayer) {
+          socket.hostId = hostPlayer.id;
+        }
+      }
+    };
+
+    // Handle host changed event
+    const onHostChanged = (data: any) => {
+      console.log("Host changed:", data);
+      // Update host ID when it changes
+      socket.hostId = data.newHost;
     };
 
     // Register event listeners
@@ -137,6 +164,7 @@ function App() {
     socket.on("reconnect", onReconnect);
     socket.on("session-created", onSessionCreated);
     socket.on("session-joined", onSessionJoined);
+    socket.on("host-changed", onHostChanged);
 
     // If we're already connected, run the connect handler immediately
     if (socket.connected) {
@@ -157,6 +185,7 @@ function App() {
       socket.off("reconnect", onReconnect);
       socket.off("session-created", onSessionCreated);
       socket.off("session-joined", onSessionJoined);
+      socket.off("host-changed", onHostChanged);
     };
   }, [reconnectAttempts]);
 

@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import "../styles/GameLobby.css";
+import { SocketContext } from "../context/SocketContext";
 
 // Define the interface for player objects
 interface Player {
   id: string;
   name: string;
-  isHost: boolean;
+  disconnected?: boolean;
 }
 
 // Define the props interface for the GameLobby component
@@ -34,7 +35,22 @@ const GameLobby: React.FC<GameLobbyProps> = ({
 }) => {
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
-  const hostPlayer = players.find((player: Player) => player.isHost);
+  const socket = useContext(SocketContext);
+
+  // Get the current socket ID
+  const currentSocketId = socket?.id;
+
+  // Get the host ID from the socket - this will work for ALL users
+  // If the current user is host (isHost=true), then they are the host
+  // Otherwise, use the hostId that's been stored in the socket
+  const hostId = isHost ? currentSocketId : socket?.hostId;
+
+  // Sort players to ensure the host is always at the top
+  const sortedPlayers = [...players].sort((a, b) => {
+    if (a.id === hostId) return -1;
+    if (b.id === hostId) return 1;
+    return 0;
+  });
 
   const copySessionCode = (): void => {
     navigator.clipboard.writeText(sessionId);
@@ -86,6 +102,11 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     },
   ];
 
+  // Find the host's name for the waiting message
+  const hostName = isHost
+    ? "verten" // If current user is host, use generic term
+    : players.find((p) => p.id === hostId)?.name || "verten";
+
   return (
     <div className="game-lobby">
       <div className="lobby-container">
@@ -134,19 +155,30 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 {/* Player list */}
                 <div className="players-divider"></div>
                 <ul className="players-list">
-                  {players.map((player: Player) => (
+                  {sortedPlayers.map((player: Player) => (
                     <li
                       key={player.id}
                       className={`player-item ${
-                        player.isHost ? "host-player" : ""
-                      }`}
+                        player.id === hostId ? "host-player" : ""
+                      } ${player.disconnected ? "disconnected" : ""}`}
                     >
                       <span className="player-icon">
-                        {player.isHost ? "👑" : "👤"}
+                        {player.id === hostId ? "👑" : "👤"}
                       </span>
                       <span className="player-name">{player.name}</span>
-                      {player.isHost && (
+                      {player.id === hostId && (
                         <span className="host-badge">Vert</span>
+                      )}
+                      {player.disconnected && (
+                        <span
+                          className="disconnected-badge"
+                          title="Midlertidig frakoblet"
+                        >
+                          🔄
+                        </span>
+                      )}
+                      {player.id === currentSocketId && (
+                        <span className="current-user-badge">(Deg)</span>
                       )}
                     </li>
                   ))}
@@ -161,9 +193,9 @@ const GameLobby: React.FC<GameLobbyProps> = ({
               <div className="card-content">
                 <h2 className="card-title">
                   {isHost ? "Velg et spill å spille" : "Tilgjengelige spill"}
-                  {!isHost && hostPlayer && (
+                  {!isHost && (
                     <span className="waiting-for-host">
-                      Venter på at {hostPlayer.name} skal velge
+                      Venter på at {hostName} skal velge
                     </span>
                   )}
                 </h2>

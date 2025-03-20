@@ -50,32 +50,29 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
     }
   };
 
-  // Find the host player
-  const hostPlayer = players.find(
-    (player) => player.isHost || player.id === socket?.hostId
-  );
-
-  // Sort players so host appears at the top
+  // Sort players - host first, then by name
   const sortedPlayers = [...players].sort((a, b) => {
-    const aIsHost = a.isHost || a.id === socket?.hostId;
-    const bIsHost = b.isHost || b.id === socket?.hostId;
+    // If current user is host, their ID should be used to identify the host
+    // Otherwise use the hostId stored in the socket
+    const hostId = isHost ? currentUserId : socket?.hostId;
 
-    if (aIsHost && !bIsHost) return -1;
-    if (!aIsHost && bIsHost) return 1;
-    return 0;
+    // Host always comes first
+    if (a.id === hostId) return -1;
+    if (b.id === hostId) return 1;
+
+    // Then sort alphabetically
+    return a.name.localeCompare(b.name);
   });
 
   return (
     <>
-      {!isOpen && (
-        <button
-          className="participant-toggle"
-          onClick={togglePanel}
-          aria-label="Vis deltakere"
-        >
-          👥
-        </button>
-      )}
+      <button
+        className={`participant-toggle ${isHost ? "is-host" : ""}`}
+        onClick={togglePanel}
+        aria-label="Vis deltakere"
+      >
+        👥
+      </button>
 
       {/* Overlay shown when panel is open */}
       <div
@@ -97,7 +94,9 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
 
         <ul className="participant-list">
           {sortedPlayers.map((player) => {
-            const isPlayerHost = hostPlayer && player.id === hostPlayer.id;
+            // If current user is host, their ID is the host ID - otherwise use the hostId from socket
+            const hostId = isHost ? currentUserId : socket?.hostId;
+            const isPlayerHost = player.id === hostId;
             const isCurrentUser = player.id === currentUserId;
             const hasVotedLambo = lamboVotes.includes(player.id);
 
@@ -111,7 +110,6 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
                 <div className="participant-info">
                   {isPlayerHost && (
                     <div className="host-indicator">
-                      <span className="host-label">VERT</span>
                       <span className="host-badge" title="Vert">
                         👑
                       </span>

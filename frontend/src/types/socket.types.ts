@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 
-// Utvidet Socket-type med dine egendefinerte egenskaper
+// Extended Socket type with custom properties
 export interface CustomSocket extends Socket {
   hostId?: string;
-  // Legg til andre egendefinerte egenskaper her om nødvendig
+  // Add other custom properties here as needed
 }

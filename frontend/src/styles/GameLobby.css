@@ -421,3 +421,60 @@
     margin-top: 0.5rem;
   }
 }
+
+/* Add these improved host styles to your GameLobby.css file */
+
+/* Enhanced host player styling */
+.player-item.host-player {
+  background-color: rgba(255, 215, 0, 0.2);
+  border-left: 4px solid #ffd700;
+  padding-left: 12px;
+  font-weight: bold;
+  position: relative;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Create a visual separation after the host */
+.player-item.host-player::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Make the host icon more prominent */
+.player-icon.host-icon {
+  font-size: 1.4rem;
+  color: #ffd700;
+  margin-right: 10px;
+  /* Optional glowing effect */
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+}
+
+/* Improve the host badge */
+.host-badge {
+  background-color: #ffd700;
+  color: #000;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  margin-left: 8px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Better layout for player details */
+.player-details {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+/* Regular player item hover effect */
+.player-item:not(.host-player):hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
