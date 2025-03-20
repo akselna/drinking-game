@@ -1,172 +1,423 @@
-/* Game Lobby styles */
+/* Clean and Aesthetic Game Lobby Styles */
 .game-lobby {
-  background-color: #1e1e1e;
-  padding: 24px;
-  border-radius: 10px;
-  max-width: 800px;
+  background-color: #121212;
+  min-height: 100vh;
+  padding: 2rem;
+  color: white;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.lobby-container {
+  max-width: 1200px;
   margin: 0 auto;
 }
 
-.game-lobby h1 {
+.lobby-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 3rem;
+  padding-top: 1rem;
 }
 
-.session-info {
+.lobby-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 0;
+  letter-spacing: -0.5px;
+}
+
+/* Card styling */
+.session-card {
+  background-color: #1e1e1e;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.session-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+  padding-bottom: 0.75rem;
   display: flex;
   justify-content: space-between;
-  background-color: #272727;
-  padding: 16px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  align-items: center;
 }
 
-.session-code {
-  margin: 0;
+.card-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2rem;
+  height: 2px;
+  background-color: #7c4dff;
 }
 
-.player-count {
-  margin: 0;
+.waiting-for-host {
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: 1rem;
 }
 
-.players-list {
-  background-color: #272727;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
-
-.players-list h2 {
-  margin-top: 0;
-  margin-bottom: 16px;
-}
-
-.players-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.players-list li {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.players-list li.host {
-  color: #ffd700;
-}
-
-.players-list li:last-child {
-  border-bottom: none;
-}
-
-.game-selection {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.game-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 16px;
-}
-
-.game-button {
-  padding: 20px;
-  font-size: 18px;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  min-height: 120px; /* Fixed height for all buttons */
+/* Session ID styling */
+.session-id {
+  font-size: 3rem;
+  font-weight: 700;
   color: white;
-  min-height: 100px;
+  margin: 1.5rem 0;
+  text-align: center;
+  letter-spacing: 2px;
+}
+
+/* Button styling */
+.button-group {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.action-button {
+  flex: 1;
+  background-color: #7c4dff;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative; /* Ensure consistent positioning */
-  overflow: hidden; /* Contain any pseudo-elements */
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.action-button:hover {
+  background-color: #9575ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.action-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.action-button.secondary {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.action-button.secondary:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.button-icon {
+  margin-right: 0.5rem;
+}
+
+/* Combined player card styling */
+.players-card .card-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Player count styling */
+.player-count {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.current-count {
+  font-size: 4rem;
+  font-weight: 700;
+  color: white;
+}
+
+.max-count {
+  font-size: 2rem;
+  margin-left: 0.5rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Divider between count and list */
+.players-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  margin: 1rem 0;
+}
+
+/* Players list styling */
+.players-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 250px;
+  overflow-y: auto;
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 0.5rem;
+}
+
+/* Scrollbar styling for players list */
+.players-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.players-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.players-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.players-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.player-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.player-item:last-child {
+  border-bottom: none;
+}
+
+.player-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.player-item.host-player {
+  background-color: rgba(255, 215, 0, 0.15);
+  position: relative;
+}
+
+.player-item.host-player::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #ffd700;
+}
+
+.player-icon {
+  margin-right: 0.75rem;
+  font-size: 1.1rem;
+}
+
+.player-name {
+  flex: 1;
+  text-align: left;
+}
+
+.host-badge {
+  background-color: rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  border-radius: 1rem;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+  font-weight: bold;
+}
+
+/* Game selection styling */
+.game-selection-card {
+  height: 100%;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.game-button {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  border: 2px solid transparent;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 7rem;
+}
+
+.game-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.1);
+}
+
+.game-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-button.selected {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border-width: 2px;
+  filter: brightness(1.2);
+}
+
+/* Non-host game buttons styling */
+.game-button.non-host {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.game-button.non-host:hover {
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.host-control-note {
   text-align: center;
-  aspect-ratio: 1.5 / 1; /* Add fixed aspect ratio */
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
 }
 
-.game-button.never-have-i-ever {
-  background-color: #e21b3c;
+.game-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
 }
 
-.game-button.music-guess {
-  background-color: #1368ce;
+.game-name {
+  font-weight: 500;
 }
 
-.game-button.drink-or-judge {
-  background-color: #9c27b0; /* Purple */
-}
-
-.game-button.beat4beat {
-  background-color: #e53935; /* Red */
-}
-
-.waiting-message {
+/* Footer styling */
+.footer {
   text-align: center;
-  background-color: #272727;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
+  margin-top: 2rem;
+  padding-bottom: 1.5rem;
 }
 
 .leave-button {
-  width: 100%;
-  padding: 12px;
-  background-color: rgba(207, 102, 121, 0.1);
-  color: #cf6679;
-  border: 1px solid #cf6679;
-  border-radius: 5px;
-  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.2s ease;
 }
 
-/* Mobile optimizations */
+.leave-button:hover {
+  background-color: rgba(255, 77, 79, 0.15);
+  color: #ff4d4f;
+  border-color: rgba(255, 77, 79, 0.3);
+}
+
+/* Layout */
+.page-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
   .game-lobby {
-    padding: 16px;
+    padding: 1rem;
   }
 
-  .session-info {
+  .lobby-title {
+    font-size: 2rem;
+  }
+
+  .page-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .session-id {
+    font-size: 2.5rem;
+  }
+
+  .games-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-content {
+    padding: 1.25rem;
+  }
+
+  .waiting-icon {
+    font-size: 3rem;
+  }
+
+  .waiting-text {
+    font-size: 1.3rem;
+  }
+
+  .players-list {
+    max-height: 200px;
+  }
+
+  .current-count {
+    font-size: 3.5rem;
+  }
+
+  .max-count {
+    font-size: 1.8rem;
+  }
+
+  .card-title {
     flex-direction: column;
-    gap: 8px;
+    align-items: flex-start;
   }
 
-  .game-buttons {
-    grid-template-columns: repeat(2, 1fr); /* Two columns on mobile */
-    gap: 12px;
+  .waiting-for-host {
+    margin-left: 0;
+    margin-top: 0.5rem;
   }
-
-  .game-button {
-    width: 100%;
-    min-height: 80px; /* Smaller height on mobile */
-    font-size: 16px;
-    padding: 16px 8px;
-  }
-}
-
-/* Even smaller screens */
-@media (max-width: 480px) {
-  .game-buttons {
-    grid-template-columns: 1fr; /* One column on very small screens */
-  }
-}
-
-.game-button.not-allowed-to-laugh {
-  background-color: #6200ea; /* Purple */
-  background-image: linear-gradient(135deg, #6200ea, #b388ff);
-  position: relative;
-  overflow: hidden;
-}
-
-.game-button.not-allowed-to-laugh::after {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  font-size: 24px;
 }
