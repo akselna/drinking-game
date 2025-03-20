@@ -284,9 +284,27 @@ export const memeTemplates: MemeTemplate[] = [
     type: "video",
   },
   {
-    id: "shocked-guy",
-    url: "https://i.imgflip.com/77zabx.mp4",
-    name: "Shocked guy",
+    id: "erection-gif",
+    url: "https://i.imgflip.com/52ivy3.mp4",
+    name: "Erection gif",
+    type: "video",
+  },
+  {
+    id: "side-eye",
+    url: "https://i.imgflip.com/7m60j9.mp4",
+    name: "Side eye",
+    type: "video",
+  },
+  {
+    id: "sick-transformation",
+    url: "https://i.imgflip.com/5w6a2x.mp4",
+    name: "Sick transformation",
+    type: "video",
+  },
+  {
+    id: "old-guy-computer",
+    url: "https://i.imgflip.com/74w5gw.mp4",
+    name: "Old guy computer",
     type: "video",
   },
 ];
