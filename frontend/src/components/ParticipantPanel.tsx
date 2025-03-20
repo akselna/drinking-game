@@ -113,7 +113,6 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
                 <div className="participant-info">
                   {isPlayerHost && (
                     <div className="host-indicator">
-                      <span className="host-label">Vert</span>
                       <span className="host-badge" title="Vert">
                         👑
                       </span>
@@ -157,9 +156,9 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
         </ul>
 
         <div className="participant-footer">
-          <p className="session-id">
-            Øktkode: <strong>{sessionId}</strong>
-          </p>
+          <h4>
+            Sesjonskode: <strong>{sessionId}</strong>
+          </h4>
           <button
             onClick={() => {
               navigator.clipboard.writeText(
