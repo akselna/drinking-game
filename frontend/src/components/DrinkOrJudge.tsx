@@ -244,8 +244,10 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
     );
   }
 
-  // Render results phase
   if (currentPhase === "results") {
+    // Get highest vote count to handle ties
+    const highestVoteCount = results.length > 0 ? results[0].votes : 0;
+
     return (
       <div
         className="drink-or-judge results-phase"
@@ -259,13 +261,14 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
 
         <div className="results-container">
           {results.map((result, index) => {
-            // Calculate drinks: 2 times the number of votes
-            const drinkAmount = result.votes * 2;
+            // Check if this player is tied for first (has highest number of votes)
+            const isWinner =
+              result.votes > 0 && result.votes === highestVoteCount;
 
             return (
               <div
                 key={result.id}
-                className={`result-item ${index === 0 ? "winner" : ""} ${
+                className={`result-item ${isWinner ? "winner" : ""} ${
                   result.id === socket?.id ? "current-user" : ""
                 }`}
               >
@@ -277,14 +280,10 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
                   <span className="vote-text">stemmer</span>
                 </div>
 
-                {/* Show drinking instruction for anyone with votes */}
-                {result.votes > 0 && (
-                  <div
-                    className={`drinking-instruction ${
-                      index === 0 ? "winner-drink" : ""
-                    }`}
-                  >
-                    Drikk {drinkAmount} slurker!
+                {/* Show drinking instruction for players tied for highest vote count */}
+                {isWinner && (
+                  <div className="drinking-instruction winner-drink">
+                    Drikk {result.votes} slurker!
                   </div>
                 )}
               </div>

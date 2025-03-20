@@ -8,8 +8,6 @@
 
 .game-content {
   flex: 1;
-  padding: 20px;
-  padding-top: 80px; /* Space for participant toggle button */
 }
 
 .reconnecting-message {
@@ -35,9 +33,6 @@
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
-  .game-content {
-    padding: 10px;
-  }
 }
 
 /* Host Main Menu button container */
