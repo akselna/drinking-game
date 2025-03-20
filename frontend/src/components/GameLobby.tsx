@@ -59,7 +59,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   };
 
   const copyInviteLink = (): void => {
-    const inviteText = `Bli med i drikkeleken min! \nKode: ${sessionId} \nhttps://www.fyllehund.n/`;
+    const inviteText = `Bli med i drikkeleken min! \nKode: ${sessionId} \nhttps://www.fyllehund.no/`;
     navigator.clipboard.writeText(inviteText);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
