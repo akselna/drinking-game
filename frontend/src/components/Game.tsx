@@ -454,26 +454,27 @@ const Game: React.FC = () => {
       {/* Render game content */}
       <div className="game-content">{renderGame()}</div>
 
-      {/* Lambo button */}
-      {!isReconnecting && !error && sessionData.sessionId && (
-        <button
-          onClick={handleLamboVote}
-          className={`lambo-button ${
-            lamboVotes.includes(socket?.id || "") ? "voted" : ""
-          }`}
-          aria-label="Lambo"
-        >
-          🎉 Lambo 🎉
-          {lamboVotes.length > 0 && (
-            <span className="lambo-vote-count">
-              {lamboVotes.length}/{sessionData.players.length}
-            </span>
-          )}
-        </button>
-      )}
-
       {/* Mobile buttons container for better layout */}
       <div className="game-mobile-buttons">
+        {/* Lambo button */}
+        {!isReconnecting && !error && sessionData.sessionId && (
+          <div className="lambo-button-container">
+            <button
+              onClick={handleLamboVote}
+              className={`lambo-button ${
+                lamboVotes.includes(socket?.id || "") ? "voted" : ""
+              }`}
+              aria-label="Lambo"
+            >
+              🎉 Lambo 🎉
+              {lamboVotes.length > 0 && (
+                <span className="lambo-vote-count">
+                  {lamboVotes.length}/{sessionData.players.length}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
         {/* Main Menu button for host */}
         {sessionData.isHost && sessionData.gameType !== GAME_TYPES.NONE && (
           <div className="host-menu-button-container">
