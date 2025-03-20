@@ -59,7 +59,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   };
 
   const copyInviteLink = (): void => {
-    const inviteText = `Bli med i drikkeleken min! \nKode: ${sessionId}`;
+    const inviteText = `Bli med i drikkeleken min! \nKode: ${sessionId} \nhttps://www.fyllehund.n/`;
     navigator.clipboard.writeText(inviteText);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
@@ -135,7 +135,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                     className="action-button secondary"
                   >
                     <span className="button-icon">💬</span>
-                    <span className="button-text">Del</span>
+                    <span className="button-text">Del lenke</span>
                   </button>
                 </div>
               </div>
@@ -166,9 +166,6 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                         {player.id === hostId ? "👑" : "👤"}
                       </span>
                       <span className="player-name">{player.name}</span>
-                      {player.id === hostId && (
-                        <span className="host-badge">Vert</span>
-                      )}
                       {player.disconnected && (
                         <span
                           className="disconnected-badge"

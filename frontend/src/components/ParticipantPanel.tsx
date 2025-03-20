@@ -66,13 +66,16 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
 
   return (
     <>
-      <button
-        className={`participant-toggle ${isHost ? "is-host" : ""}`}
-        onClick={togglePanel}
-        aria-label="Vis deltakere"
-      >
-        👥
-      </button>
+      {/* Only show toggle button when panel is closed */}
+      {!isOpen && (
+        <button
+          className={`participant-toggle ${isHost ? "is-host" : ""}`}
+          onClick={togglePanel}
+          aria-label="Vis deltakere"
+        >
+          👥
+        </button>
+      )}
 
       {/* Overlay shown when panel is open */}
       <div
@@ -110,6 +113,7 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
                 <div className="participant-info">
                   {isPlayerHost && (
                     <div className="host-indicator">
+                      <span className="host-label">Vert</span>
                       <span className="host-badge" title="Vert">
                         👑
                       </span>
