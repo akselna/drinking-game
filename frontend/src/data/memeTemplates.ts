@@ -283,4 +283,10 @@ export const memeTemplates: MemeTemplate[] = [
     name: "Falling Kermit the frog",
     type: "video",
   },
+  {
+    id: "shocked-guy",
+    url: "https://i.imgflip.com/77zabx.mp4",
+    name: "Shocked guy",
+    type: "video",
+  },
 ];
