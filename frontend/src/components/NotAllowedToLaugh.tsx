@@ -317,7 +317,7 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
               <input
                 type="number"
                 min="10"
-                max="300"
+                max="600"
                 defaultValue="60"
                 className="timer-input"
                 onChange={(e) => {
