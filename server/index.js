@@ -5,9 +5,39 @@ const cors = require("cors");
 require("dotenv").config();
 const spotifyService = require("./spotify");
 const path = require("path");
+const sessionTimers = new Map();
 
 const app = express();
 const SESSION_INACTIVITY_TIMEOUT = 3600000; // 1 hour in milliseconds
+
+function sanitizeSessionForClient(session) {
+  if (!session) return null;
+
+  // Create a deep copy of the session
+  const cleanSession = JSON.parse(
+    JSON.stringify({
+      host: session.host,
+      players: session.players,
+      gameType: session.gameType,
+      lastActivity: session.lastActivity,
+      lamboVotes: session.lamboVotes || [],
+    })
+  );
+
+  // If there's game state, clone it too but exclude timer references
+  if (session.gameState) {
+    // Create a sanitized version of gameState without timer references
+    const sanitizedGameState = { ...session.gameState };
+
+    // Remove timer IDs and other non-serializable properties
+    delete sanitizedGameState.timerId;
+
+    // Add the sanitized game state to the clean session
+    cleanSession.gameState = sanitizedGameState;
+  }
+
+  return cleanSession;
+}
 
 // Add this function to implement session cleanup
 function setupSessionCleanup() {
@@ -407,13 +437,14 @@ io.on("connection", (socket) => {
 
     // CHANGE: Explicitly send the host ID to all players
     // This is the critical change that ensures all players know who the host is
+    const sanitizedSession = sanitizeSessionForClient(session);
     socket.emit("session-joined", {
       sessionId: sessionIdUpper,
       isHost: socket.id === session.host,
-      hostId: session.host, // Add this line to send the host ID
-      gameType: session.gameType,
-      gameState: session.gameState,
-      players: session.players,
+      hostId: session.host,
+      gameType: sanitizedSession.gameType,
+      gameState: sanitizedSession.gameState,
+      players: sanitizedSession.players,
     });
 
     // Update all players in the session
@@ -1890,7 +1921,7 @@ io.on("connection", (socket) => {
     }, 1000);
 
     // Store the timer ID so we can clear it if needed
-    session.gameState.timerId = timerId;
+    sessionTimers.set(sessionId, timerId);
   });
 
   // Never Have I Ever - Submit response to a statement
