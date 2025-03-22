@@ -1,10 +1,15 @@
-/* Participant panel styles */
+/* Updated Participant panel styles to match GameLobby theme */
 .participant-toggle {
   position: fixed;
   top: 16px;
   left: 16px;
   z-index: 100;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(
+    124,
+    77,
+    255,
+    0.2
+  ); /* Purple accent with transparency */
   color: white;
   width: 48px;
   height: 48px;
@@ -12,10 +17,22 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border: none;
   cursor: pointer;
   font-size: 24px;
+  transition: all 0.2s ease;
+}
+
+.participant-toggle:hover {
+  background-color: rgba(124, 77, 255, 0.4);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.participant-toggle:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .participant-panel {
@@ -25,12 +42,12 @@
   height: 100vh;
   width: 80%;
   max-width: 320px;
-  background-color: #1e1e1e;
+  background-color: #1e1e1e; /* Match GameLobby card color */
   z-index: 99;
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
   overflow-y: auto;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.5);
   color: white;
 }
 
@@ -40,17 +57,20 @@
 
 .participant-panel-header {
   padding: 16px;
-  background-color: #6200ea;
+  background-color: #7c4dff; /* Match GameLobby purple */
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 2;
 }
 
 .participant-panel-header h2 {
   margin: 0;
   font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .close-button {
@@ -60,6 +80,21 @@
   font-size: 24px;
   cursor: pointer;
   padding: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.close-button:active {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .participant-list {
@@ -69,83 +104,20 @@
 }
 
 .participant-item {
-  padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: background-color 0.2s ease;
 }
 
-.participant-item.host {
-  background-color: rgba(255, 215, 0, 0.1);
+.participant-item:last-child {
+  border-bottom: none;
 }
 
-.participant-item.current-user {
-  font-weight: bold;
-}
-
-.participant-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.host-badge {
-  margin-left: 8px;
-  font-size: 16px;
-}
-
-.participant-actions button {
-  background: none;
-  border: none;
-  color: #ddd;
-  cursor: pointer;
-  padding: 8px;
-  font-size: 16px;
-  transition: color 0.2s ease;
-}
-
-.participant-actions button:hover {
-  color: #ffd700;
-}
-
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 98;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease-in-out;
-}
-
-.overlay.open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.participant-footer {
-  padding: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.session-id {
-  margin-bottom: 12px;
-  font-size: 50px;
-}
-
-.invite-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #6200ea;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
+.participant-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Enhanced host styling */
@@ -156,11 +128,29 @@
   font-weight: bold;
   position: relative;
   margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-/* Add slight shadow to make it stand out */
-.participant-item.host {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+/* Create space after the host in the list */
+.participant-item.host::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.participant-item.current-user {
+  font-weight: bold;
+}
+
+.participant-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
 }
 
 .host-indicator {
@@ -182,21 +172,10 @@
 
 .host-badge {
   font-size: 18px;
+  color: #ffd700;
 }
 
-/* Create space after the host in the list */
-.participant-item.host::after {
-  content: "";
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-/* Make transfer host button more visible */
-.transfer-host-button {
+.participant-actions button {
   background-color: rgba(255, 215, 0, 0.2);
   border-radius: 50%;
   width: 36px;
@@ -204,12 +183,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #ddd;
+  cursor: pointer;
+  border: none;
+  font-size: 16px;
   transition: all 0.2s ease;
 }
 
-.transfer-host-button:hover {
+.participant-actions button:hover {
   background-color: rgba(255, 215, 0, 0.4);
   transform: scale(1.1);
+  color: #ffd700;
+}
+
+.participant-actions button:active {
+  transform: scale(0.95);
 }
 
 /* Disconnected player styling */
@@ -223,62 +211,97 @@
   color: #ff9800;
 }
 
-/* Ensure the participant info is displayed correctly */
-.participant-info {
-  display: flex;
-  align-items: center;
-  flex: 1;
-}
-
-/* Add a clear title to the participant panel */
-.participant-panel-header h2 {
-  position: relative;
-  padding-right: 30px;
-}
-
-/* Update the existing styles for the button */
-.participant-toggle {
+.overlay {
   position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 100;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  border: none;
-  cursor: pointer;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 98;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+  backdrop-filter: blur(2px);
+}
+
+.overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.participant-footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.participant-footer h4 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.session-id {
+  margin-bottom: 12px;
   font-size: 24px;
+  font-weight: bold;
+  color: white;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.invite-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #7c4dff; /* Match GameLobby purple */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.invite-button:hover {
+  background-color: #9575ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.invite-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Add host indicator to the toggle button when host */
 .participant-toggle.is-host {
   border: 2px solid #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: pulse-host 2s infinite;
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  .host-label {
-    font-size: 9px;
-    padding: 2px 6px;
+@keyframes pulse-host {
+  0% {
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
   }
-
-  .participant-item.host {
-    margin-bottom: 12px;
+  50% {
+    box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
 
-/* Add to ParticipantPanel.css */
+/* Lambo vote indicator */
 .lambo-vote-indicator {
   display: inline-block;
   margin-left: 8px;
-  font-size: 14px;
+  font-size: 16px;
   animation: bounce 1s infinite;
+  color: #9c27b0; /* Matching lambo button color */
 }
 
 @keyframes bounce {
@@ -288,5 +311,42 @@
   }
   50% {
     transform: translateY(-4px);
+  }
+}
+
+/* Current user badge */
+.current-user-badge {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 6px;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .participant-panel {
+    width: 85%;
+  }
+
+  .host-label {
+    font-size: 9px;
+    padding: 2px 6px;
+  }
+
+  .participant-item.host {
+    margin-bottom: 12px;
+  }
+
+  .participant-toggle {
+    top: 12px;
+    left: 12px;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .session-id {
+    font-size: 20px;
   }
 }

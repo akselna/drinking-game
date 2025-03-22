@@ -1,13 +1,19 @@
-/* Global styles for the entire app */
+/* Updated Global styles with GameLobby theme */
 :root {
-  --primary-color: #6200ea;
+  --primary-color: #7c4dff; /* Purple from GameLobby (slightly brighter than the original dark purple) */
+  --primary-color-hover: #9575ff;
   --secondary-color: #03dac6;
-  --background-color: #121212;
-  --surface-color: #1e1e1e;
+  --background-color: #121212; /* Dark background from GameLobby */
+  --surface-color: #1e1e1e; /* Card background from GameLobby */
   --error-color: #cf6679;
   --success-color: #00c853;
   --text-color: #ffffff;
   --text-secondary-color: rgba(255, 255, 255, 0.7);
+  --host-color: #ffd700; /* Gold color for host elements */
+  --accent-color: #6200ea; /* Deeper purple for some accent elements */
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --card-shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.3);
+  --button-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
 body {
@@ -31,6 +37,96 @@ body {
   flex-direction: column;
 }
 
+/* Card styling consistent with GameLobby */
+.card {
+  background-color: var(--surface-color);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+  margin-bottom: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 1.5rem;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+  padding-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 2rem;
+  height: 2px;
+  background-color: var(--primary-color);
+}
+
+/* Common button styles */
+.btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--button-shadow);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-color-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 0.5rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(124, 77, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
 /* Connection status messages */
 .connection-error {
   position: fixed;
@@ -39,9 +135,10 @@ body {
   right: 0;
   background-color: var(--error-color);
   color: var(--text-color);
-  padding: 10px;
+  padding: 12px;
   text-align: center;
   z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
 .connecting-message {
@@ -51,43 +148,78 @@ body {
   right: 0;
   background-color: var(--primary-color);
   color: var(--text-color);
-  padding: 10px;
+  padding: 12px;
   text-align: center;
   z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Common button styles */
-button {
-  cursor: pointer;
-  font-size: 16px;
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  transition: background-color 0.3s, transform 0.1s;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background-color: var(--primary-color);
+/* Form elements styling */
+input,
+textarea,
+select {
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
   color: white;
+  font-size: 16px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.btn-secondary {
-  background-color: transparent;
-  color: var(--primary-color);
-  border: 1px solid var(--primary-color);
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(124, 77, 255, 0.25);
+  outline: none;
+}
+
+/* Error messaging */
+.error-message {
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 0.5rem;
+  background-color: rgba(207, 102, 121, 0.2);
+  color: var(--error-color);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.error-message::before {
+  content: "⚠️";
+  margin-right: 8px;
+}
+
+/* Loading indicators */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.loading-spinner::after {
+  content: "";
+  width: 30px;
+  height: 30px;
+  border: 4px solid rgba(124, 77, 255, 0.3);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Mobile optimizations */
@@ -124,10 +256,56 @@ button:disabled {
     width: 100%;
     box-sizing: border-box;
   }
+
+  .card {
+    padding: 1rem;
+    border-radius: 0.75rem;
+  }
 }
 
-@media (max-width: 767px) {
-  .leave-button {
-    display: none !important;
-  }
+/* Modal styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--surface-color);
+  border-radius: 1rem;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-title {
+  margin-top: 0;
+  margin-bottom: 16px;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.modal-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 40px;
+  height: 2px;
+  background-color: var(--primary-color);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
 }

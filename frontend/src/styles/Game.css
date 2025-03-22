@@ -1,30 +1,65 @@
-/* Game styles */
+/* Updated Game styles to match GameLobby theme */
 .game-container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   position: relative;
+  background-color: #121212; /* Match GameLobby dark background */
 }
 
 .game-content {
   flex: 1;
   /* Add padding to prevent content being hidden behind buttons */
+  padding-bottom: 80px;
 }
 
 .reconnecting-message {
   text-align: center;
   padding: 40px;
-  background-color: rgba(98, 0, 234, 0.1);
-  border-radius: 10px;
+  background-color: rgba(124, 77, 255, 0.1); /* Purple with transparency */
+  border-radius: 16px;
   margin: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 20px rgba(124, 77, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(124, 77, 255, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 20px rgba(124, 77, 255, 0.2);
+  }
 }
 
 .error-container {
   text-align: center;
   padding: 40px;
-  background-color: rgba(207, 102, 121, 0.1);
-  border-radius: 10px;
+  background-color: rgba(207, 102, 121, 0.1); /* Red with transparency */
+  border-radius: 16px;
   margin: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.error-container h2 {
+  color: #cf6679;
+  margin-bottom: 16px;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 8px;
+}
+
+.error-container h2::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #cf6679;
 }
 
 .error-message {
@@ -44,26 +79,53 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(5px);
 }
 
 .leave-confirmation-dialog {
-  background-color: #1e1e1e;
-  border-radius: 12px;
+  background-color: #1e1e1e; /* Match GameLobby card color */
+  border-radius: 16px;
   padding: 24px;
   width: 90%;
   max-width: 400px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: dialog-appear 0.3s ease-out;
+}
+
+@keyframes dialog-appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .leave-confirmation-dialog h3 {
   margin-top: 0;
   margin-bottom: 16px;
   text-align: center;
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.leave-confirmation-dialog h3::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background-color: #7c4dff; /* Purple accent color */
 }
 
 .leave-confirmation-dialog p {
   margin-bottom: 24px;
   text-align: center;
+  line-height: 1.6;
 }
 
 .confirmation-buttons {
@@ -74,12 +136,13 @@
 .confirm-button,
 .cancel-button {
   flex: 1;
-  padding: 12px;
+  padding: 14px;
   border-radius: 8px;
   font-weight: bold;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .confirm-button {
@@ -89,15 +152,30 @@
 
 .confirm-button:hover {
   background-color: #d44a5f;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .cancel-button {
-  background-color: #333;
+  background-color: rgba(255, 255, 255, 0.1);
   color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .cancel-button:hover {
-  background-color: #444;
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cancel-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* =================== DESKTOP BUTTON STYLES =================== */
@@ -124,7 +202,7 @@
   color: white;
   border: none;
   border-radius: 50px;
-  padding: 12px 20px;
+  padding: 14px 24px;
   font-weight: bold;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -151,7 +229,7 @@
   color: white;
   border: none;
   border-radius: 50px;
-  padding: 12px 20px;
+  padding: 14px 24px;
   font-weight: bold;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   display: flex;
@@ -182,7 +260,7 @@
   color: white;
   border: none;
   border-radius: 50px;
-  padding: 12px 20px;
+  padding: 14px 24px;
   font-weight: bold;
   font-size: 16px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
@@ -212,10 +290,11 @@
 .lambo-vote-count {
   background-color: rgba(255, 255, 255, 0.3);
   color: white;
-  padding: 2px 6px;
-  border-radius: 10px;
-  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 14px;
   margin-left: 8px;
+  font-weight: bold;
 }
 
 /* =================== MOBILE STYLES =================== */
@@ -226,19 +305,19 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: rgba(30, 30, 30, 0.9);
+    background-color: rgba(30, 30, 30, 0.95);
     z-index: 95;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
     box-sizing: border-box;
-    backdrop-filter: blur(5px);
-    padding: 10px;
+    backdrop-filter: blur(8px);
+    padding: 12px;
     /* Safe area for notched phones */
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
 
     /* Use grid for equal sizing of button areas */
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 8px;
+    gap: 10px;
   }
 
   /* Reset ALL positioning for mobile buttons */
@@ -264,12 +343,13 @@
   .mobile-leave-button,
   .lambo-button {
     width: 100%;
-    padding: 8px 12px;
+    padding: 10px 12px;
     font-size: 14px !important;
     min-height: 36px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    border-radius: 8px;
   }
 
   /* Equal hover and active states for ALL mobile buttons */
@@ -289,6 +369,11 @@
 
   /* Ensure content isn't hidden behind the button bar */
   .game-content {
-    padding-bottom: 70px;
+    padding-bottom: 80px;
+  }
+
+  .leave-confirmation-dialog {
+    width: 95%;
+    padding: 20px;
   }
 }
