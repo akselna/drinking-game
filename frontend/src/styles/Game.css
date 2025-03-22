@@ -378,40 +378,42 @@
   }
 }
 
-/* Updated button styling for consistency */
+/* Fixed Button Styles - Ensuring exact vertical alignment */
 
 /* =================== DESKTOP BUTTON STYLES =================== */
-/* These apply by default and are overridden in the mobile media query */
-
-/* Button containers positioning on desktop */
-.host-menu-button-container {
+/* Reset all button containers to have identical positioning context */
+.host-menu-button-container,
+.mobile-leave-button-container,
+.lambo-button-container {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: 20px !important; /* Force same bottom position */
   z-index: 90;
+  height: 44px; /* Fixed height for all containers */
+}
+
+.host-menu-button-container {
+  left: 20px;
 }
 
 .mobile-leave-button-container {
-  position: fixed;
-  bottom: 20px;
   right: 20px;
-  z-index: 90;
 }
 
 .lambo-button-container {
-  position: fixed;
-  bottom: 20px;
   left: 50%;
+  /* Only transform the X axis to prevent vertical issues */
   transform: translateX(-50%);
-  z-index: 90;
 }
 
-/* Consistent button styling for all buttons */
+/* Completely standardized button styling */
 .host-menu-button,
 .mobile-leave-button,
 .lambo-button {
-  padding: 12px 24px;
-  font-size: 16px; /* Same font size for all buttons */
+  height: 44px; /* Exact height */
+  width: auto; /* Let content determine width */
+  box-sizing: border-box;
+  padding: 0 24px; /* Only horizontal padding */
+  font-size: 16px;
   font-weight: bold;
   border-radius: 50px;
   border: none;
@@ -421,12 +423,12 @@
   transition: all 0.2s ease;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   white-space: nowrap;
-  cursor: pointer; /* Add cursor pointer to all buttons */
-  min-height: 38px; /* Consistent height */
-  line-height: 1.2;
+  cursor: pointer;
+  line-height: 1;
+  margin: 0; /* Remove any margin */
 }
 
-/* Specific button colors but consistent styling otherwise */
+/* Button colors - only background color should differ */
 .host-menu-button {
   background-color: #1368ce; /* Blue */
   color: white;
@@ -446,7 +448,7 @@
   background-color: #6a1b9a; /* Darker purple when voted */
 }
 
-/* Consistent hover and active states for ALL buttons */
+/* Hover states for non-Lambo buttons */
 .host-menu-button:hover,
 .mobile-leave-button:hover {
   background-color: #1975e6; /* Slightly lighter blue */
@@ -454,19 +456,27 @@
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Hover state for Lambo - maintain X transform */
 .lambo-button:hover {
   background-color: #b92fd1; /* Slightly lighter purple */
-  transform: translateY(-2px);
+  transform: translateX(-50%) translateY(-2px);
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Active states for non-Lambo buttons */
 .host-menu-button:active,
-.mobile-leave-button:active,
-.lambo-button:active {
+.mobile-leave-button:active {
   transform: translateY(1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* Active state for Lambo - maintain X transform */
+.lambo-button:active {
+  transform: translateX(-50%) translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Badge styling */
 .lambo-vote-count {
   background-color: rgba(255, 255, 255, 0.3);
   color: white;
@@ -484,6 +494,7 @@
     bottom: 0;
     left: 0;
     width: 100%;
+    height: auto;
     background-color: rgba(30, 30, 30, 0.95);
     z-index: 95;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
@@ -499,15 +510,13 @@
     gap: 8px;
   }
 
-  /* Reset ALL positioning for mobile buttons */
+  /* Reset ALL positioning for mobile containers */
   .host-menu-button-container,
   .mobile-leave-button-container,
   .lambo-button-container {
     position: static;
-    bottom: auto;
-    left: auto;
-    right: auto;
-    margin: 0;
+    bottom: auto !important;
+    height: auto;
     transform: none;
   }
 
@@ -516,14 +525,14 @@
   .mobile-leave-button,
   .lambo-button {
     width: 100%;
-    padding: 8px 10px;
+    height: 38px;
+    padding: 0 10px;
     font-size: 14px;
-    min-height: 36px;
     border-radius: 8px;
     transform: none;
   }
 
-  /* Equal hover and active states for ALL mobile buttons */
+  /* Equal hover states for ALL mobile buttons */
   .host-menu-button:hover,
   .mobile-leave-button:hover,
   .lambo-button:hover {
@@ -531,6 +540,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   }
 
+  /* Equal active states for ALL mobile buttons */
   .host-menu-button:active,
   .mobile-leave-button:active,
   .lambo-button:active {
