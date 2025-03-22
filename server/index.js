@@ -7,6 +7,53 @@ const spotifyService = require("./spotify");
 const path = require("path");
 
 const app = express();
+const SESSION_INACTIVITY_TIMEOUT = 3600000; // 1 hour in milliseconds
+
+// Add this function to implement session cleanup
+function setupSessionCleanup() {
+  // Run cleanup every 15 minutes
+  setInterval(() => {
+    const now = Date.now();
+    Object.keys(sessions).forEach((sessionId) => {
+      const session = sessions[sessionId];
+
+      // If session doesn't have lastActivity, add it now
+      if (!session.lastActivity) {
+        session.lastActivity = now;
+        return;
+      }
+
+      // Check if session has been inactive for too long
+      if (now - session.lastActivity > SESSION_INACTIVITY_TIMEOUT) {
+        console.log(`Cleaning up inactive session ${sessionId}`);
+
+        // Clear any timers
+        if (session.gameState && session.gameState.timerId) {
+          clearInterval(session.gameState.timerId);
+        }
+
+        // Notify remaining players if any
+        io.to(sessionId).emit("error", {
+          message: "Session expired due to inactivity",
+        });
+
+        // Delete session
+        delete sessions[sessionId];
+      }
+    });
+  }, 900000); // Check every 15 minutes
+}
+
+// Call this function after server setup
+setupSessionCleanup();
+
+// Update activity timestamp on relevant actions
+// Add this at the beginning of each socket event handler that indicates activity
+function updateSessionActivity(sessionId) {
+  if (sessions[sessionId]) {
+    sessions[sessionId].lastActivity = Date.now();
+  }
+}
 app.use(cors());
 
 // IMPORTANT: Define API routes BEFORE serving static files
@@ -269,7 +316,7 @@ io.on("connection", (socket) => {
     }
 
     // Check if session is full (max 10 players)
-    if (sessions[sessionIdUpper].players.length >= 10) {
+    if (sessions[sessionIdUpper].players.length >= 15) {
       socket.emit("error", { message: "Session is full" });
       return;
     }
@@ -680,6 +727,7 @@ io.on("connection", (socket) => {
   // Select a game (host only)
   socket.on("select-game", (sessionId, gameType) => {
     const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
 
     // Check if session exists
     if (!session) {

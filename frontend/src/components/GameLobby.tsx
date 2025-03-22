@@ -149,7 +149,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                 {/* Player count */}
                 <div className="player-count">
                   <span className="current-count">{players.length}</span>
-                  <span className="max-count">/10</span>
+                  <span className="max-count">/15</span>
                 </div>
 
                 {/* Player list */}
