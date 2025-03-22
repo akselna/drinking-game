@@ -105,6 +105,7 @@ const Game: React.FC = () => {
     const handleSessionJoined = (data: any) => {
       console.log("Session data received:", data);
       // Clear the timeout
+
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -455,8 +456,23 @@ const Game: React.FC = () => {
       <div className="game-content">{renderGame()}</div>
 
       {/* Mobile buttons container for better layout */}
+
+      {/* Mobile buttons container for better layout */}
       <div className="game-mobile-buttons">
-        {/* Lambo button */}
+        {/* Main Menu button for host */}
+        {sessionData.isHost && sessionData.gameType !== GAME_TYPES.NONE && (
+          <div className="host-menu-button-container">
+            <button
+              onClick={returnToLobby}
+              className="host-menu-button"
+              aria-label="Return to Main Menu"
+            >
+              Main Menu
+            </button>
+          </div>
+        )}
+
+        {/* Lambo button - now with a proper container */}
         {!isReconnecting && !error && sessionData.sessionId && (
           <div className="lambo-button-container">
             <button
@@ -472,18 +488,6 @@ const Game: React.FC = () => {
                   {lamboVotes.length}/{sessionData.players.length}
                 </span>
               )}
-            </button>
-          </div>
-        )}
-        {/* Main Menu button for host */}
-        {sessionData.isHost && sessionData.gameType !== GAME_TYPES.NONE && (
-          <div className="host-menu-button-container">
-            <button
-              onClick={returnToLobby}
-              className="host-menu-button"
-              aria-label="Return to Main Menu"
-            >
-              Main Menu
             </button>
           </div>
         )}

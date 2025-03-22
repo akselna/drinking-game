@@ -377,3 +377,169 @@
     padding: 20px;
   }
 }
+
+/* Updated button styling for consistency */
+
+/* =================== DESKTOP BUTTON STYLES =================== */
+/* These apply by default and are overridden in the mobile media query */
+
+/* Button containers positioning on desktop */
+.host-menu-button-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 90;
+}
+
+.mobile-leave-button-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 90;
+}
+
+.lambo-button-container {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+}
+
+/* Consistent button styling for all buttons */
+.host-menu-button,
+.mobile-leave-button,
+.lambo-button {
+  padding: 12px 24px;
+  font-size: 16px; /* Same font size for all buttons */
+  font-weight: bold;
+  border-radius: 50px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  cursor: pointer; /* Add cursor pointer to all buttons */
+  min-height: 38px; /* Consistent height */
+  line-height: 1.2;
+}
+
+/* Specific button colors but consistent styling otherwise */
+.host-menu-button {
+  background-color: #1368ce; /* Blue */
+  color: white;
+}
+
+.mobile-leave-button {
+  background-color: #cf6679; /* Red */
+  color: white;
+}
+
+.lambo-button {
+  background-color: #9c27b0; /* Purple */
+  color: white;
+}
+
+.lambo-button.voted {
+  background-color: #6a1b9a; /* Darker purple when voted */
+}
+
+/* Consistent hover and active states for ALL buttons */
+.host-menu-button:hover,
+.mobile-leave-button:hover {
+  background-color: #1975e6; /* Slightly lighter blue */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.lambo-button:hover {
+  background-color: #b92fd1; /* Slightly lighter purple */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.host-menu-button:active,
+.mobile-leave-button:active,
+.lambo-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.lambo-vote-count {
+  background-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+/* =================== MOBILE STYLES =================== */
+@media (max-width: 767px) {
+  /* Mobile button container */
+  .game-mobile-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: rgba(30, 30, 30, 0.95);
+    z-index: 95;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+    backdrop-filter: blur(8px);
+    padding: 10px;
+    /* Safe area for notched phones */
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+
+    /* Use grid for equal sizing of button areas */
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  /* Reset ALL positioning for mobile buttons */
+  .host-menu-button-container,
+  .mobile-leave-button-container,
+  .lambo-button-container {
+    position: static;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    margin: 0;
+    transform: none;
+  }
+
+  /* Equal styling for all mobile buttons */
+  .host-menu-button,
+  .mobile-leave-button,
+  .lambo-button {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 14px;
+    min-height: 36px;
+    border-radius: 8px;
+    transform: none;
+  }
+
+  /* Equal hover and active states for ALL mobile buttons */
+  .host-menu-button:hover,
+  .mobile-leave-button:hover,
+  .lambo-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .host-menu-button:active,
+  .mobile-leave-button:active,
+  .lambo-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Ensure content isn't hidden behind the button bar */
+  .game-content {
+    padding-bottom: 70px;
+  }
+}
