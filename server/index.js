@@ -1879,7 +1879,9 @@ io.on("connection", (socket) => {
   });
 
   // Never Have I Ever - Start game timer
-  socket.on("start-never-timer", (sessionId) => {
+
+  // Never Have I Ever - Start game timer
+  socket.on("start-never-timer", (sessionId, duration) => {
     const session = sessions[sessionId];
 
     if (!session || session.gameType !== GAME_TYPES.NEVER_HAVE_I_EVER) {
@@ -1893,16 +1895,55 @@ io.on("connection", (socket) => {
       return;
     }
 
+    // Make sure the game state exists
+    if (!session.gameState) {
+      session.gameState = {
+        phase: "collecting",
+        statements: [],
+        currentStatementIndex: -1,
+        responses: {},
+        timer: 60,
+      };
+    }
+
     console.log(`Host started timer for session ${sessionId}`);
 
-    // Start a 60-second timer for submissions
-    let timeLeft = 60;
+    // Set the timer duration if provided
+    let timeLeft = duration || 60;
+
+    // Store the current timeLeft in the game state
+    session.gameState.timeLeft = timeLeft;
 
     // Notify all players that the timer has started
     io.to(sessionId).emit("timer-update", { timeLeft });
 
+    // Clear any existing timer for this session
+    if (sessionTimers.has(sessionId)) {
+      clearInterval(sessionTimers.get(sessionId));
+    }
+
     const timerId = setInterval(() => {
+      // Check if the session still exists before updating
+      if (!sessions[sessionId]) {
+        console.log(`Session ${sessionId} no longer exists, clearing timer`);
+        clearInterval(timerId);
+        sessionTimers.delete(sessionId);
+        return;
+      }
+
+      // Check if gameState still exists
+      if (!sessions[sessionId].gameState) {
+        console.log(
+          `GameState for session ${sessionId} no longer exists, clearing timer`
+        );
+        clearInterval(timerId);
+        sessionTimers.delete(sessionId);
+        return;
+      }
+
+      // Decrement the timer
       timeLeft--;
+      sessions[sessionId].gameState.timeLeft = timeLeft;
 
       // Notify all players about the timer update
       io.to(sessionId).emit("timer-update", { timeLeft });
@@ -1911,7 +1952,14 @@ io.on("connection", (socket) => {
       if (timeLeft <= 0) {
         console.log(`Timer ended for session ${sessionId}`);
         clearInterval(timerId);
-        if (session.gameState.phase === "collecting") {
+        sessionTimers.delete(sessionId);
+
+        // Double-check if session still exists before starting reveal phase
+        if (
+          sessions[sessionId] &&
+          sessions[sessionId].gameState &&
+          sessions[sessionId].gameState.phase === "collecting"
+        ) {
           console.log(
             `Time's up in session ${sessionId}, starting reveal phase`
           );
@@ -2015,6 +2063,11 @@ io.on("connection", (socket) => {
         message: "Only the host can restart or return to lobby",
       });
       return;
+    }
+    // Clear any existing timers for this session
+    if (sessionTimers.has(sessionId)) {
+      clearInterval(sessionTimers.get(sessionId));
+      sessionTimers.delete(sessionId);
     }
 
     // Clear any existing timers
@@ -2310,6 +2363,16 @@ function handlePlayerDisconnect(socketId) {
                 // Actually remove the player now
                 session.players.splice(playerIndex, 1);
 
+                if (socketId === session.host && session.players.length <= 1) {
+                  if (sessionTimers.has(sessionId)) {
+                    clearInterval(sessionTimers.get(sessionId));
+                    sessionTimers.delete(sessionId);
+                    console.log(
+                      `Host ${playerName} left session ${sessionId}, cleared timers`
+                    );
+                  }
+                }
+
                 // Transfer host to another player if there are any left
                 if (session.players.length > 0) {
                   const newHostIndex = 0; // Select first player as new host
@@ -2356,14 +2419,25 @@ function handlePlayerDisconnect(socketId) {
 }
 function startRevealingPhase(sessionId) {
   const session = sessions[sessionId];
-  if (!session) return;
+  if (!session) {
+    console.log(`Session ${sessionId} not found, can't start revealing phase`);
+    return;
+  }
+
+  // Ensure gameState exists
+  if (!session.gameState) {
+    console.log(
+      `GameState for session ${sessionId} is null, can't start revealing phase`
+    );
+    return;
+  }
 
   console.log(`Starting revealing phase for session ${sessionId}`);
 
   // Clear any existing timer
-  if (session.gameState.timerId) {
-    clearInterval(session.gameState.timerId);
-    session.gameState.timerId = null;
+  if (sessionTimers.has(sessionId)) {
+    clearInterval(sessionTimers.get(sessionId));
+    sessionTimers.delete(sessionId);
   }
 
   // Make sure we have statements (either user-submitted or default)
@@ -2408,6 +2482,40 @@ function startRevealingPhase(sessionId) {
     // Send all statements so client has complete state
     statements: session.gameState.availableStatements,
   });
+}
+function setupSessionCleanup() {
+  // Run cleanup every 15 minutes
+  setInterval(() => {
+    const now = Date.now();
+    Object.keys(sessions).forEach((sessionId) => {
+      const session = sessions[sessionId];
+
+      // If session doesn't have lastActivity, add it now
+      if (!session.lastActivity) {
+        session.lastActivity = now;
+        return;
+      }
+
+      // Check if session has been inactive for too long
+      if (now - session.lastActivity > SESSION_INACTIVITY_TIMEOUT) {
+        console.log(`Cleaning up inactive session ${sessionId}`);
+
+        // Clear any timers associated with this session
+        if (sessionTimers.has(sessionId)) {
+          clearInterval(sessionTimers.get(sessionId));
+          sessionTimers.delete(sessionId);
+        }
+
+        // Notify remaining players if any
+        io.to(sessionId).emit("error", {
+          message: "Session expired due to inactivity",
+        });
+
+        // Delete session
+        delete sessions[sessionId];
+      }
+    });
+  }, 900000); // Check every 15 minutes
 }
 
 // Helper function to show music guess results
