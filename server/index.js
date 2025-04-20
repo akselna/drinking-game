@@ -86,6 +86,15 @@ function updateSessionActivity(sessionId) {
 }
 app.use(cors());
 
+function shuffleArray(array) {
+  const newArray = [...array]; // Lag en kopi for å unngå å mutere originalen
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]]; // Bytt plass
+  }
+  return newArray;
+}
+
 // IMPORTANT: Define API routes BEFORE serving static files
 // Spotify API endpoints
 app.get("/api/spotify/search", async (req, res) => {
@@ -1317,16 +1326,6 @@ io.on("connection", (socket) => {
 
     console.log(`Game restarted in session ${sessionId}`);
   });
-
-  // Add to your existing functions or create if missing
-  function shuffleArray(array) {
-    const newArray = [...array];
-    for (let i = newArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-    }
-    return newArray;
-  }
 
   // Start next statement for Drink or Judge
 
@@ -2573,15 +2572,6 @@ function showMusicGuessResults(sessionId) {
   });
 }
 
-function shuffleArray(array) {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-}
-
 // Helper function to move to the next statement
 // Modify the moveToNextStatement function to shuffle the statements if we're starting the game
 
@@ -2654,14 +2644,6 @@ function moveToNextStatement(sessionId) {
     statementIndex: session.gameState.currentStatementIndex,
     totalStatements: session.gameState.availableStatements.length,
   });
-}
-
-function shuffleArray(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
 }
 
 // Start the server
