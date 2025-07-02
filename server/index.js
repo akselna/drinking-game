@@ -7,6 +7,9 @@ const spotifyService = require("./spotify");
 const path = require("path");
 const sessionTimers = new Map();
 
+// Import Forraeder routes
+const forraederRoutes = require('./forraeder/routes');
+
 const app = express();
 const SESSION_INACTIVITY_TIMEOUT = 3600000; // 1 hour in milliseconds
 
@@ -124,6 +127,9 @@ app.get("/api/spotify/status", async (req, res) => {
     });
   }
 });
+
+// Use Forraeder routes
+app.use('/api/forraeder', forraederRoutes);
 
 // AFTER defining all API routes, THEN serve static files
 app.use(express.static(path.join(__dirname, "../frontend/build")));

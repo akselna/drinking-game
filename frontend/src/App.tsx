@@ -4,10 +4,12 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation, // Added for potential prop passing
 } from "react-router-dom";
 import { io } from "socket.io-client";
 import Home from "./components/Home";
 import Game from "./components/Game";
+import ForraederGame from "./components/Forraeder/ForraederGame"; // Import ForraederGame
 import "./App.css";
 import { SocketContext } from "./context/SocketContext";
 import "./styles/global.css";
@@ -233,6 +235,38 @@ function App() {
               element={<Home onNavigate={clearConnectionError} />}
             />
             <Route path="/game" element={<Game />} />
+            {/*
+              TODO: For ForraederGame props:
+              - sessionId, playerName, isHost, and socket are needed.
+              - These might come from App's state, localStorage, or SocketContext.
+              - For a quick MVP setup, ForraederGame can try to fetch these itself
+                or we can pass them down if App.tsx manages this state.
+              - Example if App managed them:
+                <Route
+                  path="/forraeder"
+                  element={
+                    <ForraederGame
+                      sessionId={currentSessionId} // from App's state/localStorage
+                      playerName={currentPlayerName} // from App's state/localStorage
+                      isHost={isCurrentUserHost} // from App's state/localStorage
+                      socket={socket}
+                    />
+                  }
+                />
+              - For now, ForraederGame's useEffect will try to use props if passed,
+                or derive them. We assume some session context exists.
+            */}
+            <Route
+              path="/forraeder"
+              element={
+                <ForraederGame
+                  sessionId={localStorage.getItem("drinkingGameSessionId") || "defaultSession"} // Example placeholder
+                  playerName={localStorage.getItem("drinkingGamePlayerName") || "Player"} // Example placeholder
+                  isHost={localStorage.getItem("drinkingGameIsHost") === "true"} // Example placeholder
+                  socket={socket}
+                />
+              }
+            />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
