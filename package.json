@@ -13,7 +13,7 @@
     "vercel-build": "cd frontend && npm install && npm run build"
   },
   "engines": {
-    "node": "22.x"
+    "node": "18.x"
   },
   "devDependencies": {
     "@types/recharts": "^1.8.29"
