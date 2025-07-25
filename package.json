@@ -10,12 +10,17 @@
   "scripts": {
     "start": "node server/index.js",
     "heroku-postbuild": "cd frontend && npm install && npm run build",
-    "vercel-build": "cd frontend && npm install && npm run build"
+    "vercel-build": "cd frontend && npm install && npm run build",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server/index.js",
+    "client": "npm start --prefix frontend"
   },
   "engines": {
     "node": "22.x"
   },
   "devDependencies": {
-    "@types/recharts": "^1.8.29"
+    "@types/recharts": "^1.8.29",
+    "concurrently": "^8.2.0",
+    "nodemon": "^3.0.1"
   }
 }
