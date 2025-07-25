@@ -206,6 +206,8 @@ io.on("connection", (socket) => {
     // Generate a random 6-character session ID
     const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
 
+    updateSessionActivity(sessionId);
+
     sessions[sessionId] = {
       host: socket.id,
       players: [{ id: socket.id, name: hostName }],
@@ -233,6 +235,8 @@ io.on("connection", (socket) => {
   // Join an existing session
   socket.on("join-session", (sessionId, playerName) => {
     const sessionIdUpper = sessionId.toUpperCase();
+
+    updateSessionActivity(sessionIdUpper);
 
     if (!sessions[sessionIdUpper]) {
       socket.emit("error", { message: "Session not found" });
@@ -983,6 +987,8 @@ io.on("connection", (socket) => {
   socket.on("laugh-set-duration", (sessionId, duration) => {
     const session = sessions[sessionId];
 
+    updateSessionActivity(sessionId);
+
     if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
       socket.emit("error", { message: "Invalid session or game type" });
       return;
@@ -1010,6 +1016,8 @@ io.on("connection", (socket) => {
   // Start the game (host only)
   socket.on("laugh-start-game", (sessionId, duration) => {
     const session = sessions[sessionId];
+
+    updateSessionActivity(sessionId);
 
     if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
       socket.emit("error", { message: "Invalid session or game type" });
@@ -1097,6 +1105,8 @@ io.on("connection", (socket) => {
   socket.on("laugh-submit-response", (sessionId, response) => {
     const session = sessions[sessionId];
 
+    updateSessionActivity(sessionId);
+
     if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
       socket.emit("error", { message: "Invalid session or game type" });
       return;
@@ -1131,6 +1141,8 @@ io.on("connection", (socket) => {
   // Show next response (host only)
   socket.on("laugh-next-response", (sessionId) => {
     const session = sessions[sessionId];
+
+    updateSessionActivity(sessionId);
 
     if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
       socket.emit("error", { message: "Invalid session or game type" });
@@ -1169,6 +1181,8 @@ io.on("connection", (socket) => {
   // Restart game (host only)
   socket.on("laugh-restart-game", (sessionId) => {
     const session = sessions[sessionId];
+
+    updateSessionActivity(sessionId);
 
     if (!session || session.gameType !== GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
       socket.emit("error", { message: "Invalid session or game type" });
@@ -1216,6 +1230,8 @@ io.on("connection", (socket) => {
 
   socket.on("drink-or-judge-next-statement", (sessionId) => {
     const session = sessions[sessionId];
+
+    updateSessionActivity(sessionId);
 
     if (!session || session.gameType !== GAME_TYPES.DRINK_OR_JUDGE) {
       socket.emit("error", { message: "Invalid session or game type" });
@@ -1339,6 +1355,8 @@ io.on("connection", (socket) => {
   socket.on("music-guess-submit-song", (sessionId, song) => {
     const session = sessions[sessionId];
 
+    updateSessionActivity(sessionId);
+
     if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
       socket.emit("error", { message: "Invalid session or game type" });
       return;
@@ -1396,6 +1414,8 @@ io.on("connection", (socket) => {
 
   socket.on("music-guess-start-guessing", (sessionId) => {
     const session = sessions[sessionId];
+
+    updateSessionActivity(sessionId);
 
     if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
       socket.emit("error", { message: "Invalid session or game type" });
@@ -1460,6 +1480,8 @@ io.on("connection", (socket) => {
   socket.on("music-guess-vote", (sessionId, votedForId) => {
     const session = sessions[sessionId];
 
+    updateSessionActivity(sessionId);
+
     if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
       socket.emit("error", { message: "Invalid session or game type" });
       return;
@@ -1505,6 +1527,8 @@ io.on("connection", (socket) => {
   socket.on("music-guess-force-results", (sessionId) => {
     const session = sessions[sessionId];
 
+    updateSessionActivity(sessionId);
+
     if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
       socket.emit("error", { message: "Invalid session or game type" });
       return;
@@ -1522,6 +1546,8 @@ io.on("connection", (socket) => {
   // Music Guess - Next song
   socket.on("music-guess-next-song", (sessionId) => {
     const session = sessions[sessionId];
+
+    updateSessionActivity(sessionId);
 
     if (!session || session.gameType !== GAME_TYPES.MUSIC_GUESS) {
       socket.emit("error", { message: "Invalid session or game type" });
@@ -1768,6 +1794,8 @@ io.on("connection", (socket) => {
   socket.on("start-never-timer", (sessionId, duration) => {
     const session = sessions[sessionId];
 
+    updateSessionActivity(sessionId);
+
     if (!session || session.gameType !== GAME_TYPES.NEVER_HAVE_I_EVER) {
       socket.emit("error", { message: "Invalid session or game type" });
       return;
@@ -1860,6 +1888,8 @@ io.on("connection", (socket) => {
   socket.on("submit-response", (sessionId, response) => {
     const session = sessions[sessionId];
 
+    updateSessionActivity(sessionId);
+
     if (!session || session.gameType !== GAME_TYPES.NEVER_HAVE_I_EVER) {
       socket.emit("error", { message: "Invalid session or game type" });
       return;
@@ -1904,6 +1934,8 @@ io.on("connection", (socket) => {
   // Never Have I Ever - Next statement (host can force next)
   socket.on("next-statement", (sessionId) => {
     const session = sessions[sessionId];
+
+    updateSessionActivity(sessionId);
 
     if (!session || session.gameType !== GAME_TYPES.NEVER_HAVE_I_EVER) {
       socket.emit("error", { message: "Invalid session or game type" });
