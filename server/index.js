@@ -69,6 +69,13 @@ function setupSessionCleanup() {
 
         // Delete session
         delete sessions[sessionId];
+
+        // Remove all player->session mappings for this session
+        Object.keys(playerSessions).forEach((socketId) => {
+          if (playerSessions[socketId].sessionId === sessionId) {
+            delete playerSessions[socketId];
+          }
+        });
       }
     });
   }, 900000); // Check every 15 minutes
@@ -2512,6 +2519,13 @@ function setupSessionCleanup() {
 
         // Delete session
         delete sessions[sessionId];
+
+        // Remove all player->session mappings for this session
+        Object.keys(playerSessions).forEach((socketId) => {
+          if (playerSessions[socketId].sessionId === sessionId) {
+            delete playerSessions[socketId];
+          }
+        });
       }
     });
   }, 900000); // Check every 15 minutes
