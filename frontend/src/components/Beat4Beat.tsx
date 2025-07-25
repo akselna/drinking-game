@@ -29,7 +29,6 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
   const [hasBuzzed, setHasBuzzed] = useState<boolean>(false);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [roundNumber, setRoundNumber] = useState<number>(1);
-  const [buzzTime, setBuzzTime] = useState<number | null>(null);
   const [roundActive, setRoundActive] = useState<boolean>(false);
   const [waitingMessage, setWaitingMessage] = useState<string>("");
   const [roundWinner, setRoundWinner] = useState<string | null>(null);
@@ -62,7 +61,6 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
       setRoundActive(true);
       setBuzzOrder([]);
       setHasBuzzed(false);
-      setBuzzTime(null);
       setWaitingMessage("");
     };
 
@@ -93,7 +91,6 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
       setCurrentPhase("waiting");
       setBuzzOrder([]);
       setHasBuzzed(false);
-      setBuzzTime(null);
       setRoundWinner(null);
     };
 
@@ -119,7 +116,6 @@ const Beat4Beat: React.FC<Beat4BeatProps> = ({
     if (!socket || !roundActive) return;
 
     const timestamp = Date.now();
-    setBuzzTime(timestamp);
     setHasBuzzed(true);
     setWaitingMessage("Buzz registered! Waiting for others...");
 

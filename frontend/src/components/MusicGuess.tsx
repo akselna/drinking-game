@@ -73,8 +73,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
 
   // Audio player
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [canPlay, setCanPlay] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(60);
   const [timerActive, setTimerActive] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -172,7 +170,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        setIsPlaying(false);
       }
     };
 
@@ -202,7 +199,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       // Stop audio if playing
       if (audioRef.current) {
         audioRef.current.pause();
-        setIsPlaying(false);
       }
     };
 
@@ -220,7 +216,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        setIsPlaying(false);
       }
     };
 
@@ -265,17 +260,15 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     if (!audioElement) return;
 
     const handleCanPlay = () => {
-      setCanPlay(true);
+      // audio can play
     };
 
     const handleEnded = () => {
-      setIsPlaying(false);
-      setCanPlay(true);
+      // audio playback finished
     };
 
     const handleError = (e: any) => {
       console.error("Audio error:", e);
-      setCanPlay(false);
     };
 
     // Add event listeners
@@ -401,25 +394,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     socket.emit("music-guess-start-guessing", sessionId);
   };
 
-  // Play/pause current song
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current
-        .play()
-        .then(() => {
-          setIsPlaying(true);
-          setTimerActive(true);
-        })
-        .catch((err) => {
-          console.error("Error playing audio:", err);
-        });
-    }
-  };
 
   // Submit vote
   const submitVote = () => {

@@ -59,11 +59,6 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
     return kahootColors[statementIndex % kahootColors.length];
   };
 
-  // Find host player
-  const hostPlayer = players.find(
-    (player) => player.id === players.find((p) => p.isHost)?.id
-  );
-
   // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -240,7 +235,7 @@ const NeverHaveIEver: React.FC<NeverHaveIEverProps> = ({
         setGameEnded(true);
       }
     }
-  }, [gameState, socket?.id]);
+  }, [gameState, socket]);
 
   const handleSubmitStatement = () => {
     if (!socket) return;

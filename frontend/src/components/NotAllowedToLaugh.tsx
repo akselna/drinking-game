@@ -61,19 +61,6 @@ const NotAllowedToLaugh: React.FC<NotAllowedToLaughProps> = ({
     // Find all GIF images and add a handler to control animation
     const gifImages = document.querySelectorAll(".gif-image");
 
-    // Function to check if element is in viewport
-    const isInViewport = (element: Element) => {
-      const rect = element.getBoundingClientRect();
-      return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <=
-          (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <=
-          (window.innerWidth || document.documentElement.clientWidth)
-      );
-    };
-
     // Add intersection observer to only animate GIFs when visible
     if ("IntersectionObserver" in window) {
       const observer = new IntersectionObserver((entries) => {
