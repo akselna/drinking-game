@@ -44,7 +44,7 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
   const getBgColor = useCallback(() => {
     const colorIndex = Math.floor(Math.random() * gameColors.length);
     return gameColors[colorIndex];
-  }, []);
+  }, [gameColors]);
 
   const [bgColor, setBgColor] = useState(getBgColor());
 
