@@ -73,7 +73,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
 
   // Audio player
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(60);
   const [timerActive, setTimerActive] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -171,7 +170,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        setIsPlaying(false);
       }
     };
 
@@ -201,7 +199,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       // Stop audio if playing
       if (audioRef.current) {
         audioRef.current.pause();
-        setIsPlaying(false);
       }
     };
 
@@ -219,7 +216,6 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
-        setIsPlaying(false);
       }
     };
 
@@ -268,7 +264,7 @@ const MusicGuess: React.FC<MusicGuessProps> = ({
     };
 
     const handleEnded = () => {
-      setIsPlaying(false);
+      // audio playback finished
     };
 
     const handleError = (e: any) => {
