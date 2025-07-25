@@ -3,7 +3,7 @@
     {
       "src": "api/index.js",
       "use": "@vercel/node",
-      "config": { "runtime": "nodejs18.x" }
+      "config": { "runtime": "nodejs22.x" }
     },
     {
       "src": "frontend/package.json",
