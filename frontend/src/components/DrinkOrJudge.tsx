@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/DrinkOrJudge.css";
 
@@ -32,13 +32,16 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
   const [results, setResults] = useState<any[]>([]);
 
   // Colors for the game (similar to kahoot style)
-  const gameColors = [
-    "#e21b3c", // red
-    "#1368ce", // blue
-    "#26890c", // green
-    "#ffa602", // yellow
-    "#9c27b0", // purple
-  ];
+  const gameColors = useMemo(
+    () => [
+      "#e21b3c", // red
+      "#1368ce", // blue
+      "#26890c", // green
+      "#ffa602", // yellow
+      "#9c27b0", // purple
+    ],
+    []
+  );
 
   // Set random background color
   const getBgColor = useCallback(() => {
