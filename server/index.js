@@ -2664,8 +2664,12 @@ function shuffleArray(array) {
   return array;
 }
 
-// Start the server
+// Start the server only when this file is run directly
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-}); // Start the server
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = { app, server };
