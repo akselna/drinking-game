@@ -27,6 +27,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
   const [penalty, setPenalty] = useState<number | null>(gameState?.penalty || null);
   const [category, setCategory] = useState<string | null>(gameState?.category || null);
   const [categories, setCategories] = useState<string[]>(gameState?.categories || []);
+  const [wheelRotation, setWheelRotation] = useState<number>(0);
 
   useEffect(() => {
     if (!socket) return;
@@ -40,7 +41,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       setPenalty(data.penalty);
       setCategory(data.category);
       if (data.categories) setCategories(data.categories);
-      setPhase("result");
+      setPhase("plinko");
     };
 
     socket.on("skjenke-countdown", handleCountdown);
@@ -52,6 +53,22 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     };
   }, [socket]);
 
+  // Transition from plinko to wheel and from wheel to result
+  useEffect(() => {
+    if (phase === "plinko") {
+      const timer = setTimeout(() => setPhase("wheel"), 3000);
+      return () => clearTimeout(timer);
+    }
+    if (phase === "wheel") {
+      const index = categories.indexOf(category || "");
+      const degPerSegment = 360 / categories.length;
+      const rotation = 1080 - index * degPerSegment; // 3 spins
+      setWheelRotation(rotation);
+      const timer = setTimeout(() => setPhase("result"), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [phase, categories, category]);
+
   const startGame = () => {
     if (!socket) return;
     socket.emit("skjenke-set-countdown", sessionId, countdown);
@@ -62,6 +79,13 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
   const nextRound = () => {
     if (!socket) return;
     socket.emit("skjenke-start", sessionId);
+  };
+
+  const backToSetup = () => {
+    setPhase("setup");
+    setPenalty(null);
+    setCategory(null);
+    setTimeLeft(countdown);
   };
 
   const renderSetup = () => (
@@ -95,6 +119,61 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
   const renderCountdown = () => (
     <div className="skjenke-countdown">
       <div className={timeLeft <= 10 ? "warning" : ""}>{timeLeft}</div>
+      {isHost && (
+        <button className="back-button" onClick={backToSetup}>
+          Back
+        </button>
+      )}
+    </div>
+  );
+
+  const renderPlinko = () => (
+    <div className="skjenke-plinko">
+      <div className="plinko-board">
+        <div
+          className="plinko-ball"
+          style={{
+            "--target-x": `${(penalty ? penalty - 1 : 0) * 40}px`,
+          } as React.CSSProperties}
+        />
+        <div className="slots">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className="slot">
+              {n}
+            </div>
+          ))}
+        </div>
+      </div>
+      {isHost && (
+        <button className="back-button" onClick={backToSetup}>
+          Back
+        </button>
+      )}
+    </div>
+  );
+
+  const renderWheel = () => (
+    <div className="skjenke-wheel-container">
+      <div
+        className="wheel"
+        style={{ transform: `rotate(${wheelRotation}deg)` }}
+      >
+        {categories.map((cat, idx) => (
+          <div
+            key={cat}
+            className="segment"
+            style={{ transform: `rotate(${idx * (360 / categories.length)}deg)` }}
+          >
+            <span>{cat}</span>
+          </div>
+        ))}
+      </div>
+      <div className="pointer" />
+      {isHost && (
+        <button className="back-button" onClick={backToSetup}>
+          Back
+        </button>
+      )}
     </div>
   );
 
@@ -107,10 +186,17 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
           Neste runde
         </button>
       )}
+      {isHost && (
+        <button className="back-button" onClick={backToSetup}>
+          Back
+        </button>
+      )}
     </div>
   );
 
   if (phase === "countdown") return renderCountdown();
+  if (phase === "plinko") return renderPlinko();
+  if (phase === "wheel") return renderWheel();
   if (phase === "result") return renderResult();
   return renderSetup();
 };
