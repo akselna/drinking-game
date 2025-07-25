@@ -1,0 +1,32 @@
+.skjenke-countdown {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  font-size: 5rem;
+}
+
+.skjenke-countdown .warning {
+  color: red;
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.skjenke-result {
+  text-align: center;
+  padding-top: 2rem;
+}
+
+.host-controls label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.host-controls button {
+  margin-top: 1rem;
+}

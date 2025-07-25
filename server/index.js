@@ -168,6 +168,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
   BEAT4BEAT: "beat4Beat", // Add this line
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SKJENKEHJULET: "skjenkeHjulet", // Dashboard game mode
 };
 
 // Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
@@ -982,6 +983,27 @@ io.on("connection", (socket) => {
         currentResponseIndex: 0,
         timerDuration: 60,
         timeRemaining: 60,
+      };
+    } else if (gameType === GAME_TYPES.SKJENKEHJULET) {
+      session.gameState = {
+        phase: "setup",
+        mode: "mild",
+        countdown: 30,
+        timeRemaining: 30,
+        penalty: null,
+        category: null,
+        categories: [
+          "Alle med hvite sokker",
+          "Alle med briller",
+          "Alle som har bursdag denne måneden",
+          "Alle som er single",
+          "Alle med piercing",
+          "Alle med mørke sko",
+          "Alle som studerer",
+          "Alle som liker pils",
+          "Alle med langt hår",
+          "Alle som hater mandager",
+        ],
       };
     }
 
@@ -2235,6 +2257,113 @@ io.on("connection", (socket) => {
     // Notify all clients that Lambo is ended
     io.to(sessionId).emit("lambo-ended");
   });
+
+  // Skjenkehjulet events
+  socket.on("skjenke-set-countdown", (sessionId, seconds) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can set the countdown" });
+      return;
+    }
+
+    const clamped = Math.min(120, Math.max(5, seconds));
+    session.gameState.countdown = clamped;
+    session.gameState.timeRemaining = clamped;
+  });
+
+  socket.on("skjenke-set-mode", (sessionId, mode) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can set the mode" });
+      return;
+    }
+
+    if (!["mild", "medium", "blackout"].includes(mode)) {
+      socket.emit("error", { message: "Invalid mode" });
+      return;
+    }
+
+    session.gameState.mode = mode;
+  });
+
+  socket.on("skjenke-start", (sessionId) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can start" });
+      return;
+    }
+
+    // Clear existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+      session.gameState.timerId = null;
+    }
+
+    session.gameState.phase = "countdown";
+    session.gameState.timeRemaining = session.gameState.countdown;
+
+    io.to(sessionId).emit("skjenke-countdown", {
+      timeRemaining: session.gameState.timeRemaining,
+    });
+
+    const timer = setInterval(() => {
+      const current = sessions[sessionId];
+      if (!current || current.gameType !== GAME_TYPES.SKJENKEHJULET) {
+        clearInterval(timer);
+        return;
+      }
+
+      current.gameState.timeRemaining--;
+
+      io.to(sessionId).emit("skjenke-countdown", {
+        timeRemaining: current.gameState.timeRemaining,
+      });
+
+      if (current.gameState.timeRemaining <= 0) {
+        clearInterval(timer);
+        current.gameState.timerId = null;
+
+        const penalty = calculatePenalty(current.gameState.mode);
+        const categoryIndex = Math.floor(
+          Math.random() * current.gameState.categories.length
+        );
+        const category = current.gameState.categories[categoryIndex];
+
+        current.gameState.phase = "result";
+        current.gameState.penalty = penalty;
+        current.gameState.category = category;
+
+        io.to(sessionId).emit("skjenke-result", {
+          penalty,
+          category,
+          categories: current.gameState.categories,
+        });
+      }
+    }, 1000);
+
+    session.gameState.timerId = timer;
+  });
 });
 
 const disconnectedHosts = {}; // Track temporarily disconnected hosts
@@ -2585,6 +2714,25 @@ function shuffleArray(array) {
     [array[i], array[j]] = [array[j], array[i]];
   }
   return array;
+}
+
+function calculatePenalty(mode) {
+  const r = Math.random();
+  if (mode === "medium") {
+    if (r < 0.3) return 2;
+    if (r < 0.6) return 3;
+    if (r < 0.9) return 4;
+    return 5;
+  } else if (mode === "blackout") {
+    if (r < 0.2) return 3;
+    if (r < 0.5) return 4;
+    if (r < 0.8) return 5;
+    return 6;
+  }
+  // mild
+  if (r < 0.7) return 1;
+  if (r < 0.9) return 2;
+  return 3;
 }
 
 // Start the server only when this file is run directly
