@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/DrinkOrJudge.css";
 
@@ -41,10 +41,10 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
   ];
 
   // Set random background color
-  const getBgColor = () => {
+  const getBgColor = useCallback(() => {
     const colorIndex = Math.floor(Math.random() * gameColors.length);
     return gameColors[colorIndex];
-  };
+  }, []);
 
   const [bgColor, setBgColor] = useState(getBgColor());
 
@@ -106,7 +106,7 @@ const DrinkOrJudge: React.FC<DrinkOrJudgeProps> = ({
       socket.off("drink-or-judge-vote-update", handleVoteUpdate);
       socket.off("drink-or-judge-results", handleResults);
     };
-  }, [socket]);
+  }, [socket, getBgColor]);
 
   // Start the game (host only)
   const startGame = () => {
