@@ -7,6 +7,15 @@ const spotifyService = require("./spotify");
 const path = require("path");
 const sessionTimers = new Map();
 
+function generateSessionId(length = 6) {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789"; // Exclude 0 and O
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+}
+
 const app = express();
 const SESSION_INACTIVITY_TIMEOUT = 3600000; // 1 hour in milliseconds
 
@@ -203,8 +212,8 @@ io.on("connection", (socket) => {
 
   // Create a new session
   socket.on("create-session", (hostName) => {
-    // Generate a random 6-character session ID
-    const sessionId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate a random 6-character session ID without ambiguous characters
+    const sessionId = generateSessionId();
 
     updateSessionActivity(sessionId);
 
