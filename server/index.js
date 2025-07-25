@@ -39,41 +39,7 @@ function sanitizeSessionForClient(session) {
   return cleanSession;
 }
 
-// Add this function to implement session cleanup
-function setupSessionCleanup() {
-  // Run cleanup every 15 minutes
-  setInterval(() => {
-    const now = Date.now();
-    Object.keys(sessions).forEach((sessionId) => {
-      const session = sessions[sessionId];
-
-      // If session doesn't have lastActivity, add it now
-      if (!session.lastActivity) {
-        session.lastActivity = now;
-        return;
-      }
-
-      // Check if session has been inactive for too long
-      if (now - session.lastActivity > SESSION_INACTIVITY_TIMEOUT) {
-        console.log(`Cleaning up inactive session ${sessionId}`);
-
-        // Clear any timers
-        if (session.gameState && session.gameState.timerId) {
-          clearInterval(session.gameState.timerId);
-        }
-
-        // Notify remaining players if any
-        io.to(sessionId).emit("error", {
-          message: "Session expired due to inactivity",
-        });
-
-        // Delete session
-        delete sessions[sessionId];
-      }
-    });
-  }, 900000); // Check every 15 minutes
-}
-
+// Setup periodic cleanup of inactive sessions (function defined later)
 // Call this function after server setup
 setupSessionCleanup();
 
@@ -86,14 +52,6 @@ function updateSessionActivity(sessionId) {
 }
 app.use(cors());
 
-function shuffleArray(array) {
-  const newArray = [...array]; // Lag en kopi for å unngå å mutere originalen
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]]; // Bytt plass
-  }
-  return newArray;
-}
 
 // IMPORTANT: Define API routes BEFORE serving static files
 // Spotify API endpoints
@@ -200,118 +158,6 @@ const neverHaveIEverStatements = [
 // Modify the "submit-never-statement" event handler to allow submissions during any phase
 // Finn denne event handleren og erstatt den med denne oppdaterte versjonen:
 
-// Modifiser moveToNextStatement for å bruke predefinerte spørsmål når man går tom for brukerspørsmål
-// Finn denne funksjonen og erstatt den med:
-
-// Helper function to move to the next statement
-function moveToNextStatement(sessionId) {
-  const session = sessions[sessionId];
-  if (!session) return;
-
-  // Increment the statement index
-  session.gameState.currentStatementIndex++;
-
-  console.log(
-    `Moving to statement ${session.gameState.currentStatementIndex} in session ${sessionId}`
-  );
-
-  // Check if we've gone through all statements
-  if (
-    session.gameState.currentStatementIndex >=
-    session.gameState.statements.length
-  ) {
-    console.log(`Ran out of statements in session ${sessionId}`);
-
-    // Check if there are any pending statements from users to use next
-    if (
-      session.gameState.pendingStatements &&
-      session.gameState.pendingStatements.length > 0
-    ) {
-      console.log(
-        `Using ${session.gameState.pendingStatements.length} pending user statements`
-      );
-
-      // Add pending statements to the main statements array
-      session.gameState.statements = session.gameState.statements.concat(
-        session.gameState.pendingStatements
-      );
-
-      // Clear the pending statements
-      session.gameState.pendingStatements = [];
-
-      // Reset the current index to point to the first new statement
-      session.gameState.currentStatementIndex =
-        session.gameState.statements.length -
-        session.gameState.pendingStatements.length;
-    }
-    // If no pending statements, use predefined ones
-    else {
-      // Initialize used statements array if it doesn't exist
-      if (!session.gameState.usedPredefinedStatements) {
-        session.gameState.usedPredefinedStatements = [];
-      }
-
-      // Find statements that haven't been used recently
-      const availableStatements = neverHaveIEverStatements.filter(
-        (stmt) => !session.gameState.usedPredefinedStatements.includes(stmt)
-      );
-
-      // If we've used all statements or nearly all, reset the used list
-      if (availableStatements.length < 5) {
-        session.gameState.usedPredefinedStatements = [];
-        console.log(`Reset used statements list for session ${sessionId}`);
-      }
-
-      // Get a random statement from the available ones
-      const randomIndex = Math.floor(
-        Math.random() *
-          (availableStatements.length || neverHaveIEverStatements.length)
-      );
-
-      const statement = availableStatements.length
-        ? availableStatements[randomIndex]
-        : neverHaveIEverStatements[randomIndex];
-
-      // Mark this statement as used
-      session.gameState.usedPredefinedStatements.push(statement);
-
-      // Add this predefined statement to the game
-      session.gameState.statements.push({
-        text: statement,
-        author: "Spillet",
-        authorId: "system",
-        isPredefined: true,
-      });
-
-      console.log(
-        `Added predefined statement: "${statement}" to session ${sessionId}`
-      );
-
-      // Reset the current index to show this new statement
-      session.gameState.currentStatementIndex =
-        session.gameState.statements.length - 1;
-    }
-
-    // Send the new statement to all players
-    io.to(sessionId).emit("next-statement", {
-      statement:
-        session.gameState.statements[session.gameState.currentStatementIndex],
-      statementIndex: session.gameState.currentStatementIndex,
-      totalStatements: session.gameState.statements.length,
-    });
-  } else {
-    // Send the next statement to all players
-    console.log(
-      `Sending statement ${session.gameState.currentStatementIndex} to players in session ${sessionId}`
-    );
-    io.to(sessionId).emit("next-statement", {
-      statement:
-        session.gameState.statements[session.gameState.currentStatementIndex],
-      statementIndex: session.gameState.currentStatementIndex,
-      totalStatements: session.gameState.statements.length,
-    });
-  }
-}
 
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
