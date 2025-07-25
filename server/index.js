@@ -39,7 +39,48 @@ function sanitizeSessionForClient(session) {
   return cleanSession;
 }
 
-// Setup periodic cleanup of inactive sessions (function defined later)
+// Add this function to implement session cleanup
+function setupSessionCleanup() {
+  // Run cleanup every 15 minutes
+  setInterval(() => {
+    const now = Date.now();
+    Object.keys(sessions).forEach((sessionId) => {
+      const session = sessions[sessionId];
+
+      // If session doesn't have lastActivity, add it now
+      if (!session.lastActivity) {
+        session.lastActivity = now;
+        return;
+      }
+
+      // Check if session has been inactive for too long
+      if (now - session.lastActivity > SESSION_INACTIVITY_TIMEOUT) {
+        console.log(`Cleaning up inactive session ${sessionId}`);
+
+        // Clear any timers
+        if (session.gameState && session.gameState.timerId) {
+          clearInterval(session.gameState.timerId);
+        }
+
+        // Notify remaining players if any
+        io.to(sessionId).emit("error", {
+          message: "Session expired due to inactivity",
+        });
+
+        // Delete session
+        delete sessions[sessionId];
+
+        // Remove all player->session mappings for this session
+        Object.keys(playerSessions).forEach((socketId) => {
+          if (playerSessions[socketId].sessionId === sessionId) {
+            delete playerSessions[socketId];
+          }
+        });
+      }
+    });
+  }, 900000); // Check every 15 minutes
+}
+
 // Call this function after server setup
 setupSessionCleanup();
 
@@ -51,7 +92,6 @@ function updateSessionActivity(sessionId) {
   }
 }
 app.use(cors());
-
 
 // IMPORTANT: Define API routes BEFORE serving static files
 // Spotify API endpoints
@@ -157,7 +197,6 @@ const neverHaveIEverStatements = [
 
 // Modify the "submit-never-statement" event handler to allow submissions during any phase
 // Finn denne event handleren og erstatt den med denne oppdaterte versjonen:
-
 
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
@@ -2358,6 +2397,13 @@ function setupSessionCleanup() {
 
         // Delete session
         delete sessions[sessionId];
+
+        // Remove all player->session mappings for this session
+        Object.keys(playerSessions).forEach((socketId) => {
+          if (playerSessions[socketId].sessionId === sessionId) {
+            delete playerSessions[socketId];
+          }
+        });
       }
     });
   }, 900000); // Check every 15 minutes
