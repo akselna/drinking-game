@@ -7,6 +7,9 @@
       "config": { "distDir": "frontend/build" }
     }
   ],
+  "functions": {
+    "api/index.js": { "runtime": "nodejs18.x" }
+  },
   "routes": [
     { "src": "/api/(.*)", "dest": "api/index.js" },
     { "src": "/(.*)", "dest": "frontend/build/$1" }
