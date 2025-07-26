@@ -50,8 +50,9 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     x: 300,
     y: 0,
   });
-  const [finalSlot, setFinalSlot] = useState<number>(-1);
-  const [wheelIndex, setWheelIndex] = useState<number>(-1);
+const [finalSlot, setFinalSlot] = useState<number>(-1);
+const [wheelIndex, setWheelIndex] = useState<number>(-1);
+  const idleAnimationRef = useRef<number | null>(null);
 
   // Canvas refs
   const ballCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -204,6 +205,16 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       startWheelAnimation(wheelIndex);
     }
   }, [phase]);
+
+  // Start idle wheel during countdown
+  useEffect(() => {
+    if (phase === "countdown") {
+      startIdleWheelSpin();
+    } else if (idleAnimationRef.current) {
+      cancelAnimationFrame(idleAnimationRef.current);
+      idleAnimationRef.current = null;
+    }
+  }, [phase, wheelCategories]);
 
   // Start game (host only)
   const startGame = () => {
@@ -375,6 +386,74 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     animate();
   };
 
+  // Idle wheel spin during countdown
+  const startIdleWheelSpin = () => {
+    const canvas = wheelCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    let rotation = 0;
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const segmentAngle = (2 * Math.PI) / wheelCategories.length;
+
+      wheelCategories.forEach((category, index) => {
+        const startAngle = rotation + index * segmentAngle;
+        const endAngle = startAngle + segmentAngle;
+
+        const hue = (index * 360) / wheelCategories.length;
+        ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + segmentAngle / 2);
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(category, radius * 0.7, 5);
+        ctx.restore();
+      });
+
+      ctx.fillStyle = "#333";
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#FF0000";
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY - radius - 10);
+      ctx.lineTo(centerX - 15, centerY - radius + 10);
+      ctx.lineTo(centerX + 15, centerY - radius + 10);
+      ctx.closePath();
+      ctx.fill();
+
+      rotation += 0.02;
+      if (phase === "countdown") {
+        idleAnimationRef.current = requestAnimationFrame(draw);
+      }
+    };
+
+    draw();
+  };
+
   // Wheel spin animation
   const startWheelAnimation = (targetIndex: number) => {
     const canvas = wheelCanvasRef.current;
@@ -390,7 +469,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     let rotation = 0;
     const targetRotation =
       (targetIndex / wheelCategories.length) * 2 * Math.PI + Math.PI * 6; // Multiple spins
-    const rotationSpeed = 0.2;
+    const rotationSpeed = 0.1;
     let currentSpeed = rotationSpeed;
 
     const animate = () => {
@@ -446,7 +525,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
       // Update rotation
       rotation += currentSpeed;
-      currentSpeed *= 0.995; // Slow down
+      currentSpeed *= 0.98; // Slow down more noticeably
 
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
@@ -549,23 +628,21 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
         <div className="skjenkehjulet countdown-phase">
           <h2>🎰 Skjenkehjulet 🎰</h2>
 
-          <div
-            className={`countdown-display ${
-              timeRemaining <= 10 ? "warning" : ""
-            }`}
-          >
-            <div className="countdown-number">{timeRemaining}</div>
-            <div className="countdown-label">sekunder igjen</div>
-          </div>
+          <div className="wheel-wrapper">
+            <canvas
+              ref={wheelCanvasRef}
+              width={400}
+              height={400}
+              className="wheel-canvas"
+            />
 
-          <div className="wheel-preview">
-            <h3>Kategorier på hjulet:</h3>
-            <div className="categories-grid">
-              {wheelCategories.map((category, index) => (
-                <div key={index} className="category-item">
-                  {category}
-                </div>
-              ))}
+            <div
+              className={`countdown-overlay ${
+                timeRemaining <= 10 ? "warning" : ""
+              }`}
+            >
+              <div className="countdown-number">{timeRemaining}</div>
+              <div className="countdown-label">sekunder igjen</div>
             </div>
           </div>
 
