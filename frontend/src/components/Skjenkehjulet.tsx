@@ -41,6 +41,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     null
   );
 
+  const dangerActive = finalScore === "CHUG" && phase === "result";
+
   const backToConfig = () => {
     setPhase("config");
     setCurrentRound(1);
@@ -671,6 +673,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   if (phase === "countdown") {
     return (
       <div className="skjenkehjulet">
+        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
         <div className="countdown-display">{displayCount}</div>
       </div>
     );
@@ -679,6 +682,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   if (phase === "playing") {
     return (
       <div className="skjenkehjulet">
+        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
         <div ref={containerRef}></div>
       </div>
     );
@@ -687,6 +691,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   if (phase === "result") {
     return (
       <div className="skjenkehjulet">
+        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
         <div ref={containerRef}></div>
         {finalScore && <div className="result-display">{finalScore}</div>}
       </div>
@@ -696,6 +701,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   if (phase === "wheel") {
     return (
       <div className="skjenkehjulet">
+        <div className="danger-overlay"></div>
         {wheelCategory ? (
           <div className="result-display">{wheelCategory}</div>
         ) : (
@@ -721,6 +727,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
   return (
     <div className="skjenkehjulet">
+      <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
       <div ref={containerRef}></div>
       {finalScore && <div className="result-display">{finalScore}</div>}
       {currentRound < rounds ? (
