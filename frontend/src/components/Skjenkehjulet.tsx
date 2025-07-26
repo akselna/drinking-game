@@ -247,11 +247,11 @@ const Skjenkehjulet: React.FC = () => {
     const runner = Runner.create();
     const ballGraphic = document.getElementById(
       "ballGraphic"
-    ) as SVGCircleElement;
+    ) as unknown as SVGCircleElement;
     let ballBody: any;
     const anchorGraphic = document.getElementById(
       "anchorGraphic"
-    ) as SVGCircleElement;
+    ) as unknown as SVGCircleElement;
     let anchorBody: any;
     let anchorConstraint: any;
     const anchorConstraintGraphic = document.querySelector(
