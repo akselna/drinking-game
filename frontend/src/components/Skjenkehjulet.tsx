@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import "../styles/Skjenkehjulet.css";
 
 const matterUrl =
@@ -10,7 +16,11 @@ declare global {
   }
 }
 
-const Skjenkehjulet: React.FC = () => {
+export interface SkjenkehjuletHandle {
+  backToConfig: () => void;
+}
+
+const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
@@ -27,6 +37,17 @@ const Skjenkehjulet: React.FC = () => {
   const boardFuncs = useRef<{ drop: () => void; reset: () => void } | null>(
     null
   );
+
+  const backToConfig = () => {
+    setPhase("config");
+    setCurrentRound(1);
+    setFinalScore(null);
+    boardFuncs.current?.reset();
+  };
+
+  useImperativeHandle(ref, () => ({
+    backToConfig,
+  }));
 
   // Load Matter.js dynamically when component mounts
   useEffect(() => {
@@ -646,12 +667,7 @@ const Skjenkehjulet: React.FC = () => {
       ) : (
         <button
           className="plinko-btn"
-          onClick={() => {
-            setPhase("config");
-            setCurrentRound(1);
-            setFinalScore(null);
-            boardFuncs.current?.reset();
-          }}
+          onClick={backToConfig}
         >
           Avslutt
         </button>
