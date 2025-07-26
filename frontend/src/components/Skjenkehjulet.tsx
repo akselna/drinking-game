@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { CustomSocket } from "../types/socket.types";
+import "../styles/Skjenkehjulet.css";
 
 interface SkjenkehjuletProps {
   sessionId: string;
@@ -347,12 +348,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       // Check if ball reached bottom
       if (ballY > canvas.height - 100) {
         setIsAnimating(false);
-        // Trigger wheel spin after a delay
-        setTimeout(() => {
-          if (socket) {
-            socket.emit("skjenkehjulet-trigger-wheel", sessionId);
-          }
-        }, 1000);
         return;
       }
 
@@ -438,13 +433,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
-      } else {
-        // Animation complete
-        setTimeout(() => {
-          if (socket) {
-            socket.emit("skjenkehjulet-show-result", sessionId);
-          }
-        }, 500);
       }
     };
 
