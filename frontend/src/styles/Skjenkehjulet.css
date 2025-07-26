@@ -1,0 +1,12 @@
+.skjenkehjulet {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.skjenkehjulet-frame {
+  border: none;
+  width: 620px;
+  height: 700px;
+}

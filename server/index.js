@@ -168,6 +168,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
   BEAT4BEAT: "beat4Beat", // Add this line
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SKJENKEHJULET: "skjenkehjulet",
 };
 
 // Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
@@ -983,6 +984,8 @@ io.on("connection", (socket) => {
         timerDuration: 60,
         timeRemaining: 60,
       };
+    } else if (gameType === GAME_TYPES.SKJENKEHJULET) {
+      session.gameState = {};
     }
 
     // Notify all players about the game selection
@@ -2043,6 +2046,8 @@ io.on("connection", (socket) => {
           results: [],
           usedStatements: [],
         };
+      } else if (session.gameType === GAME_TYPES.SKJENKEHJULET) {
+        session.gameState = {};
       }
 
       // Notify all players the game has been restarted

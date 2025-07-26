@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Skjenkehjulet</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap");
+* {padding:0;margin:0;box-sizing:border-box;font-family:"IBM Plex Sans", sans-serif;}
+.container {margin:20px auto;width:fit-content;display:flex;flex-direction:column;gap:20px;height:100%;}
+.points {font-size:40px;font-weight:bold;}
+.scoreText {font-size:100px;font-weight:bold;opacity:0.38;fill:white;}
+#drop_slider {width:90%;margin:0 auto;}
+</style>
+</head>
+<body>
+<div class="container">
+  <svg id="svg" width="600" height="600" viewBox="0 0 1000 1000" fill="none">
+    <defs><radialGradient id="ball_gradient"><stop offset="0%" stop-color="#FF7373" /><stop offset="100%" stop-color="#790202" /></radialGradient></defs><rect x="0" y="580" width="1000" height="20" fill="grey" />
+    <circle id="ballGraphic" cx="500" cy="50" r="20" fill="url(#ball_gradient)"/>
+    <circle id="anchorGraphic" cx="500" cy="10" r="7" fill="white" stroke="black"/>
+  </svg>
+  <input id="drop_slider" type="range" min="50" max="950" value="500" />
+  <button id="drop_button">Test Plinko</button>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.12.0/matter.min.js"></script>
+<script>
+const { Engine, Events, Runner, Bodies, World, Constraint } = Matter;
+const svg = document.querySelector("#svg");
+const engine = Engine.create();
+const runner = Runner.create();
+const ballGraphic = document.getElementById("ballGraphic");
+let ballBody;
+const anchorGraphic = document.getElementById("anchorGraphic");
+let anchorBody;
+let anchorConstraint;
+const dropSlider = document.querySelector("#drop_slider");
+const dropButton = document.querySelector("#drop_button");
+let dropped = false;
+const initBallBody = () => {
+  const xpos = parseInt(ballGraphic.getAttribute("cx"));
+  const ypos = parseInt(ballGraphic.getAttribute("cy"));
+  const r = parseInt(ballGraphic.getAttribute("r"));
+  ballBody = Bodies.circle(0, 0, r, { friction: 0, restitution: 0.6 });
+  Matter.Body.setPosition(ballBody, { x: xpos, y: ypos });
+};
+const initAnchorBody = () => {
+  const xpos = parseInt(anchorGraphic.getAttribute("cx"));
+  const ypos = parseInt(anchorGraphic.getAttribute("cy"));
+  const r = parseInt(anchorGraphic.getAttribute("r"));
+  anchorBody = Bodies.circle(0, 0, r, { isStatic: true });
+  Matter.Body.setPosition(anchorBody, { x: xpos, y: ypos });
+};
+const initConstraint = () => {
+  anchorConstraint = Constraint.create({ bodyA: anchorBody, bodyB: ballBody, stiffness: 0.1, length: 75 });
+};
+const initWorld = () => {
+  const floor = Bodies.rectangle(500, 590, 1000, 40, { isStatic: true });
+  World.add(engine.world, [ballBody, anchorBody, anchorConstraint, floor]);
+  Runner.run(runner, engine);
+};
+const dropBall = () => {
+  dropped = true;
+  World.remove(engine.world, anchorConstraint);
+};
+dropSlider.addEventListener("input", (e) => {
+  if (dropped) return;
+  Matter.Body.setPosition(anchorBody, { x: e.target.value, y: anchorBody.position.y });
+  anchorGraphic.setAttribute("cx", e.target.value);
+});
+dropButton.addEventListener("click", () => {
+  if (!dropped) {
+    dropBall();
+  }
+});
+Engine.run(engine);
+initBallBody();
+initAnchorBody();
+initConstraint();
+initWorld();
+(function update(){
+  ballGraphic.setAttribute("cx", ballBody.position.x);
+  ballGraphic.setAttribute("cy", ballBody.position.y);
+  if(!dropped){
+    anchorGraphic.setAttribute("cx", anchorBody.position.x);
+  }
+  requestAnimationFrame(update);
+})();
+</script>
+</body>
+</html>
