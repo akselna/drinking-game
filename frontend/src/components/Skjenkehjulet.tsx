@@ -22,8 +22,75 @@ export interface SkjenkehjuletHandle {
   backToConfig: () => void;
 }
 
+// Helper function to shuffle an array
+const shuffleArray = (array: string[]) => {
+  let currentIndex = array.length,
+    randomIndex;
+  while (currentIndex !== 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex],
+      array[currentIndex],
+    ];
+  }
+  return array;
+};
+
+// Full list of the most concise categories
+const allCategories = [
+  "Has text on shirt",
+  "Wearing a striped shirt",
+  "Wearing green",
+  "Wearing a ring",
+  "Has a visible scar",
+  "Has short nails",
+  "Phone battery under 50%",
+  "Has a cracked screen",
+  "Is wearing glasses",
+  "Has a beard",
+  "Has short hair",
+  "Has long hair",
+  "Has curly hair",
+  "Has a tattoo",
+  "Is wearing jeans",
+  "Is wearing a watch",
+  "Is wearing nail polish",
+  "Has non-white socks",
+  "Is closest to the door",
+  "Is the youngest",
+  "Is the oldest",
+  "Has a brother",
+  "Has a sister",
+  "Arrived by foot/bus",
+  "Has travelled abroad",
+  "Arrived the earliest",
+  "Arrived the last",
+  "Taller than person on right",
+  "Has hair tied up",
+  "Phone has no case",
+  "Has a charging cable",
+  "Glass is more than half-full",
+  "Has an empty glass",
+  "Has middle-parted hair",
+  "Wearing a long-sleeve",
+  "Has visited the toilet",
+  "Is drinking from a glass",
+  "Is wearing contacts",
+  "Taller than person on left",
+  "Only one wearing shorts",
+  "Is a natural blonde",
+  "Has side-parted hair",
+  "Is wearing boots",
+  "Has played Fortnite",
+  "Is single",
+  "Is in a relationship",
+  "Has a pet",
+];
+
 const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastCategoryIndex = useRef<number | null>(null);
   const animationFrameId = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
@@ -42,6 +109,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const [finalScore, setFinalScore] = useState<string | null>(null);
   const [selectedSensor, setSelectedSensor] = useState<string | null>(null);
   const [wheelCategory, setWheelCategory] = useState<string | null>(null);
+  const [shuffledCategories, setShuffledCategories] = useState<string[]>([]);
+  const [currentRoundCategories, setCurrentRoundCategories] = useState<
+    string[]
+  >([]);
+
   const [intensity, setIntensity] = useState(
     "Mild" as "Mild" | "Medium" | "Fyllehund" | "Grøfta"
   );
@@ -50,7 +122,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   );
   const [fadingCategories, setFadingCategories] = useState<any[]>([]);
 
-  // State-variabler KUN for å styre selve ølanimasjonen
   const [beerHeight, setBeerHeight] = useState("0%");
   const [isGlassVisible, setIsGlassVisible] = useState(false);
   const [isRefilling, setIsRefilling] = useState(false);
@@ -68,7 +139,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       boardFuncs.current.reset();
     }
     setIsGlassVisible(false);
-    // Clear the container to allow re-initialization
     if (containerRef.current) {
       containerRef.current.innerHTML = "";
     }
@@ -78,7 +148,22 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     backToConfig,
   }));
 
-  // Laster inn Matter.js
+  // Shuffle categories when starting a new game
+  useEffect(() => {
+    if (phase === "countdown" && currentRound === 1) {
+      setShuffledCategories(shuffleArray([...allCategories]));
+    }
+  }, [phase, currentRound]);
+
+  // Set categories for the current round
+  useEffect(() => {
+    if (shuffledCategories.length > 0) {
+      const startIndex = (currentRound - 1) * 10;
+      const endIndex = startIndex + 10;
+      setCurrentRoundCategories(shuffledCategories.slice(startIndex, endIndex));
+    }
+  }, [shuffledCategories, currentRound]);
+
   useEffect(() => {
     if (window.Matter) {
       setReady(true);
@@ -94,47 +179,51 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     };
   }, []);
 
-  // Fading categories
   useEffect(() => {
-    if (phase !== "countdown") {
+    if (phase !== "countdown" || currentRoundCategories.length === 0) {
       setFadingCategories([]);
       return;
     }
-    const categories = [
-      "Hvite sokker",
-      "Lengst hår",
-      "Briller",
-      "Høyest",
-      "Rød skjorte",
-      "Eldst",
-      "Yngst",
-      "Brune sko",
-      "Øredobber",
-      "Blå øyne",
-    ];
+
     const animationInterval = setInterval(() => {
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * currentRoundCategories.length);
+      } while (randomIndex === lastCategoryIndex.current);
+      lastCategoryIndex.current = randomIndex;
+
+      const zone = Math.floor(Math.random() * 2);
+      let top, left;
+
+      if (zone === 0) {
+        top = `${5 + Math.random() * 10}%`;
+      } else {
+        top = `${85 + Math.random() * 10}%`;
+      }
+      left = `${5 + Math.random() * 90}%`;
+
       const newCategory = {
         key: Date.now(),
-        text: categories[Math.floor(Math.random() * categories.length)],
+        text: currentRoundCategories[randomIndex],
         style: {
-          top: `${Math.random() * 80 + 10}%`,
-          left: `${Math.random() * 80 + 10}%`,
-          animation: `fadeInOut ${2 + Math.random() * 2}s ease-in-out`,
+          top: top,
+          left: left,
+          animation: `fadeInOut ${3 + Math.random() * 2}s ease-in-out`,
         },
       };
+
       setFadingCategories((prev) => [...prev, newCategory]);
       setTimeout(() => {
         setFadingCategories((prev) =>
           prev.filter((c) => c.key !== newCategory.key)
         );
-      }, 4000);
-    }, 1500);
-    return () => clearInterval(animationInterval);
-  }, [phase]);
+      }, 5000);
+    }, 2500);
 
-  // Main Game Logic and Animation Controller
+    return () => clearInterval(animationInterval);
+  }, [phase, currentRoundCategories]);
+
   useEffect(() => {
-    // 1. NEDTELLING (NEW requestAnimationFrame LOGIC)
     if (phase === "countdown") {
       setIsGlassVisible(true);
       setIsRefilling(false);
@@ -143,18 +232,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       const totalDuration = countdownValue * 1000;
 
       const animate = (timestamp: number) => {
-        if (!startTime) {
-          startTime = timestamp;
-        }
-
+        if (!startTime) startTime = timestamp;
         const elapsedTime = timestamp - startTime;
         const progress = Math.min(elapsedTime / totalDuration, 1);
-
-        // Update beer height (from 89% down to 0%)
-        const newBeerHeight = 100 * (1 - progress);
+        const newBeerHeight = 89 * (1 - progress);
         setBeerHeight(`${newBeerHeight}%`);
-
-        // Update countdown number
         const newDisplayCount = Math.ceil(countdownValue - elapsedTime / 1000);
         setDisplayCount(newDisplayCount > 0 ? newDisplayCount : 0);
 
@@ -166,32 +248,25 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           setPhase("playing");
         }
       };
-
       animationFrameId.current = requestAnimationFrame(animate);
-
       return () => {
-        if (animationFrameId.current) {
+        if (animationFrameId.current)
           cancelAnimationFrame(animationFrameId.current);
-        }
       };
     }
 
-    // 2. SKJULER GLASSET UNDER SPILL OG RESULTAT
     if (phase === "playing" || phase === "result" || phase === "wheel") {
       setIsGlassVisible(false);
     }
 
-    // 3. Går fra kombinert resultat til PÅFYLLING
     if (phase === "combined-result") {
       const nextPhaseTimer = setTimeout(() => {
         if (currentRound < rounds) {
           setCurrentRound((c) => c + 1);
           setFinalScore(null);
           setWheelCategory(null);
-          if (boardFuncs.current) {
-            boardFuncs.current.reset();
-          }
-          setPhase("refilling"); // Gå til påfylling
+          if (boardFuncs.current) boardFuncs.current.reset();
+          setPhase("refilling");
         } else {
           backToConfig();
         }
@@ -199,21 +274,17 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       return () => clearTimeout(nextPhaseTimer);
     }
 
-    // 4. PÅFYLLING
     if (phase === "refilling") {
       setIsGlassVisible(true);
-      setIsRefilling(true); // Starter CSS-animasjonen for påfylling
-
+      setIsRefilling(true);
       const refillTimer = setTimeout(() => {
         setIsRefilling(false);
-        setPhase("countdown"); // Går til neste runde sin nedtelling
-      }, 6000); // Må matche varigheten av 'fill' animasjonen i CSS
-
+        setPhase("countdown");
+      }, 6000);
       return () => clearTimeout(refillTimer);
     }
   }, [phase, countdownValue, rounds, currentRound]);
 
-  // useEffect for Plinko board
   useEffect(() => {
     if (phase !== "playing" || !ready) return;
     initBoard();
@@ -222,7 +293,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     }, 1500);
   }, [phase, ready]);
 
-  // useEffects for Plinko-resultat
   useEffect(() => {
     if (phase !== "result") return;
     const holder = containerRef.current;
@@ -230,11 +300,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     const rects = holder.querySelectorAll<SVGRectElement>("#sensors rect");
     rects.forEach((r) => {
       const key = r.getAttribute("x") + "_" + r.getAttribute("y");
-      if (key === selectedSensor) {
-        r.classList.add("highlight");
-      } else {
-        r.classList.add("dim");
-      }
+      if (key === selectedSensor) r.classList.add("highlight");
+      else r.classList.add("dim");
     });
     const svg = holder.querySelector("svg");
     svg?.classList.add("fadeout");
@@ -262,7 +329,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     }
   }, [phase, wheelCategory]);
 
-  // JSX-komponent for selve ølglasset
   const BeerGlassAnimation = () => (
     <div className={`glass-container ${isGlassVisible ? "visible" : ""}`}>
       <div className={`glass ${isRefilling ? "refilling" : ""}`}>
@@ -511,8 +577,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     const layouts: Record<string, (string | number)[]> = {
       Mild: [3, 3, 6, 6, 3, 3, 6, 6, 3, 3],
       Medium: [3, 6, 6, 3, 6, 10, 6, 3, 6, 3],
-      Fyllehund: [3, 6, 10, 6, "CHUG", 10, 6, 10, 6, 3],
-      Grøfta: [3, 6, 10, "CHUG", 10, "CHUG", 10, 10, 6, 3],
+      Fyllehund: [3, 6, 10, 6, "CHUG", 10, 6, 10, 6, 3], // Fyllehund -> Heavy Drinker
+      Grøfta: [3, 6, 10, "CHUG", 10, "CHUG", 10, 10, 6, 3], // Grøfta -> The Gutter
     };
     const applyIntensity = () => {
       const layout = layouts[intensity];
@@ -853,15 +919,13 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
   return (
     <div className="skjenkehjulet-wrapper">
-      {/* 1. Animasjonen rendres alltid i DOM, men er kun synlig når den skal være det */}
       <BeerGlassAnimation />
 
-      {/* 2. Viser riktig spillskjerm basert på 'phase' */}
       {phase === "config" && (
         <div className="skjenkehjulet config-form">
-          <h2>Skjenkehjulet</h2>
+          <h2>The Serving Wheel</h2>
           <label>
-            Nedtelling (sekunder):
+            Countdown (seconds):
             <input
               type="number"
               value={countdownValue}
@@ -871,7 +935,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             />
           </label>
           <label>
-            Runder:
+            Rounds:
             <input
               type="number"
               value={rounds}
@@ -879,15 +943,15 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             />
           </label>
           <label>
-            Intensitet:
+            Intensity:
             <select
               value={intensity}
               onChange={(e) => setIntensity(e.target.value as any)}
             >
               <option value="Mild">Mild</option>
               <option value="Medium">Medium</option>
-              <option value="Fyllehund">Fyllehund</option>
-              <option value="Grøfta">Grøfta</option>
+              <option value="Fyllehund">Heavy</option>
+              <option value="Grøfta">Extreme</option>
             </select>
           </label>
           <button
@@ -895,7 +959,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             onClick={() => setPhase("countdown")}
             disabled={!ready}
           >
-            Start spillet
+            Start Game
           </button>
         </div>
       )}
@@ -943,18 +1007,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           ) : (
             <LuckyWheel
               key={`wheel-${currentRound}`}
-              categories={[
-                "Hvite sokker",
-                "Lengst hår",
-                "Briller",
-                "Høyest",
-                "Rød skjorte",
-                "Eldst",
-                "Yngst",
-                "Brune sko",
-                "Øredobber",
-                "Blå øyne",
-              ]}
+              categories={currentRoundCategories}
               onFinish={(c) => setWheelCategory(c)}
             />
           )}
@@ -975,7 +1028,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                 textAlign: "center",
               }}
             >
-              🎯 Endelig Resultat! 🎯
+              🎯 Final Result! 🎯
             </h2>
             <div
               style={{
@@ -988,11 +1041,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                 lineHeight: "1.6",
               }}
             >
-              Alle med{" "}
+              Everyone who{" "}
               <span style={{ color: "#ffd700", fontWeight: "bold" }}>
                 {wheelCategory}
               </span>{" "}
-              må drikke{" "}
+              must drink{" "}
               <span
                 style={{
                   color: finalScore === "CHUG" ? "#ff4444" : "#4caf50",
@@ -1000,7 +1053,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                   fontSize: "2.2rem",
                 }}
               >
-                {finalScore === "CHUG" ? "CHUG!" : `${finalScore} slurker`}
+                {finalScore === "CHUG" ? "a CHUG!" : `${finalScore} sips`}
               </span>
             </div>
             {finalScore === "CHUG" && (
@@ -1008,7 +1061,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                 className="chug-warning"
                 style={{ animation: "chug-blink 1s infinite alternate" }}
               >
-                🍺 BÅNN BÅNN BÅNN! 🍺
+                🍺 CHUG CHUG CHUG! 🍺
               </div>
             )}
             <div
@@ -1020,8 +1073,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
               }}
             >
               {currentRound < rounds
-                ? `Runde ${currentRound} av ${rounds} ferdig!`
-                : `🎉 Spillet er ferdig! 🎉`}
+                ? `Round ${currentRound} of ${rounds} complete!`
+                : `🎉 Game Over! 🎉`}
             </div>
           </div>
         </div>
