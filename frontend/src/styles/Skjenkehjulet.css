@@ -178,21 +178,29 @@
 .countdown-phase {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
+  align-items: center;
 }
 
-.countdown-display {
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-  padding: 40px;
-  border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
+.wheel-wrapper {
+  position: relative;
+  display: inline-block;
 }
 
-.countdown-display.warning {
-  background: linear-gradient(135deg, #ff4444, #cc0000);
+.countdown-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 20px 30px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.countdown-overlay.warning {
+  background: rgba(204, 0, 0, 0.7);
   animation: pulse-warning 1s infinite;
-  transform: scale(1.05);
 }
 
 @keyframes pulse-warning {
