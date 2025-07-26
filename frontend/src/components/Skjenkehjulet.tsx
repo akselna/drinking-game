@@ -262,14 +262,12 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       Mild: [3, 3, 6, 6, 3, 3, 6, 6, 3, 3],
       Medium: [3, 6, 6, 10, 6, 6, 10, 6, 6, 3],
       Fyllehund: [3, 6, 10, 6, 10, 6, 10, "CHUG", 10, 6],
-      "Grøfta": [3, 6, 10, "CHUG", 10, 10, 10, "CHUG", 10, 6],
+      Grøfta: [3, 6, 10, "CHUG", 10, 10, 10, "CHUG", 10, 6],
     };
 
     const applyIntensity = () => {
       const layout = layouts[intensity];
-      const sensors = containerRef.current?.querySelectorAll(
-        "#sensors rect"
-      );
+      const sensors = containerRef.current?.querySelectorAll("#sensors rect");
       const points = containerRef.current?.querySelectorAll("#points text");
       sensors?.forEach((s, idx) => {
         const val = layout[idx];
@@ -614,7 +612,10 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         </label>
         <label>
           Intensitet:
-          <select value={intensity} onChange={(e) => setIntensity(e.target.value as any)}>
+          <select
+            value={intensity}
+            onChange={(e) => setIntensity(e.target.value as any)}
+          >
             <option value="Mild">Mild</option>
             <option value="Medium">Medium</option>
             <option value="Fyllehund">Fyllehund</option>
@@ -665,15 +666,12 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           Neste runde
         </button>
       ) : (
-        <button
-          className="plinko-btn"
-          onClick={backToConfig}
-        >
+        <button className="plinko-btn" onClick={backToConfig}>
           Avslutt
         </button>
       )}
     </div>
   );
-};
+});
 
 export default Skjenkehjulet;

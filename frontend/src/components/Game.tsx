@@ -473,40 +473,39 @@ const Game: React.FC = () => {
         {sessionData.isHost &&
           sessionData.gameType !== GAME_TYPES.NONE &&
           sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
-          <div className="host-menu-button-container">
-            <button
-              onClick={returnToLobby}
-              className="host-menu-button"
-              aria-label="Return to Main Menu"
-            >
-              Main Menu
-            </button>
-          </div>
-        )}
+            <div className="host-menu-button-container">
+              <button
+                onClick={returnToLobby}
+                className="host-menu-button"
+                aria-label="Return to Main Menu"
+              >
+                Main Menu
+              </button>
+            </div>
+          )}
 
         {/* Lambo button - now with a proper container */}
         {!isReconnecting &&
           !error &&
           sessionData.sessionId &&
           sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
-          <div className="lambo-button-container">
-            <button
-              onClick={handleLamboVote}
-              className={`lambo-button ${
-                lamboVotes.includes(socket?.id || "") ? "voted" : ""
-              }`}
-              aria-label="Lambo"
-            >
-              🎉 Lambo 🎉
-              {lamboVotes.length > 0 && (
-                <span className="lambo-vote-count">
-                  {lamboVotes.length}/{sessionData.players.length}
-                </span>
-              )}
-            </button>
-          </div>
+            <div className="lambo-button-container">
+              <button
+                onClick={handleLamboVote}
+                className={`lambo-button ${
+                  lamboVotes.includes(socket?.id || "") ? "voted" : ""
+                }`}
+                aria-label="Lambo"
+              >
+                🎉 Lambo 🎉
+                {lamboVotes.length > 0 && (
+                  <span className="lambo-vote-count">
+                    {lamboVotes.length}/{sessionData.players.length}
+                  </span>
+                )}
+              </button>
+            </div>
           )}
-        )}
 
         {/* Leave Session button */}
         {sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
