@@ -334,22 +334,50 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
     const layouts: Record<string, (string | number)[]> = {
       Mild: [3, 3, 6, 6, 3, 3, 6, 6, 3, 3],
-      Medium: [3, 6, 6, 10, 6, 6, 10, 6, 6, 3],
-      Fyllehund: [3, 6, 10, 6, 10, 6, 10, "CHUG", 10, 6],
-      Grøfta: [3, 6, 10, "CHUG", 10, 10, 10, "CHUG", 10, 6],
+      Medium: [3, 6, 6, 3, 6, 10, 6, 3, 6, 3],
+      Fyllehund: [3, 6, 10, 6, "CHUG", 10, 6, 10, 6, 3],
+      Grøfta: [3, 6, 10, "CHUG", 10, "CHUG", 10, 10, 6, 3],
     };
 
     const applyIntensity = () => {
       const layout = layouts[intensity];
       const sensors = containerRef.current?.querySelectorAll("#sensors rect");
       const points = containerRef.current?.querySelectorAll("#points text");
+
+      // Define colors based on penalty severity
+      const getColorForPenalty = (val: string | number) => {
+        switch (val) {
+          case 3:
+            return "#4CAF50"; // Green - mild penalty
+          case 6:
+            return "#FFC107"; // Yellow - medium penalty
+          case 10:
+            return "#FF9800"; // Light red/orange - high penalty
+          case "CHUG":
+            return "#F44336"; // Red - severe penalty
+          default:
+            return "#4CAF50"; // Default to green
+        }
+      };
+
       sensors?.forEach((s, idx) => {
         const val = layout[idx];
-        (s as HTMLElement).dataset.score = String(val);
+        const sensorElement = s as HTMLElement;
+        sensorElement.dataset.score = String(val);
+        // Update the fill color based on penalty severity
+        sensorElement.setAttribute("fill", getColorForPenalty(val));
       });
+
       points?.forEach((p, idx) => {
         const val = layout[idx];
         p.textContent = String(val);
+        // Update text color for better contrast
+        const pointElement = p as HTMLElement;
+        if (val === "CHUG" || val === 10) {
+          pointElement.setAttribute("fill", "white");
+        } else {
+          pointElement.setAttribute("fill", "darkgreen");
+        }
       });
     };
 
