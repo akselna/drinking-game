@@ -100,6 +100,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       icon: "😂",
       color: "#6200ea",
     },
+    {
+      id: "skjenkeHjulet",
+      name: "Skjenkehjulet",
+      icon: "🍻",
+      color: "#ff5722",
+    },
   ];
 
   // Find the host's name for the waiting message
