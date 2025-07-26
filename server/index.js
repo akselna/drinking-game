@@ -168,7 +168,51 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
   BEAT4BEAT: "beat4Beat", // Add this line
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SKJENKEHJULET: "skjenkehjulet",
 };
+
+const skjenkehjuletCategories = [
+  "Hvite sokker",
+  "Briller",
+  "Lengste hår",
+  "Korteste hår",
+  "Eldste",
+  "Yngste",
+  "Høyeste",
+  "Laveste",
+  "Blå øyne",
+  "Brune øyne",
+  "Piercing",
+  "Tatovering",
+  "Rødt plagg",
+  "Blått plagg",
+  "Hvitt plagg",
+  "Svart plagg",
+  "Caps",
+  "Kjole/skjørt",
+  "Sneakers",
+  "Høye hæler",
+  "Mannlig",
+  "Kvinnelig",
+  "Student",
+  "Jobber",
+  "Single",
+  "I forhold",
+  "Har kjæledyr",
+  "Bor hjemme",
+  "Har bil",
+  "Har moped",
+  "Har iPhone",
+  "Har Android",
+  "Drikker kaffe",
+  "Drikker te",
+  "Røyker",
+  "Snuser",
+  "Har snap-score over 100k",
+  "Har TikTok",
+  "Spiller spill",
+  "Trener regelmessig",
+];
 
 // Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
 const neverHaveIEverStatements = [
@@ -203,6 +247,306 @@ const neverHaveIEverStatements = [
   "...vært på fest i et annet land",
   "...stått på scenen foran over 100 mennesker",
 ];
+
+const punishments = {
+  mild: [
+    { type: "1 slurk", amount: 1, probability: 0.4, color: "#4CAF50" },
+    { type: "2 slurker", amount: 2, probability: 0.3, color: "#FFC107" },
+    { type: "3 slurker", amount: 3, probability: 0.2, color: "#FF9800" },
+    { type: "Bunnløs", amount: 999, probability: 0.1, color: "#F44336" },
+  ],
+  medium: [
+    { type: "1 slurk", amount: 1, probability: 0.25, color: "#4CAF50" },
+    { type: "2 slurker", amount: 2, probability: 0.3, color: "#FFC107" },
+    { type: "3 slurker", amount: 3, probability: 0.25, color: "#FF9800" },
+    { type: "5 slurker", amount: 5, probability: 0.15, color: "#E91E63" },
+    { type: "Bunnløs", amount: 999, probability: 0.05, color: "#F44336" },
+  ],
+  blackout: [
+    { type: "2 slurker", amount: 2, probability: 0.2, color: "#FFC107" },
+    { type: "3 slurker", amount: 3, probability: 0.25, color: "#FF9800" },
+    { type: "5 slurker", amount: 5, probability: 0.25, color: "#E91E63" },
+    { type: "7 slurker", amount: 7, probability: 0.15, color: "#9C27B0" },
+    { type: "Bunnløs", amount: 999, probability: 0.15, color: "#F44336" },
+  ],
+};
+// Helper function to select punishment based on probability
+function selectPunishmentByProbability(gameMode) {
+  const modePunishments = punishments[gameMode];
+  const random = Math.random();
+  let cumulativeProbability = 0;
+
+  for (let i = 0; i < modePunishments.length; i++) {
+    cumulativeProbability += modePunishments[i].probability;
+    if (random <= cumulativeProbability) {
+      return { ...modePunishments[i], slotIndex: i };
+    }
+  }
+
+  // Fallback to last punishment if something goes wrong
+  return {
+    ...modePunishments[modePunishments.length - 1],
+    slotIndex: modePunishments.length - 1,
+  };
+}
+
+// Helper function to shuffle array
+function shuffleArray(array) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+// Socket event handlers for Skjenkehjulet
+
+// Add to game selection logic:
+if (gameType === GAME_TYPES.SKJENKEHJULET) {
+  session.gameState = {
+    phase: "setup",
+    countdownTime: 10,
+    gameMode: "medium",
+    timeRemaining: 0,
+    currentPunishment: null,
+    currentCategory: "",
+    wheelCategories: [],
+    roundNumber: 1,
+  };
+}
+//Skjenkehjulet - Start Game
+socket.on("skjenkehjulet-start-game", (sessionId, settings) => {
+  const session = sessions[sessionId];
+
+  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+    socket.emit("error", { message: "Invalid session or game type" });
+    return;
+  }
+
+  // Only the host can start the game
+  if (socket.id !== session.host) {
+    socket.emit("error", { message: "Only the host can start the game" });
+    return;
+  }
+
+  updateSessionActivity(sessionId);
+
+  // Initialize game state
+  session.gameState = {
+    phase: "countdown",
+    countdownTime: settings.countdownTime || 10,
+    gameMode: settings.gameMode || "medium",
+    timeRemaining: settings.countdownTime || 10,
+    currentPunishment: null,
+    currentCategory: "",
+    wheelCategories: shuffleArray(skjenkehjuletCategories).slice(0, 10), // Select 10 random categories
+    roundNumber: 1,
+  };
+
+  console.log(
+    `Skjenkehjulet game started in session ${sessionId} with ${settings.gameMode} mode`
+  );
+
+  // Start countdown timer
+  startSkjenkehjuletCountdown(sessionId);
+
+  // Notify all clients
+  io.to(sessionId).emit("skjenkehjulet-game-start", {
+    countdownTime: session.gameState.countdownTime,
+    gameMode: session.gameState.gameMode,
+    wheelCategories: session.gameState.wheelCategories,
+  });
+});
+
+// Countdown timer function
+function startSkjenkehjuletCountdown(sessionId) {
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  const timer = setInterval(() => {
+    if (
+      !sessions[sessionId] ||
+      sessions[sessionId].gameState.phase !== "countdown"
+    ) {
+      clearInterval(timer);
+      return;
+    }
+
+    session.gameState.timeRemaining--;
+
+    // Send countdown update
+    io.to(sessionId).emit("skjenkehjulet-countdown-update", {
+      timeRemaining: session.gameState.timeRemaining,
+    });
+
+    // When countdown reaches 0, start punishment selection
+    if (session.gameState.timeRemaining <= 0) {
+      clearInterval(timer);
+      startPunishmentSelection(sessionId);
+    }
+  }, 1000);
+
+  // Store timer reference for cleanup
+  session.gameState.timerId = timer;
+}
+
+// Start punishment selection
+function startPunishmentSelection(sessionId) {
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  // Select punishment based on probability
+  const selectedPunishment = selectPunishmentByProbability(
+    session.gameState.gameMode
+  );
+
+  session.gameState.currentPunishment = selectedPunishment;
+  session.gameState.phase = "punishment-animation";
+
+  console.log(
+    `Selected punishment for session ${sessionId}: ${selectedPunishment.type} (slot ${selectedPunishment.slotIndex})`
+  );
+
+  // Notify clients to start ball animation
+  io.to(sessionId).emit("skjenkehjulet-punishment-animation", {
+    punishment: selectedPunishment,
+    targetSlot: selectedPunishment.slotIndex,
+  });
+
+  // After animation delay, trigger wheel spin
+  setTimeout(() => {
+    triggerWheelSpin(sessionId);
+  }, 4000); // 4 seconds for ball animation
+}
+
+// Trigger wheel spin
+function triggerWheelSpin(sessionId) {
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  // Select random category from wheel
+  const categoryIndex = Math.floor(
+    Math.random() * session.gameState.wheelCategories.length
+  );
+  const selectedCategory = session.gameState.wheelCategories[categoryIndex];
+
+  session.gameState.currentCategory = selectedCategory;
+  session.gameState.phase = "wheel-spin";
+
+  console.log(
+    `Wheel spinning in session ${sessionId}, selected: ${selectedCategory}`
+  );
+
+  // Notify clients to start wheel animation
+  io.to(sessionId).emit("skjenkehjulet-wheel-spin", {
+    category: selectedCategory,
+    categoryIndex: categoryIndex,
+  });
+
+  // After wheel animation, show result
+  setTimeout(() => {
+    showSkjenkehjuletResult(sessionId);
+  }, 3000); // 3 seconds for wheel animation
+}
+
+// Manual trigger wheel (from client after ball animation)
+socket.on("skjenkehjulet-trigger-wheel", (sessionId) => {
+  const session = sessions[sessionId];
+
+  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+    return;
+  }
+
+  triggerWheelSpin(sessionId);
+});
+
+// Show result
+function showSkjenkehjuletResult(sessionId) {
+  const session = sessions[sessionId];
+  if (!session) return;
+
+  session.gameState.phase = "result";
+
+  console.log(
+    `Showing result for session ${sessionId}: ${session.gameState.currentCategory} must drink ${session.gameState.currentPunishment.type}`
+  );
+
+  // Notify clients to show result
+  io.to(sessionId).emit("skjenkehjulet-result", {
+    category: session.gameState.currentCategory,
+    punishment: session.gameState.currentPunishment,
+  });
+}
+
+// Manual show result (from client after wheel animation)
+socket.on("skjenkehjulet-show-result", (sessionId) => {
+  const session = sessions[sessionId];
+
+  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+    return;
+  }
+
+  showSkjenkehjuletResult(sessionId);
+});
+
+// Next round
+socket.on("skjenkehjulet-next-round", (sessionId) => {
+  const session = sessions[sessionId];
+
+  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+    socket.emit("error", { message: "Invalid session or game type" });
+    return;
+  }
+
+  // Only the host can start next round
+  if (socket.id !== session.host) {
+    socket.emit("error", { message: "Only the host can start the next round" });
+    return;
+  }
+
+  updateSessionActivity(sessionId);
+
+  // Clear any existing timer
+  if (session.gameState.timerId) {
+    clearInterval(session.gameState.timerId);
+  }
+
+  // Increment round number and shuffle categories
+  session.gameState.roundNumber++;
+  session.gameState.wheelCategories = shuffleArray(
+    skjenkehjuletCategories
+  ).slice(0, 10);
+
+  // Reset state for new round
+  session.gameState.phase = "countdown";
+  session.gameState.timeRemaining = session.gameState.countdownTime;
+  session.gameState.currentPunishment = null;
+  session.gameState.currentCategory = "";
+
+  console.log(
+    `Starting round ${session.gameState.roundNumber} in session ${sessionId}`
+  );
+
+  // Start countdown
+  startSkjenkehjuletCountdown(sessionId);
+
+  // Notify clients
+  io.to(sessionId).emit("skjenkehjulet-next-round", {
+    countdownTime: session.gameState.countdownTime,
+    wheelCategories: session.gameState.wheelCategories,
+    roundNumber: session.gameState.roundNumber,
+  });
+});
+
+// Cleanup timers when game is restarted or session ends
+function cleanupSkjenkehjuletTimers(sessionId) {
+  const session = sessions[sessionId];
+  if (session && session.gameState && session.gameState.timerId) {
+    clearInterval(session.gameState.timerId);
+    session.gameState.timerId = null;
+  }
+}
 
 // Modify the "submit-never-statement" event handler to allow submissions during any phase
 // Finn denne event handleren og erstatt den med denne oppdaterte versjonen:

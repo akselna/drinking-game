@@ -1,3 +1,12 @@
+/*
+ * OPPDATER EKSISTERENDE FIL: frontend/src/components/GameLobby.tsx
+ *
+ * Erstatt hele innholdet i den eksisterende GameLobby.tsx filen med denne koden.
+ * Dette legger til kategorier og Skjenkehjulet-spillet.
+ */
+
+// Updated GameLobby.tsx with categories and Skjenkehjulet
+
 import React, { useState, useContext } from "react";
 import "../styles/GameLobby.css";
 import { SocketContext } from "../context/SocketContext";
@@ -18,12 +27,14 @@ interface GameLobbyProps {
   onLeaveSession: () => void;
 }
 
-// Define the game option interface
+// Define the game option interface with category
 interface GameOption {
   id: string;
   name: string;
   icon: string;
   color: string;
+  category: string;
+  isNew?: boolean;
 }
 
 const GameLobby: React.FC<GameLobbyProps> = ({
@@ -40,9 +51,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
   // Get the current socket ID
   const currentSocketId = socket?.id;
 
-  // Get the host ID from the socket - this will work for ALL users
-  // If the current user is host (isHost=true), then they are the host
-  // Otherwise, use the hostId that's been stored in the socket
+  // Get the host ID from the socket
   const hostId = isHost ? currentSocketId : socket?.hostId;
 
   // Sort players to ensure the host is always at the top
@@ -74,33 +83,64 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     }, 300);
   };
 
+  // Updated game options with categories
   const gameOptions: GameOption[] = [
+    // Classic drinking games
     {
       id: "neverHaveIEver",
       name: "Jeg har aldri...",
       icon: "🤭",
       color: "#e21b3c",
+      category: "Klassiske spill",
     },
     {
       id: "musicGuess",
       name: "Hvem satte på sangen?",
       icon: "🎵",
       color: "#1368ce",
+      category: "Klassiske spill",
     },
     {
       id: "drinkOrJudge",
       name: "Hvem i rommet?",
       icon: "👀",
       color: "#9c27b0",
+      category: "Klassiske spill",
     },
-    { id: "beat4Beat", name: "Beat4Beat", icon: "🎧", color: "#e53935" },
+    {
+      id: "beat4Beat",
+      name: "Beat4Beat",
+      icon: "🎧",
+      color: "#e53935",
+      category: "Klassiske spill",
+    },
     {
       id: "notAllowedToLaugh",
       name: "Ikke lov å le på vors",
       icon: "😂",
       color: "#6200ea",
+      category: "Klassiske spill",
+    },
+    // Dashboard games
+    {
+      id: "skjenkehjulet",
+      name: "Skjenkehjulet",
+      icon: "🎰",
+      color: "#FFD700",
+      category: "Dashboard-spill",
+      isNew: true,
     },
   ];
+
+  // Group games by category
+  const gamesByCategory = gameOptions.reduce((acc, game) => {
+    const category = game.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(game);
+    return acc;
+  }, {} as Record<string, GameOption[]>);
 
   // Find the host's name for the waiting message
   const hostName = isHost
@@ -184,7 +224,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
             </div>
           </div>
 
-          {/* Right Column - Game Selection for everyone */}
+          {/* Right Column - Game Selection with Categories */}
           <div className="right-column">
             <div className="session-card game-selection-card">
               <div className="card-content">
@@ -196,23 +236,42 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                     </span>
                   )}
                 </h2>
-                <div className="games-grid">
-                  {gameOptions.map((game: GameOption) => (
-                    <button
-                      key={game.id}
-                      onClick={() => handleGameSelect(game.id)}
-                      className={`game-button ${
-                        selectedGame === game.id ? "selected" : ""
-                      } ${!isHost ? "non-host" : ""}`}
-                      style={{
-                        backgroundColor: game.color + "15", // Add transparency to color
-                        borderColor: game.color,
-                      }}
-                      disabled={!isHost}
+
+                <div className="games-by-category">
+                  {Object.entries(gamesByCategory).map(([category, games]) => (
+                    <div
+                      key={category}
+                      className={`game-category ${
+                        category === "Dashboard-spill"
+                          ? "dashboard-category"
+                          : ""
+                      }`}
                     >
-                      <span className="game-icon">{game.icon}</span>
-                      <span className="game-name">{game.name}</span>
-                    </button>
+                      <h4 className="category-title">{category}</h4>
+                      <div className="category-games">
+                        {games.map((game: GameOption) => (
+                          <button
+                            key={game.id}
+                            onClick={() => handleGameSelect(game.id)}
+                            className={`game-button ${
+                              selectedGame === game.id ? "selected" : ""
+                            } ${!isHost ? "non-host" : ""}`}
+                            style={{
+                              backgroundColor: game.color + "15",
+                              borderColor: game.color,
+                            }}
+                            disabled={!isHost}
+                            data-game-id={game.id}
+                          >
+                            <span className="game-icon">{game.icon}</span>
+                            <span className="game-name">{game.name}</span>
+                            {game.isNew && (
+                              <span className="new-feature-badge">Nytt!</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   ))}
                 </div>
 

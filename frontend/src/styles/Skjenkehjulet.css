@@ -1,0 +1,573 @@
+/*
+ * NY FIL: frontend/src/styles/Skjenkehjulet.css
+ * 
+ * CSS-styling for Skjenkehjulet-spillet.
+ * Lag denne filen i frontend/src/styles/ mappen.
+ */
+
+/* Skjenkehjulet game styles */
+.skjenkehjulet {
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+  background-color: #1e1e1e;
+  color: white;
+  min-height: 70vh;
+}
+
+.skjenkehjulet h2 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 2.5rem;
+  background: linear-gradient(45deg, #ffd700, #ffa500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+}
+
+/* Setup Phase */
+.setup-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.setup-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.settings-card {
+  background-color: #272727;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.settings-card h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: #ffd700;
+}
+
+.setting-group {
+  margin-bottom: 20px;
+}
+
+.setting-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.time-input {
+  width: 100px;
+  padding: 12px;
+  border-radius: 8px;
+  background-color: #333;
+  color: white;
+  border: 2px solid #555;
+  font-size: 1.2rem;
+  text-align: center;
+  transition: border-color 0.2s ease;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #ffd700;
+  box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.3);
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.mode-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #444;
+  color: white;
+}
+
+.mode-button:hover {
+  background-color: #555;
+  transform: translateY(-2px);
+}
+
+.mode-button.selected {
+  background-color: #ffd700;
+  color: #000;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+}
+
+.punishment-preview {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.punishment-preview h4 {
+  margin-bottom: 12px;
+  color: #ffd700;
+}
+
+.punishment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.punishment-item {
+  background-color: #333;
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.punishment-type {
+  font-weight: bold;
+}
+
+.punishment-probability {
+  background-color: rgba(255, 215, 0, 0.2);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.start-button {
+  padding: 16px 32px;
+  background: linear-gradient(45deg, #ffd700, #ffa500);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.3);
+}
+
+.start-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+}
+
+.start-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3);
+}
+
+/* Countdown Phase */
+.countdown-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.countdown-display {
+  background: linear-gradient(135deg, #1e3c72, #2a5298);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.countdown-display.warning {
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  animation: pulse-warning 1s infinite;
+  transform: scale(1.05);
+}
+
+@keyframes pulse-warning {
+  0%,
+  100% {
+    box-shadow: 0 8px 24px rgba(255, 68, 68, 0.5);
+  }
+  50% {
+    box-shadow: 0 12px 32px rgba(255, 68, 68, 0.8);
+  }
+}
+
+.countdown-number {
+  font-size: 6rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.countdown-label {
+  font-size: 1.5rem;
+  opacity: 0.9;
+}
+
+.wheel-preview {
+  background-color: #272727;
+  padding: 24px;
+  border-radius: 12px;
+}
+
+.wheel-preview h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #ffd700;
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.category-item {
+  background-color: #444;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  border-left: 4px solid #ffd700;
+}
+
+.category-item:hover {
+  background-color: #555;
+  transform: translateY(-2px);
+}
+
+/* Animation Phase */
+.animation-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+}
+
+.ball-canvas {
+  border: 3px solid #ffd700;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1e3c72, #2a5298);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.punishment-display {
+  background-color: #272727;
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid #ffd700;
+}
+
+.punishment-display h3 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #ffd700;
+}
+
+/* Wheel Phase */
+.wheel-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: center;
+}
+
+.current-punishment {
+  background-color: #272727;
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: 2px solid #ffd700;
+}
+
+.current-punishment h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #ffd700;
+}
+
+.wheel-canvas {
+  border: 3px solid #ffd700;
+  border-radius: 50%;
+  background-color: #333;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Result Phase */
+.result-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.result-display {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: result-glow 2s infinite alternate;
+}
+
+@keyframes result-glow {
+  0% {
+    box-shadow: 0 8px 24px rgba(255, 107, 107, 0.5);
+  }
+  100% {
+    box-shadow: 0 12px 32px rgba(255, 107, 107, 0.8);
+  }
+}
+
+.result-category {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.result-punishment {
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.host-controls {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.next-round-button {
+  padding: 16px 32px;
+  background: linear-gradient(45deg, #4caf50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 16px rgba(76, 175, 80, 0.3);
+}
+
+.next-round-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+}
+
+.next-round-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* Back Button */
+.back-button {
+  padding: 12px 24px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.back-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.back-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Waiting Message */
+.waiting-message {
+  background-color: #272727;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.waiting-message p {
+  margin: 0;
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+/* Loading State */
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+
+.loading p {
+  font-size: 1.2rem;
+  opacity: 0.8;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+  .skjenkehjulet {
+    padding: 16px;
+  }
+
+  .skjenkehjulet h2 {
+    font-size: 2rem;
+  }
+
+  .countdown-number {
+    font-size: 4rem;
+  }
+
+  .countdown-label {
+    font-size: 1.2rem;
+  }
+
+  .result-category {
+    font-size: 1.5rem;
+  }
+
+  .result-punishment {
+    font-size: 2rem;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+
+  .category-item {
+    padding: 8px;
+    font-size: 0.9rem;
+  }
+
+  .mode-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .mode-button {
+    width: 100%;
+  }
+
+  .host-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .next-round-button,
+  .start-button {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .ball-canvas,
+  .wheel-canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .punishment-list {
+    gap: 6px;
+  }
+
+  .punishment-item {
+    padding: 10px;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .skjenkehjulet h2 {
+    font-size: 1.8rem;
+  }
+
+  .countdown-number {
+    font-size: 3rem;
+  }
+
+  .result-category {
+    font-size: 1.3rem;
+  }
+
+  .result-punishment {
+    font-size: 1.8rem;
+  }
+
+  .settings-card {
+    padding: 16px;
+  }
+
+  .start-button,
+  .next-round-button {
+    font-size: 1.1rem;
+    padding: 14px 24px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .skjenkehjulet {
+    border: 2px solid white;
+  }
+
+  .settings-card,
+  .waiting-message,
+  .wheel-preview {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .mode-button {
+    border: 1px solid white;
+  }
+
+  .category-item {
+    border: 1px solid #ffd700;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .countdown-display.warning {
+    animation: none;
+  }
+
+  .result-display {
+    animation: none;
+  }
+
+  .start-button:hover,
+  .next-round-button:hover,
+  .back-button:hover,
+  .mode-button:hover,
+  .category-item:hover {
+    transform: none;
+  }
+
+  .pulse-warning {
+    animation: none;
+  }
+}

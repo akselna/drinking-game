@@ -478,3 +478,189 @@
 .player-item:not(.host-player):hover {
   background-color: rgba(255, 255, 255, 0.08);
 }
+
+/*
+ * OPPDATER EKSISTERENDE FIL: frontend/src/styles/GameLobby.css
+ * 
+ * Legg til denne CSS-koden på SLUTTEN av den eksisterende GameLobby.css filen.
+ * Dette legger til styling for spillkategorier og spesiell styling for Skjenkehjulet.
+ */
+
+/* Add to GameLobby.css - Styles for game categories */
+
+.game-category {
+  margin-bottom: 2rem;
+}
+
+.category-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  position: relative;
+  padding-bottom: 0.5rem;
+  text-align: left;
+}
+
+.category-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 3rem;
+  height: 2px;
+  background-color: #7c4dff;
+}
+
+/* Special styling for Dashboard-spill category */
+.game-category:has(.category-title:contains("Dashboard-spill"))
+  .category-title {
+  color: #ffd700;
+  background: linear-gradient(45deg, #ffd700, #ffa500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-category:has(.category-title:contains("Dashboard-spill"))
+  .category-title::after {
+  background: linear-gradient(45deg, #ffd700, #ffa500);
+}
+
+.category-games {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+/* Enhanced game button for Skjenkehjulet */
+.game-button[data-game-id="skjenkehjulet"] {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.15),
+    rgba(255, 165, 0, 0.15)
+  );
+  border: 2px solid #ffd700;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-button[data-game-id="skjenkehjulet"]::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 215, 0, 0.1),
+    transparent
+  );
+  transform: rotate(45deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+  50% {
+    transform: translateX(100%) translateY(100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(-100%) translateY(-100%) rotate(45deg);
+  }
+}
+
+.game-button[data-game-id="skjenkehjulet"]:hover {
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.game-button[data-game-id="skjenkehjulet"] .game-icon {
+  font-size: 2.2rem;
+  text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.game-button[data-game-id="skjenkehjulet"] .game-name {
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Mobile optimizations for categories */
+@media (max-width: 768px) {
+  .category-games {
+    grid-template-columns: 1fr;
+  }
+
+  .category-title {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  .game-category {
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Extra emphasis for Dashboard category */
+.dashboard-category {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.05),
+    rgba(255, 165, 0, 0.05)
+  );
+  border-radius: 1rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  margin-bottom: 2.5rem;
+  position: relative;
+}
+
+.dashboard-category::before {
+  content: "✨";
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  font-size: 1.5rem;
+  animation: float 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Highlight new feature */
+.new-feature-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(45deg, #ff6b6b, #ff8e53);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}

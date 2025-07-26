@@ -10,15 +10,16 @@ import DrinkOrJudge from "./DrinkOrJudge";
 import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
+import Skjenkehjulet from "./Skjenkehjulet";
 
-// Game type constants (must match server constants)
 const GAME_TYPES = {
   NONE: "none",
   NEVER_HAVE_I_EVER: "neverHaveIEver",
   MUSIC_GUESS: "musicGuess",
   DRINK_OR_JUDGE: "drinkOrJudge",
   BEAT4BEAT: "beat4Beat",
-  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh",
+  SKJENKEHJULET: "skjenkehjulet", // Add new game type
 };
 
 const Game: React.FC = () => {
@@ -303,7 +304,7 @@ const Game: React.FC = () => {
     }
   };
 
-  // Render the appropriate component based on game type
+  // Update the renderGame function to include Skjenkehjulet case
   const renderGame = () => {
     if (isReconnecting) {
       return (
@@ -359,7 +360,6 @@ const Game: React.FC = () => {
             returnToLobby={returnToLobby}
           />
         );
-
       case GAME_TYPES.DRINK_OR_JUDGE:
         return (
           <DrinkOrJudge
@@ -389,6 +389,19 @@ const Game: React.FC = () => {
       case GAME_TYPES.NOT_ALLOWED_TO_LAUGH:
         return (
           <NotAllowedToLaugh
+            sessionId={sessionData.sessionId}
+            players={sessionData.players}
+            isHost={sessionData.isHost}
+            gameState={sessionData.gameState}
+            socket={socket}
+            restartGame={restartGame}
+            leaveSession={confirmLeaveSession}
+            returnToLobby={returnToLobby}
+          />
+        );
+      case GAME_TYPES.SKJENKEHJULET: // Add new case for Skjenkehjulet
+        return (
+          <Skjenkehjulet
             sessionId={sessionData.sessionId}
             players={sessionData.players}
             isHost={sessionData.isHost}
