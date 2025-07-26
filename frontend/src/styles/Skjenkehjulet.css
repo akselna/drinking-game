@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;700&display=swap");
+
+.container {
+  margin: 20px auto;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.scoreText {
+  font-size: 100px;
+  font-weight: bold;
+  opacity: 0.38;
+  fill: white;
+}
+
+.points {
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.plinko-btn {
+  margin-bottom: 10px;
+  padding: 8px 16px;
+  background-color: #6200ea;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  margin: 20px auto;
+}
+
+.countdown-display {
+  font-size: 120px;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.result-display {
+  font-size: 80px;
+  text-align: center;
+  margin-top: 20px;
+  animation: pop 0.6s ease-out forwards;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
