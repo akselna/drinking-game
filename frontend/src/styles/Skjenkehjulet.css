@@ -20,22 +20,75 @@
   font-weight: bold;
 }
 
-.plinko-btn {
-  margin-bottom: 10px;
-  padding: 8px 16px;
-  background-color: #6200ea;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
+/* Config form styling - matching app theme */
 .config-form {
+  background-color: #1e1e1e;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  padding: 2rem;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+  color: white;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  width: 300px;
-  margin: 20px auto;
+  gap: 15px;
+}
+
+.config-form h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: white;
+}
+
+.config-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.config-form input,
+.config-form select {
+  width: 100%;
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.config-form input:focus,
+.config-form select:focus {
+  border-color: #7c4dff;
+  outline: none;
+}
+
+/* Button styling matching app theme */
+.plinko-btn {
+  background-color: #7c4dff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.plinko-btn:hover:not(:disabled) {
+  background-color: #9575ff;
+}
+
+.plinko-btn:disabled {
+  background-color: rgba(124, 77, 255, 0.5);
+  cursor: not-allowed;
 }
 
 .countdown-display {
@@ -71,18 +124,18 @@
   bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(30, 30, 30, 0.9);
   border-radius: 15px;
   padding: 20px;
   max-width: 90%;
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(124, 77, 255, 0.3);
 }
 
 .categories-preview h3 {
   text-align: center;
   margin: 0 0 15px 0;
-  color: #ffd700;
+  color: #7c4dff;
   font-size: 1.2rem;
 }
 
@@ -94,25 +147,25 @@
 }
 
 .category-preview {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(124, 77, 255, 0.2);
   border-radius: 8px;
   padding: 8px 12px;
   text-align: center;
   font-size: 0.9rem;
   color: white;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(124, 77, 255, 0.4);
   transition: all 0.3s ease;
 }
 
 .category-preview:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(124, 77, 255, 0.3);
   transform: translateY(-2px);
 }
 
 .tension-text {
   text-align: center;
   margin: 0;
-  color: #ffaa00;
+  color: #9575ff;
   font-style: italic;
   font-size: 1rem;
 }
@@ -123,17 +176,17 @@
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(30, 30, 30, 0.9);
   border-radius: 10px;
   padding: 15px;
   max-width: 90%;
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 215, 0, 0.5);
+  border: 2px solid rgba(124, 77, 255, 0.4);
 }
 
 .playing-categories-text {
   text-align: center;
-  color: #ffd700;
+  color: #7c4dff;
   font-weight: bold;
   margin-bottom: 10px;
   font-size: 1.1rem;
@@ -158,7 +211,7 @@
 }
 
 .scrolling-category:nth-child(even) {
-  color: #ffaa00;
+  color: #9575ff;
 }
 
 @keyframes scroll-categories {
@@ -219,6 +272,7 @@
     transform: scale(1.05);
   }
 }
+
 @keyframes pop {
   0% {
     transform: scale(0);
@@ -235,11 +289,13 @@
 }
 
 .highlight {
-  fill: gold !important;
+  fill: #7c4dff !important;
 }
+
 .dim {
   opacity: 0.3;
 }
+
 .fadeout {
   opacity: 0;
   transition: opacity 0.5s ease;
