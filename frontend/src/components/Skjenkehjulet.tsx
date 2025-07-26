@@ -205,6 +205,13 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     }
   }, [phase]);
 
+  // Start idle wheel spin during countdown
+  useEffect(() => {
+    if (phase === "countdown") {
+      startIdleWheel();
+    }
+  }, [phase, wheelCategories]);
+
   // Start game (host only)
   const startGame = () => {
     if (!socket || !isHost) return;
@@ -375,6 +382,75 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     animate();
   };
 
+  // Idle wheel spin during countdown
+  const startIdleWheel = () => {
+    const canvas = wheelCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    let rotation = 0;
+    const speed = 0.02;
+
+    const animate = () => {
+      if (phase !== "countdown") return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const segmentAngle = (2 * Math.PI) / wheelCategories.length;
+
+      wheelCategories.forEach((category, index) => {
+        const startAngle = rotation + index * segmentAngle;
+        const endAngle = startAngle + segmentAngle;
+
+        const hue = (index * 360) / wheelCategories.length;
+        ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + segmentAngle / 2);
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(category, radius * 0.7, 5);
+        ctx.restore();
+      });
+
+      ctx.fillStyle = "#333";
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#FF0000";
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY - radius - 10);
+      ctx.lineTo(centerX - 15, centerY - radius + 10);
+      ctx.lineTo(centerX + 15, centerY - radius + 10);
+      ctx.closePath();
+      ctx.fill();
+
+      rotation += speed;
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+  };
+
   // Wheel spin animation
   const startWheelAnimation = (targetIndex: number) => {
     const canvas = wheelCanvasRef.current;
@@ -390,7 +466,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     let rotation = 0;
     const targetRotation =
       (targetIndex / wheelCategories.length) * 2 * Math.PI + Math.PI * 6; // Multiple spins
-    const rotationSpeed = 0.2;
+    const rotationSpeed = 0.05;
     let currentSpeed = rotationSpeed;
 
     const animate = () => {
@@ -446,7 +522,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
       // Update rotation
       rotation += currentSpeed;
-      currentSpeed *= 0.995; // Slow down
+      currentSpeed *= 0.97; // Slow down gradually
 
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
@@ -558,16 +634,12 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
             <div className="countdown-label">sekunder igjen</div>
           </div>
 
-          <div className="wheel-preview">
-            <h3>Kategorier på hjulet:</h3>
-            <div className="categories-grid">
-              {wheelCategories.map((category, index) => (
-                <div key={index} className="category-item">
-                  {category}
-                </div>
-              ))}
-            </div>
-          </div>
+          <canvas
+            ref={wheelCanvasRef}
+            width={600}
+            height={600}
+            className="wheel-canvas"
+          />
 
           {isHost && (
             <button onClick={returnToLobby} className="back-button">
