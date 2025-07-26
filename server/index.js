@@ -355,11 +355,6 @@ function startPunishmentSelection(sessionId) {
     punishment: selectedPunishment,
     targetSlot: selectedPunishment.slotIndex,
   });
-
-  // After animation delay, trigger wheel spin
-  setTimeout(() => {
-    triggerWheelSpin(sessionId);
-  }, 4000); // 4 seconds for ball animation
 }
 
 // Trigger wheel spin
@@ -389,7 +384,7 @@ function triggerWheelSpin(sessionId) {
   // After wheel animation, show result
   setTimeout(() => {
     showSkjenkehjuletResult(sessionId);
-  }, 3000); // 3 seconds for wheel animation
+  }, 5000); // 5 seconds for wheel animation
 }
 
 
@@ -1263,6 +1258,23 @@ io.on("connection", (socket) => {
       gameMode: session.gameState.gameMode,
       wheelCategories: session.gameState.wheelCategories,
     });
+  });
+
+  // Ball animation finished (host notifies)
+  socket.on("skjenkehjulet-ball-finished", (sessionId) => {
+    const session = sessions[sessionId];
+    if (
+      !session ||
+      session.gameType !== GAME_TYPES.SKJENKEHJULET ||
+      socket.id !== session.host
+    ) {
+      return;
+    }
+
+    // Ensure we're still in the punishment phase
+    if (session.gameState.phase === "punishment-animation") {
+      triggerWheelSpin(sessionId);
+    }
   });
 
 
