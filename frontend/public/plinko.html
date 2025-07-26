@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plinko</title>
+  <link rel="stylesheet" href="plinko.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <svg id="svg" width="600" height="600" viewBox="0 0 1000 1000" fill="none"></svg>
+    <div class="controls">
+      <label for="mode_select">Mode:</label>
+      <select id="mode_select">
+        <option value="mild">Mild</option>
+        <option value="hardcore">Hardcore</option>
+      </select>
+      <input id="drop_slider" type="range" min="50" max="950" value="500" />
+      <button id="drop_button">DROP</button>
+    </div>
+    <div class="score" id="scoreText">~ 0 ~</div>
+  </div>
+  <script src="plinko.js"></script>
+</body>
+</html>
