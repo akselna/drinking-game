@@ -56,10 +56,10 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 0; /* Controlled by React */
+  height: 0; /* Controlled by React inline style */
   background-size: 100% 100%;
   background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1526092/beer.png");
-  transition: height 10s linear; /* Countdown transition */
+  /* The transition is now set dynamically via inline style in the React component */
 }
 
 .glass .surface {

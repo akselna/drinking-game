@@ -63,8 +63,14 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     setCurrentRound(1);
     setFinalScore(null);
     setWheelCategory(null);
-    boardFuncs.current?.reset();
+    if (boardFuncs.current) {
+      boardFuncs.current.reset();
+    }
     setIsGlassVisible(false);
+    // Clear the container to allow re-initialization
+    if (containerRef.current) {
+      containerRef.current.innerHTML = "";
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -168,7 +174,9 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           setCurrentRound((c) => c + 1);
           setFinalScore(null);
           setWheelCategory(null);
-          boardFuncs.current?.reset();
+          if (boardFuncs.current) {
+            boardFuncs.current.reset();
+          }
           setPhase("refilling"); // Gå til påfylling
         } else {
           backToConfig();
@@ -905,7 +913,13 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           ></div>
           <div ref={containerRef}></div>
           {phase === "result" && finalScore && (
-            <div className="result-display">{finalScore}</div>
+            <div
+              className={`result-display ${
+                finalScore === "CHUG" ? "chug-result" : ""
+              }`}
+            >
+              {finalScore}
+            </div>
           )}
         </div>
       )}
@@ -952,7 +966,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                 textAlign: "center",
               }}
             >
-              🎯 Final Result! 🎯
+              🎯 Endelig Resultat! 🎯
             </h2>
             <div
               style={{
@@ -965,11 +979,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                 lineHeight: "1.6",
               }}
             >
-              Everyone who{" "}
+              Alle med{" "}
               <span style={{ color: "#ffd700", fontWeight: "bold" }}>
                 {wheelCategory}
               </span>{" "}
-              has to drink{" "}
+              må drikke{" "}
               <span
                 style={{
                   color: finalScore === "CHUG" ? "#ff4444" : "#4caf50",
@@ -977,29 +991,28 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                   fontSize: "2.2rem",
                 }}
               >
-                {finalScore === "CHUG" ? "CHUG!" : `${finalScore} sips`}
+                {finalScore === "CHUG" ? "CHUG!" : `${finalScore} slurker`}
               </span>
             </div>
             {finalScore === "CHUG" && (
               <div
-                style={{
-                  fontSize: "1.4rem",
-                  color: "#ff6666",
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  animation: "pulse 1.5s infinite",
-                  marginBottom: "1rem",
-                }}
+                className="chug-warning"
+                style={{ animation: "chug-blink 1s infinite alternate" }}
               >
-                🍺 CHUG CHUG CHUG! 🍺
+                🍺 BÅNN BÅNN BÅNN! 🍺
               </div>
             )}
             <div
-              style={{ fontSize: "1.2rem", opacity: 0.8, textAlign: "center" }}
+              style={{
+                fontSize: "1.2rem",
+                opacity: 0.8,
+                textAlign: "center",
+                marginTop: "2rem",
+              }}
             >
               {currentRound < rounds
-                ? `Round ${currentRound} of ${rounds} complete!`
-                : `🎉 Game Complete! 🎉`}
+                ? `Runde ${currentRound} av ${rounds} ferdig!`
+                : `🎉 Spillet er ferdig! 🎉`}
             </div>
           </div>
         </div>
