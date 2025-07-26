@@ -1,0 +1,36 @@
+.skjenkehjulet {
+  padding: 20px;
+  text-align: center;
+  color: white;
+}
+
+.wheel-container {
+  margin: 20px auto;
+  width: 200px;
+  height: 200px;
+  border: 8px solid #fff;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: conic-gradient(
+    #f64e8b 0deg 45deg,
+    #d3ee98 45deg 90deg,
+    #f64e8b 90deg 135deg,
+    #d3ee98 135deg 180deg,
+    #f64e8b 180deg 225deg,
+    #d3ee98 225deg 270deg,
+    #f64e8b 270deg 315deg,
+    #d3ee98 315deg 360deg
+  );
+  transition: transform 4s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.spin-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+}
