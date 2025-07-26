@@ -373,3 +373,54 @@
     font-size: 80px;
   }
 }
+/* The main container for the countdown screen */
+.skjenkehjulet-countdown {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Hides text that goes off-screen */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Styles the big countdown number */
+.countdown-display-centered {
+  font-size: 15rem;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  z-index: 10; /* Ensures the number is on top */
+}
+
+/* Styles each piece of fading category text */
+.fading-category-text {
+  position: absolute; /* Allows for random placement */
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 500;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.7);
+  opacity: 0; /* Starts invisible */
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* The animation that makes the text fade in and out */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.2);
+  }
+}
