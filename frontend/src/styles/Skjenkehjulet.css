@@ -179,6 +179,7 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
+  align-items: center;
 }
 
 .countdown-display {
@@ -303,6 +304,10 @@
   border-radius: 50%;
   background-color: #333;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  width: 80vmin;
+  height: 80vmin;
+  max-width: 600px;
+  max-height: 600px;
 }
 
 /* Result Phase */
