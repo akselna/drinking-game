@@ -1,0 +1,10 @@
+.skjenkehjulet-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+#skjenk-drop {
+  margin-top: 10px;
+}
