@@ -21,6 +21,9 @@ const Skjenkehjulet: React.FC = () => {
   const [currentRound, setCurrentRound] = useState(1);
   const [displayCount, setDisplayCount] = useState(3);
   const [finalScore, setFinalScore] = useState<string | null>(null);
+  const [intensity, setIntensity] = useState(
+    "Mild" as "Mild" | "Medium" | "Fyllehund" | "Grøfta"
+  );
   const boardFuncs = useRef<{ drop: () => void; reset: () => void } | null>(
     null
   );
@@ -233,6 +236,31 @@ const Skjenkehjulet: React.FC = () => {
         </g>
       </svg>
     </div>`;
+
+    const layouts: Record<string, (string | number)[]> = {
+      Mild: [3, 3, 6, 6, 3, 3, 6, 6, 3, 3],
+      Medium: [3, 6, 6, 10, 6, 6, 10, 6, 6, 3],
+      Fyllehund: [3, 6, 10, 6, 10, 6, 10, "CHUG", 10, 6],
+      "Grøfta": [3, 6, 10, "CHUG", 10, 10, 10, "CHUG", 10, 6],
+    };
+
+    const applyIntensity = () => {
+      const layout = layouts[intensity];
+      const sensors = containerRef.current?.querySelectorAll(
+        "#sensors rect"
+      );
+      const points = containerRef.current?.querySelectorAll("#points text");
+      sensors?.forEach((s, idx) => {
+        const val = layout[idx];
+        (s as HTMLElement).dataset.score = String(val);
+      });
+      points?.forEach((p, idx) => {
+        const val = layout[idx];
+        p.textContent = String(val);
+      });
+    };
+
+    applyIntensity();
 
     // JavaScript adapted from snippet
     const { Engine, Events, Runner, Bodies, World, Constraint } = window.Matter;
@@ -562,6 +590,15 @@ const Skjenkehjulet: React.FC = () => {
             value={rounds}
             onChange={(e) => setRounds(parseInt(e.target.value) || 0)}
           />
+        </label>
+        <label>
+          Intensitet:
+          <select value={intensity} onChange={(e) => setIntensity(e.target.value as any)}>
+            <option value="Mild">Mild</option>
+            <option value="Medium">Medium</option>
+            <option value="Fyllehund">Fyllehund</option>
+            <option value="Grøfta">Grøfta</option>
+          </select>
         </label>
         <button
           className="plinko-btn"
