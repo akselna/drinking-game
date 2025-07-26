@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import "../styles/Skjenkehjulet.css";
 import LuckyWheel from "./LuckyWheel";
+import "../styles/BeerAnimation.css"; // Importer stiler
 
 const matterUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js";
@@ -25,12 +26,18 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
-    "config" | "countdown" | "playing" | "result" | "wheel" | "combined-result"
+    | "config"
+    | "countdown"
+    | "playing"
+    | "result"
+    | "wheel"
+    | "combined-result"
+    | "refilling" // Egen fase for påfylling
   >("config");
-  const [countdownValue, setCountdownValue] = useState(3);
+  const [countdownValue, setCountdownValue] = useState(10);
   const [rounds, setRounds] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
-  const [displayCount, setDisplayCount] = useState(3);
+  const [displayCount, setDisplayCount] = useState(10);
   const [finalScore, setFinalScore] = useState<string | null>(null);
   const [selectedSensor, setSelectedSensor] = useState<string | null>(null);
   const [wheelCategory, setWheelCategory] = useState<string | null>(null);
@@ -42,6 +49,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   );
   const [fadingCategories, setFadingCategories] = useState<any[]>([]);
 
+  // State-variabler KUN for å styre selve ølanimasjonen
+  const [beerHeight, setBeerHeight] = useState("0%");
+  const [isGlassVisible, setIsGlassVisible] = useState(false);
+  const [isRefilling, setIsRefilling] = useState(false);
+
   const dangerActive =
     finalScore === "CHUG" &&
     (phase === "result" || phase === "wheel" || phase === "combined-result");
@@ -52,13 +64,14 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     setFinalScore(null);
     setWheelCategory(null);
     boardFuncs.current?.reset();
+    setIsGlassVisible(false);
   };
 
   useImperativeHandle(ref, () => ({
     backToConfig,
   }));
 
-  // Load Matter.js dynamically when component mounts
+  // Laster inn Matter.js (uendret)
   useEffect(() => {
     if (window.Matter) {
       setReady(true);
@@ -74,14 +87,12 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     };
   }, []);
 
-  // Fading categories animation during countdown
+  // Fading categories (uendret)
   useEffect(() => {
-    // This logic only runs when the phase is 'countdown'
     if (phase !== "countdown") {
       setFadingCategories([]);
       return;
     }
-
     const categories = [
       "Hvite sokker",
       "Lengst hår",
@@ -94,67 +105,102 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       "Øredobber",
       "Blå øyne",
     ];
-
     const animationInterval = setInterval(() => {
       const newCategory = {
         key: Date.now(),
         text: categories[Math.floor(Math.random() * categories.length)],
-        // Generates random positions and assigns the animation
         style: {
           top: `${Math.random() * 80 + 10}%`,
           left: `${Math.random() * 80 + 10}%`,
           animation: `fadeInOut ${2 + Math.random() * 2}s ease-in-out`,
         },
       };
-      // Adds the new text to the screen
       setFadingCategories((prev) => [...prev, newCategory]);
-
-      // Removes the text from memory after its animation is done
       setTimeout(() => {
         setFadingCategories((prev) =>
           prev.filter((c) => c.key !== newCategory.key)
         );
       }, 4000);
-    }, 1500); // Adds a new category every 1.5 seconds
-
-    return () => clearInterval(animationInterval); // Cleanup
+    }, 1500);
+    return () => clearInterval(animationInterval);
   }, [phase]);
 
-  // Countdown logic
+  // Kjører når spillet går inn i en ny fase for å styre logikk og animasjoner
   useEffect(() => {
-    // This logic only runs when the phase is 'countdown'
-    if (phase !== "countdown") return;
+    // 1. NEDTELLING
+    if (phase === "countdown") {
+      setIsGlassVisible(true);
+      setIsRefilling(false);
+      setBeerHeight("89%"); // Sett glasset til fullt
 
-    let count = countdownValue;
-    setDisplayCount(count);
+      // Liten forsinkelse for å la React rendre det fulle glasset før animasjonen starter
+      const animationStartTimer = setTimeout(() => {
+        setBeerHeight("0%"); // Start tømmingen
+      }, 100);
 
-    const interval = setInterval(() => {
-      count -= 1;
-      if (count <= 0) {
-        clearInterval(interval);
-        setPhase("playing"); // Moves to the next phase
-      } else {
-        setDisplayCount(count); // Updates the number on screen
-      }
-    }, 1000); // Runs every 1 second
+      // Logikk for selve tallet som telles ned
+      let count = countdownValue;
+      setDisplayCount(count);
+      const countdownTimer = setInterval(() => {
+        count -= 1;
+        setDisplayCount(count);
+        if (count <= 0) {
+          clearInterval(countdownTimer);
+          setPhase("playing");
+        }
+      }, 1000);
 
-    return () => clearInterval(interval); // Cleanup
-  }, [phase, countdownValue]);
+      return () => {
+        clearInterval(countdownTimer);
+        clearTimeout(animationStartTimer);
+      };
+    }
 
-  // Start board and drop ball when entering playing phase
-  // NEW:
+    // 2. SKJULER GLASSET UNDER SPILL OG RESULTAT
+    if (phase === "playing" || phase === "result" || phase === "wheel") {
+      setIsGlassVisible(false);
+    }
+
+    // 3. Går fra kombinert resultat til PÅFYLLING
+    if (phase === "combined-result") {
+      const nextPhaseTimer = setTimeout(() => {
+        if (currentRound < rounds) {
+          setCurrentRound((c) => c + 1);
+          setFinalScore(null);
+          setWheelCategory(null);
+          boardFuncs.current?.reset();
+          setPhase("refilling"); // Gå til påfylling
+        } else {
+          backToConfig();
+        }
+      }, 4000);
+      return () => clearTimeout(nextPhaseTimer);
+    }
+
+    // 4. PÅFYLLING
+    if (phase === "refilling") {
+      setIsGlassVisible(true);
+      setIsRefilling(true); // Starter CSS-animasjonen for påfylling
+
+      const refillTimer = setTimeout(() => {
+        setIsRefilling(false);
+        setPhase("countdown"); // Går til neste runde sin nedtelling
+      }, 6000); // Varer i 6 sekunder
+
+      return () => clearTimeout(refillTimer);
+    }
+  }, [phase, countdownValue, rounds, currentRound]);
+
+  // useEffect for Plinko board (uendret)
   useEffect(() => {
     if (phase !== "playing" || !ready) return;
     initBoard();
-    // Add a delay before dropping the ball to build tension
     setTimeout(() => {
-      if (boardFuncs.current) {
-        boardFuncs.current.drop();
-      }
-    }, 1500); // 1.5 second delay before ball drops
+      if (boardFuncs.current) boardFuncs.current.drop();
+    }, 1500);
   }, [phase, ready]);
 
-  // Highlight sensor and fade board when result is ready
+  // useEffects for Plinko-resultat (uendret)
   useEffect(() => {
     if (phase !== "result") return;
     const holder = containerRef.current;
@@ -185,38 +231,100 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     }
   }, [phase]);
 
-  // After the wheel stops, show combined result then proceed to next round
   useEffect(() => {
     if (phase === "wheel" && wheelCategory) {
       const t = setTimeout(() => {
         setPhase("combined-result");
-      }, 1000); // Show wheel result for 1 second first
+      }, 1000);
       return () => clearTimeout(t);
     }
   }, [phase, wheelCategory]);
 
-  // Handle combined result phase
-  useEffect(() => {
-    if (phase === "combined-result") {
-      const t = setTimeout(() => {
-        if (currentRound < rounds) {
-          // Reset everything for next round
-          setCurrentRound((c) => c + 1);
-          setFinalScore(null);
-          setWheelCategory(null);
-          boardFuncs.current?.reset();
-          setPhase("countdown");
-        } else {
-          // Game finished, go back to config
-          setWheelCategory(null);
-          backToConfig();
-        }
-      }, 4000); // Show combined result for 4 seconds
-      return () => clearTimeout(t);
-    }
-  }, [phase, currentRound, rounds]);
+  // JSX-komponent for selve ølglasset
+  const BeerGlassAnimation = () => (
+    <div className={`glass-container ${isGlassVisible ? "visible" : ""}`}>
+      <div className={`glass ${isRefilling ? "refilling" : ""}`}>
+        <div className="wrapper">
+          <div className="contents">
+            <div
+              className="beer"
+              style={{
+                height: beerHeight,
+                transition: `height ${countdownValue}s linear`,
+              }}
+            >
+              <div className="bubbles">
+                <div className="layer"></div>
+                <div className="layer more"></div>
+              </div>
+              <div className="surface">
+                <div className="head"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <svg viewBox="0 0 550 980">
+          <style type="text/css">{`.st0{fill:url(#SVGID_1_);}.st1{fill:#FFFFFF;}.st2{opacity:0.85;fill:#FFFFFF;}.st3{opacity:0.86;fill:#FFFFFF;}.st4{opacity:0.5;fill:#FFFFFF;}.st5{fill:url(#SVGID_2_);}`}</style>
+          <linearGradient
+            id="SVGID_1_"
+            gradientUnits="userSpaceOnUse"
+            x1="399.6879"
+            y1="462.5569"
+            x2="516.6628"
+            y2="462.5569"
+          >
+            <stop
+              offset="0.1021"
+              style={{ stopColor: "#FFFFFF", stopOpacity: "0" }}
+            ></stop>
+            <stop offset="1" style={{ stopColor: "#FFFFFF" }}></stop>
+          </linearGradient>
+          <path
+            className="st0"
+            d="M399.69,81.11c39.58-2.26,83.23-10.35,104.66-14.72c6.71-1.37,12.84,4.07,12.28,10.89 c-11.21,135.24-66.63,741.35-68.14,757c-1.57,16.27-35.15,24.66-35.15,24.66C439.56,549.38,399.69,81.11,399.69,81.11z"
+          ></path>
+          <path className="st1" d="M507.67,73.32"></path>
+          <path
+            className="st2"
+            d="M519.05,43.86c-19.85,4.57-40.18,6.98-60.48,8.99c-20.32,1.97-40.7,3.3-61.1,4.29 c-40.79,1.98-85.04,2.97-122.48,2.97s-81.69-1-122.48-2.97c-20.39-0.99-40.78-2.32-61.1-4.29c-20.3-2.02-40.62-4.42-60.48-8.99 l-0.42,1.67c19.92,5.04,40.25,9.5,60.57,11.97c20.34,2.41,40.74,4.2,61.16,5.63C193.11,66,235.57,67.88,275,67.88 c39.43,0,81.89-1.88,122.74-4.75c20.42-1.43,40.83-3.22,61.16-5.63c20.32-2.47,40.65-6.92,60.57-11.97L519.05,43.86z"
+          ></path>
+          <path
+            className="st3"
+            d="M333.03,908.96c-19.07-1.51-41.93-2.67-58.03-2.67s-38.96,1.16-58.03,2.67c-19.06,1.52-38.08,3.67-56.93,6.86 l0.22,1.39c18.88-2.59,37.89-4.14,56.92-5.05c19.03-0.91,34.61-0.87,57.82-0.87s38.79-0.04,57.82,0.87 c19.03,0.92,38.04,2.47,56.92,5.05l0.22-1.39C371.11,912.64,352.09,910.48,333.03,908.96z"
+          ></path>
+          <path
+            className="st4"
+            d="M275,829.75c-32.91,0-89.08,3.57-132.66,10.66l0.21,1.39c43.66-5.88,95.72-7.05,132.45-7.05 s88.79,1.17,132.45,7.05l0.21-1.39C364.08,833.32,307.91,829.75,275,829.75z"
+          ></path>
+          <linearGradient
+            id="SVGID_2_"
+            gradientUnits="userSpaceOnUse"
+            x1="1108.0135"
+            y1="462.5569"
+            x2="1224.9884"
+            y2="462.5569"
+            gradientTransform="matrix(-1 0 0 1 1258.3256 0)"
+          >
+            <stop
+              offset="0.1021"
+              style={{ stopColor: "#FFFFFF", stopOpacity: "0" }}
+            ></stop>
+            <stop offset="1" style={{ stopColor: "#FFFFFF" }}></stop>
+          </linearGradient>
+          <path
+            className="st5"
+            d="M150.31,81.11c-39.58-2.26-83.23-10.35-104.66-14.72c-6.71-1.37-12.84,4.07-12.28,10.89 c11.21,135.24,66.63,741.35,68.14,757c-1.57,16.27-35.15,24.66-35.15,24.66C110.44,549.38,150.31,81.11,150.31,81.11z"
+          ></path>
+          <path className="st1" d="M42.33,73.32"></path>
+          <path
+            className="st1"
+            d="M549.97,30.97c-0.02-0.6-0.13-1.13-0.27-1.67c-0.14-0.52-0.29-1.11-0.48-1.54c-0.38-0.87-0.85-1.8-1.32-2.4 c-0.24-0.33-0.48-0.67-0.73-0.98l-0.71-0.77c-1.93-1.96-3.7-3.02-5.41-4C539.34,18.67,444.21,0,275,0S10.66,18.67,8.96,19.62 c-1.7,0.98-3.47,2.04-5.41,4l-0.71,0.77c-0.25,0.3-0.49,0.65-0.73,0.98c-0.47,0.6-0.94,1.52-1.32,2.4c-0.2,0.43-0.35,1.02-0.48,1.54 c-0.14,0.53-0.25,1.07-0.27,1.67C0,31.52-0.01,32.21,0.01,32.65l0.05,0.58l0.37,4.63l1.47,18.54c3.96,49.44,8.46,98.83,13.02,148.18 c2.26,24.68,4.6,49.35,7,74.01l7.16,73.99l7.19,73.99l7.37,73.97L51,574.5l7.52,73.95l7.57,73.95l7.76,73.93l7.75,73.93l6.73,62.36 c1.21,11.23,8.21,21.08,18.52,25.69C134.4,970.62,193.09,980,275,980s140.6-9.38,168.15-21.69c10.31-4.61,17.31-14.45,18.52-25.69 l6.73-62.36l7.75-73.93l7.76-73.93l7.57-73.95L499,574.5l7.37-73.97l7.37-73.97l7.19-73.99l7.16-73.99c2.4-24.66,4.74-49.33,7-74.01 c4.57-49.35,9.06-98.73,13.02-148.18l1.47-18.54l0.37-4.63l0.05-0.58C550.01,32.21,550,31.52,549.97,30.97z M13.75,33.43 c-0.01,0.02-0.04,0.04-0.05,0.04C13.72,33.45,13.74,33.44,13.75,33.43C13.76,33.42,13.75,33.43,13.75,33.43z M14.16,31.57 c0.01,0.04,0.03,0.2,0.03,0.35L14.16,31.57z M535.45,36.78l-1.42,18.52c-3.84,49.36-8.21,98.69-12.66,148.04l-13.3,148.05 l-6.66,74.03l-6.51,74.05l-6.51,74.05l-6.36,74.06l-6.31,74.07l-6.11,74.08l-3.39,41.09h0c-1.33,16.12-11.67,26.49-44.15,38.94 c-10.73,4.12-18.37,13.78-19.84,25.18c-1.01,7.86-2.1,15.18-3.42,22.87c-2.81,16.42-15.03,29.62-31.19,33.64 c-24.33,6.05-58.46,10.27-92.61,10.27s-68.29-4.22-92.61-10.27c-16.16-4.02-28.38-17.22-31.19-33.64 c-1.32-7.69-2.41-15.02-3.42-22.87c-1.46-11.4-9.1-21.06-19.84-25.18c-32.48-12.46-42.82-22.82-44.15-38.94h0l-3.39-41.09 l-6.11-74.08l-6.31-74.07l-6.36-74.06l-6.51-74.05l-6.51-74.05l-6.66-74.03l-13.3-148.05c-4.45-49.35-8.83-98.68-12.66-148.04 l-1.42-18.52l-0.29-3.8c0.39-0.31,0.96-0.69,1.59-1.05c1-0.57,2.2-1.12,3.43-1.65c5.05-2.08,10.86-3.66,16.67-5.03 c5.84-1.38,11.81-2.52,17.81-3.56c12.03-2.02,24.18-3.78,36.39-5.25c12.21-1.5,24.48-2.66,36.76-3.85 C176.07,8.05,226.65,4.23,275,4.23s98.93,3.82,148.08,8.36c12.28,1.19,24.55,2.35,36.76,3.85c12.21,1.47,24.37,3.24,36.39,5.25 c6,1.04,11.97,2.19,17.81,3.56c5.81,1.37,11.62,2.95,16.67,5.03c1.23,0.53,2.43,1.07,3.43,1.65c0.63,0.36,1.2,0.74,1.59,1.05 L535.45,36.78z M535.82,31.92c0-0.15,0.01-0.31,0.03-0.35L535.82,31.92z M536.25,33.43C536.25,33.43,536.24,33.42,536.25,33.43 c0.01,0.01,0.03,0.02,0.05,0.04C536.29,33.47,536.25,33.45,536.25,33.43z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  );
 
-  // Initialize plinko board when ready
   const initBoard = () => {
     if (!ready || !containerRef.current) return;
     if (containerRef.current.innerHTML !== "") return; // already init
@@ -389,40 +497,33 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       Fyllehund: [3, 6, 10, 6, "CHUG", 10, 6, 10, 6, 3],
       Grøfta: [3, 6, 10, "CHUG", 10, "CHUG", 10, 10, 6, 3],
     };
-
     const applyIntensity = () => {
       const layout = layouts[intensity];
       const sensors = containerRef.current?.querySelectorAll("#sensors rect");
       const points = containerRef.current?.querySelectorAll("#points text");
-
-      // Define colors based on penalty severity
       const getColorForPenalty = (val: string | number) => {
         switch (val) {
           case 3:
-            return "#4CAF50"; // Green - mild penalty
+            return "#4CAF50";
           case 6:
-            return "#FFC107"; // Yellow - medium penalty
+            return "#FFC107";
           case 10:
-            return "#FF9800"; // Light red/orange - high penalty
+            return "#FF9800";
           case "CHUG":
-            return "#F44336"; // Red - severe penalty
+            return "#F44336";
           default:
-            return "#4CAF50"; // Default to green
+            return "#4CAF50";
         }
       };
-
       sensors?.forEach((s, idx) => {
         const val = layout[idx];
         const sensorElement = s as HTMLElement;
         sensorElement.dataset.score = String(val);
-        // Update the fill color based on penalty severity
         sensorElement.setAttribute("fill", getColorForPenalty(val));
       });
-
       points?.forEach((p, idx) => {
         const val = layout[idx];
         p.textContent = String(val);
-        // Update text color for better contrast
         const pointElement = p as HTMLElement;
         if (val === "CHUG" || val === 10) {
           pointElement.setAttribute("fill", "white");
@@ -431,13 +532,9 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         }
       });
     };
-
     applyIntensity();
-
-    // JavaScript adapted from snippet
     const { Engine, Events, Runner, Bodies, World, Constraint } = window.Matter;
     const svg = document.querySelector("#svg") as SVGSVGElement;
-    const namespace = "http://www.w3.org/2000/svg";
     const viewboxArray = (svg.getAttribute("viewBox") || "0 0 1000 1000").split(
       " "
     );
@@ -466,7 +563,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     const spinnerGraphics: any[] = [];
     const scoreText = document.querySelector("#scoreText") as SVGTextElement;
     let dropped = false;
-
     const initBallBody = () => {
       const xpos = parseInt(ballGraphic.getAttribute("cx") || "0");
       const ypos = parseInt(ballGraphic.getAttribute("cy") || "0");
@@ -479,7 +575,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       });
       window.Matter.Body.setPosition(ballBody, { x: xpos, y: ypos });
     };
-
     const initAnchorBody = () => {
       const xpos = parseInt(anchorGraphic.getAttribute("cx") || "0");
       const ypos = parseInt(anchorGraphic.getAttribute("cy") || "0");
@@ -492,7 +587,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       });
       window.Matter.Body.setPosition(anchorBody, { x: xpos, y: ypos });
     };
-
     const initConstraint = () => {
       anchorConstraint = Constraint.create({
         bodyA: anchorBody,
@@ -501,7 +595,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         length: 75,
       });
     };
-
     const initFloor = () => {
       floor = Bodies.rectangle(0, 0, vbWidth, wallThickness, {
         id: `floor`,
@@ -514,7 +607,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         y: vbHeight + wallThickness / 2,
       });
     };
-
     const initWalls = () => {
       right_wall = Bodies.rectangle(0, 0, wallThickness, vbHeight, {
         id: `rightwall`,
@@ -537,7 +629,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         y: vbHeight / 2,
       });
     };
-
     const initPegs = () => {
       const pegHolder = document.querySelector("#pegs") as SVGGElement;
       const pegs = pegHolder.getElementsByTagName("circle");
@@ -558,7 +649,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         pegBodies.push(pegBody);
       }
     };
-
     const initSensors = () => {
       const sensorHolder = document.querySelector("#sensors") as SVGGElement;
       const sensorGrapghics = sensorHolder.getElementsByTagName("rect");
@@ -605,7 +695,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         }
       });
     };
-
     const initSeparators = () => {
       const holder = document.querySelector("#cupwalls") as SVGGElement;
       const cupwalls = holder.getElementsByTagName("rect");
@@ -627,7 +716,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         cup_separators.push(sep);
       }
     };
-
     const initSpinners = () => {
       const spinnerHolder = document.querySelector("#spinners") as SVGGElement;
       const sgs = spinnerHolder.getElementsByTagName("rect");
@@ -657,7 +745,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         spinners.push(spinnerBody);
       }
     };
-
     const spinSpinners = () => {
       for (let i = 0; i < spinners.length; i++) {
         const spinner = spinners[i];
@@ -671,47 +758,21 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         );
       }
     };
-
     const dropBall = () => {
       dropped = true;
-
-      // Avoid extreme left and right - keep it in the "sweet spot"
-      const positions = [
-        250, // Left side
-        350, // Left-center
-        450, // Center-left
-        550, // Center-right
-        650, // Right-center
-        750, // Right side
-      ];
-
-      // Pick a random position from the balanced array
+      const positions = [250, 350, 450, 550, 650, 750];
       const randomX = positions[Math.floor(Math.random() * positions.length)];
-
-      // Add some extra randomness within that zone
-      const finalX = randomX + (Math.random() - 0.5) * 40; // ±20 pixels
-
-      console.log(`Ball dropping from X position: ${finalX}`); // Debug log
-
-      // FIRST: Remove the constraint so it doesn't pull back to center
+      const finalX = randomX + (Math.random() - 0.5) * 40;
       window.Matter.Composite.remove(engine.world, anchorConstraint);
-
-      // THEN: Set the new position
       window.Matter.Body.setPosition(ballBody, { x: finalX, y: 50 });
       window.Matter.Body.setPosition(anchorBody, { x: finalX, y: 10 });
-
-      // Update the visual elements
       ballGraphic.setAttribute("cx", String(finalX));
       anchorGraphic.setAttribute("cx", String(finalX));
-
-      // Give the ball a small random horizontal velocity for more chaos
-      const randomVelocity = (Math.random() - 0.5) * 0.02; // Random left/right push
+      const randomVelocity = (Math.random() - 0.5) * 0.02;
       window.Matter.Body.setVelocity(ballBody, { x: randomVelocity, y: 0 });
     };
-
     const reset = () => {
       dropped = false;
-      // Reset ball to center position
       window.Matter.Body.setPosition(ballBody, { x: vbWidth / 2, y: 50 });
       window.Matter.Body.setPosition(anchorBody, {
         x: vbWidth / 2,
@@ -722,15 +783,12 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       window.Matter.Composite.add(engine.world, anchorConstraint);
       scoreText.textContent = "~ 0 ~";
     };
-
     boardFuncs.current = { drop: dropBall, reset };
-
     const drawBall = () => {
       const pos = ballBody.position;
       ballGraphic.setAttribute("cx", String(pos.x));
       ballGraphic.setAttribute("cy", String(pos.y));
     };
-
     const drawConstrainGraphic = () => {
       const pos = ballBody.position;
       if (!dropped) {
@@ -742,7 +800,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         anchorConstraintGraphic.setAttribute("d", "");
       }
     };
-
     const initWorld = () => {
       window.Matter.Composite.add(engine.world, [
         ballBody,
@@ -758,14 +815,12 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       ]);
       Runner.run(runner, engine);
     };
-
     const update = () => {
       spinSpinners();
       drawBall();
       drawConstrainGraphic();
       window.requestAnimationFrame(update);
     };
-
     initBallBody();
     initAnchorBody();
     initConstraint();
@@ -779,253 +834,175 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     update();
   };
 
-  if (phase === "config") {
-    return (
-      <div className="skjenkehjulet config-form">
-        <h2>Skjenkehjulet</h2>
-        <label>
-          Nedtelling (sekunder):
-          <input
-            type="number"
-            value={countdownValue}
-            onChange={(e) => setCountdownValue(parseInt(e.target.value) || 0)}
-          />
-        </label>
-        <label>
-          Runder:
-          <input
-            type="number"
-            value={rounds}
-            onChange={(e) => setRounds(parseInt(e.target.value) || 0)}
-          />
-        </label>
-        <label>
-          Intensitet:
-          <select
-            value={intensity}
-            onChange={(e) => setIntensity(e.target.value as any)}
-          >
-            <option value="Mild">Mild</option>
-            <option value="Medium">Medium</option>
-            <option value="Fyllehund">Fyllehund</option>
-            <option value="Grøfta">Grøfta</option>
-          </select>
-        </label>
-        <button
-          className="plinko-btn"
-          onClick={() => setPhase("countdown")}
-          disabled={!ready}
-        >
-          Start spillet
-        </button>
-      </div>
-    );
-  }
-
-  if (phase === "countdown") {
-    return (
-      <div className="skjenkehjulet skjenkehjulet-countdown">
-        {/* This part creates a fading text element for each item in the array */}
-        {fadingCategories.map((cat) => (
-          <div key={cat.key} className="fading-category-text" style={cat.style}>
-            {cat.text}
-          </div>
-        ))}
-        {/* This shows the centered countdown number */}
-        <div className="countdown-display-centered">{displayCount}</div>
-      </div>
-    );
-  }
-
-  if (phase === "playing") {
-    return (
-      <div className="skjenkehjulet">
-        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
-        <div ref={containerRef}></div>
-
-        {/* Show categories during ball drop for extra tension */}
-        <div className="playing-categories">
-          <div className="playing-categories-text">
-            Snart avgjøres det... 🎯
-          </div>
-          <div className="categories-scroll">
-            {[
-              "Hvite sokker",
-              "Lengst hår",
-              "Briller",
-              "Høyest",
-              "Rød skjorte",
-              "Eldst",
-              "Yngst",
-              "Brune sko",
-              "Øredobber",
-              "Blå øyne",
-            ].map((category, index) => (
-              <span key={index} className="scrolling-category">
-                {category}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === "result") {
-    return (
-      <div className="skjenkehjulet">
-        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
-        <div ref={containerRef}></div>
-        {finalScore && <div className="result-display">{finalScore}</div>}
-      </div>
-    );
-  }
-
-  if (phase === "combined-result") {
-    return (
-      <div className="skjenkehjulet">
-        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
-        <div className="combined-result-display">
-          <h2
-            style={{
-              fontSize: "2.5rem",
-              marginBottom: "2rem",
-              color: dangerActive ? "#ff4444" : "#fff",
-              textAlign: "center",
-            }}
-          >
-            🎯 Final Result! 🎯
-          </h2>
-
-          <div
-            style={{
-              fontSize: "1.8rem",
-              marginBottom: "1.5rem",
-              padding: "2rem",
-              backgroundColor: "rgba(0,0,0,0.3)",
-              borderRadius: "1rem",
-              textAlign: "center",
-              lineHeight: "1.6",
-            }}
-          >
-            Everyone who{" "}
-            <span
-              style={{
-                color: "#ffd700",
-                fontWeight: "bold",
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
-              }}
-            >
-              {wheelCategory}
-            </span>{" "}
-            has to drink{" "}
-            <span
-              style={{
-                color: finalScore === "CHUG" ? "#ff4444" : "#4caf50",
-                fontWeight: "bold",
-                fontSize: "2.2rem",
-                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
-              }}
-            >
-              {finalScore === "CHUG" ? "CHUG!" : `${finalScore} sips`}
-            </span>
-          </div>
-
-          {finalScore === "CHUG" && (
-            <div
-              style={{
-                fontSize: "1.4rem",
-                color: "#ff6666",
-                fontWeight: "bold",
-                textAlign: "center",
-                animation: "pulse 1.5s infinite",
-                marginBottom: "1rem",
-              }}
-            >
-              🍺 CHUG CHUG CHUG! 🍺
-            </div>
-          )}
-
-          <div
-            style={{
-              fontSize: "1.2rem",
-              opacity: 0.8,
-              textAlign: "center",
-            }}
-          >
-            {currentRound < rounds ? (
-              <>
-                Round {currentRound} of {rounds} complete!
-              </>
-            ) : (
-              <>🎉 Game Complete! 🎉</>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (phase === "wheel") {
-    return (
-      <div className="skjenkehjulet">
-        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
-        {wheelCategory ? (
-          <div className="result-display">{wheelCategory}</div>
-        ) : (
-          <LuckyWheel
-            key={`wheel-${currentRound}-${Date.now()}`} // Force component reset
-            categories={[
-              "Hvite sokker",
-              "Lengst hår",
-              "Briller",
-              "Høyest",
-              "Rød skjorte",
-              "Eldst",
-              "Yngst",
-              "Brune sko",
-              "Øredobber",
-              "Blå øyne",
-            ]}
-            onFinish={(c) => setWheelCategory(c)}
-          />
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="skjenkehjulet">
-      <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
-      <div ref={containerRef}></div>
-      {finalScore && (
-        <div
-          className={`result-display ${
-            finalScore === "CHUG" ? "chug-result" : ""
-          }`}
-        >
-          {finalScore}
-          {finalScore === "CHUG" && (
-            <div className="chug-warning">🍺 CHUG! CHUG! 🍺</div>
+    <div className="skjenkehjulet-wrapper">
+      {/* 1. Animasjonen rendres alltid i DOM, men er kun synlig når den skal være det */}
+      <BeerGlassAnimation />
+
+      {/* 2. Viser riktig spillskjerm basert på 'phase' */}
+      {phase === "config" && (
+        <div className="skjenkehjulet config-form">
+          <h2>Skjenkehjulet</h2>
+          <label>
+            Nedtelling (sekunder):
+            <input
+              type="number"
+              value={countdownValue}
+              onChange={(e) =>
+                setCountdownValue(parseInt(e.target.value) || 10)
+              }
+            />
+          </label>
+          <label>
+            Runder:
+            <input
+              type="number"
+              value={rounds}
+              onChange={(e) => setRounds(parseInt(e.target.value) || 1)}
+            />
+          </label>
+          <label>
+            Intensitet:
+            <select
+              value={intensity}
+              onChange={(e) => setIntensity(e.target.value as any)}
+            >
+              <option value="Mild">Mild</option>
+              <option value="Medium">Medium</option>
+              <option value="Fyllehund">Fyllehund</option>
+              <option value="Grøfta">Grøfta</option>
+            </select>
+          </label>
+          <button
+            className="plinko-btn"
+            onClick={() => setPhase("countdown")}
+            disabled={!ready}
+          >
+            Start spillet
+          </button>
+        </div>
+      )}
+
+      {phase === "countdown" && (
+        <div className="skjenkehjulet skjenkehjulet-countdown">
+          {fadingCategories.map((cat) => (
+            <div
+              key={cat.key}
+              className="fading-category-text"
+              style={cat.style}
+            >
+              {cat.text}
+            </div>
+          ))}
+          <div className="countdown-display-centered">{displayCount}</div>
+        </div>
+      )}
+
+      {(phase === "playing" || phase === "result") && (
+        <div className="skjenkehjulet">
+          <div
+            className={`danger-overlay ${dangerActive ? "active" : ""}`}
+          ></div>
+          <div ref={containerRef}></div>
+          {phase === "result" && finalScore && (
+            <div className="result-display">{finalScore}</div>
           )}
         </div>
       )}
-      {currentRound < rounds ? (
-        <button
-          className="plinko-btn"
-          onClick={() => {
-            setCurrentRound((c) => c + 1);
-            setFinalScore(null);
-            boardFuncs.current?.reset();
-            setPhase("countdown");
-          }}
-        >
-          Neste runde
-        </button>
-      ) : (
-        <button className="plinko-btn" onClick={backToConfig}>
-          Avslutt
-        </button>
+
+      {phase === "wheel" && (
+        <div className="skjenkehjulet">
+          <div
+            className={`danger-overlay ${dangerActive ? "active" : ""}`}
+          ></div>
+          {wheelCategory ? (
+            <div className="result-display">{wheelCategory}</div>
+          ) : (
+            <LuckyWheel
+              key={`wheel-${currentRound}`}
+              categories={[
+                "Hvite sokker",
+                "Lengst hår",
+                "Briller",
+                "Høyest",
+                "Rød skjorte",
+                "Eldst",
+                "Yngst",
+                "Brune sko",
+                "Øredobber",
+                "Blå øyne",
+              ]}
+              onFinish={(c) => setWheelCategory(c)}
+            />
+          )}
+        </div>
+      )}
+
+      {phase === "combined-result" && (
+        <div className="skjenkehjulet">
+          <div
+            className={`danger-overlay ${dangerActive ? "active" : ""}`}
+          ></div>
+          <div className="combined-result-display">
+            <h2
+              style={{
+                fontSize: "2.5rem",
+                marginBottom: "2rem",
+                color: dangerActive ? "#ff4444" : "#fff",
+                textAlign: "center",
+              }}
+            >
+              🎯 Final Result! 🎯
+            </h2>
+            <div
+              style={{
+                fontSize: "1.8rem",
+                marginBottom: "1.5rem",
+                padding: "2rem",
+                backgroundColor: "rgba(0,0,0,0.3)",
+                borderRadius: "1rem",
+                textAlign: "center",
+                lineHeight: "1.6",
+              }}
+            >
+              Everyone who{" "}
+              <span style={{ color: "#ffd700", fontWeight: "bold" }}>
+                {wheelCategory}
+              </span>{" "}
+              has to drink{" "}
+              <span
+                style={{
+                  color: finalScore === "CHUG" ? "#ff4444" : "#4caf50",
+                  fontWeight: "bold",
+                  fontSize: "2.2rem",
+                }}
+              >
+                {finalScore === "CHUG" ? "CHUG!" : `${finalScore} sips`}
+              </span>
+            </div>
+            {finalScore === "CHUG" && (
+              <div
+                style={{
+                  fontSize: "1.4rem",
+                  color: "#ff6666",
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  animation: "pulse 1.5s infinite",
+                  marginBottom: "1rem",
+                }}
+              >
+                🍺 CHUG CHUG CHUG! 🍺
+              </div>
+            )}
+            <div
+              style={{ fontSize: "1.2rem", opacity: 0.8, textAlign: "center" }}
+            >
+              {currentRound < rounds
+                ? `Round ${currentRound} of ${rounds} complete!`
+                : `🎉 Game Complete! 🎉`}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

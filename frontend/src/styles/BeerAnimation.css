@@ -1,0 +1,226 @@
+/* BEER GLASS ANIMATION STYLES */
+
+/* Main glass container */
+.glass-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  width: 40vmin;
+  display: none; /* Hidden by default, controlled by React */
+}
+
+.glass-container.visible {
+  display: block;
+}
+
+.glass {
+  position: relative;
+  width: 100%;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+.glass svg {
+  position: relative;
+  z-index: 1;
+  display: block;
+  transform: translateZ(100vmin);
+}
+
+.glass .wrapper {
+  position: absolute;
+  left: 10.5%;
+  right: 10.5%;
+  top: 5%;
+  bottom: -15%;
+  transform: perspective(96vmin) rotateX(-30.8deg);
+}
+
+.glass .contents {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 0 0 25% 25% / 0 0 10% 10%;
+  overflow: hidden;
+}
+
+/* BEER */
+.glass .beer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0; /* Controlled by React */
+  background-size: 100% 100%;
+  background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1526092/beer.png");
+  transition: height 10s linear; /* Countdown transition */
+}
+
+.glass .surface {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  transform: scale(1);
+  opacity: 1;
+}
+
+.glass .surface::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding-bottom: 15%;
+  margin-top: -5%;
+  border-radius: 50%;
+  background: #000;
+  opacity: 0.35;
+}
+
+.glass .surface::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding-bottom: 15%;
+  margin-top: -7.5%;
+  border-radius: 50%;
+  background: #d39909;
+}
+
+/* REFILL ANIMATION - Triggered by .refilling class */
+.glass.refilling .beer {
+  animation: fill 6s cubic-bezier(0.2, 0, 0.4, 1) forwards;
+}
+
+.glass.refilling .surface {
+  animation: surface 6s cubic-bezier(0.2, 0, 0.4, 1) forwards;
+}
+
+@keyframes fill {
+  0% {
+    height: 0%;
+  }
+  100% {
+    height: 89%;
+  }
+}
+
+@keyframes surface {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  10%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* BUBBLES */
+.glass .bubbles {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.glass .bubbles .layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10%;
+  padding-bottom: 200%;
+  background-size: 100% auto;
+  background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1526092/bubbles.png");
+  background-repeat: repeat-y;
+  -webkit-mask-image: linear-gradient(to top, transparent 20%, black 100%);
+  animation: bubbly 3s linear infinite;
+}
+
+.glass .bubbles .layer.more {
+  transform: rotate(180deg);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 40%, black 100%);
+  animation-direction: reverse;
+  animation-duration: 3.5s;
+  opacity: 0.65;
+}
+
+@keyframes bubbly {
+  from {
+    background-position-y: 100%;
+  }
+}
+
+/* HEAD */
+.glass .head {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  padding-bottom: 0%;
+  opacity: 0;
+  background: linear-gradient(
+    to right,
+    rgba(178, 178, 178, 1) 0%,
+    rgba(235, 235, 235, 1) 50%,
+    rgba(178, 178, 178, 1) 100%
+  );
+}
+
+.glass.refilling .head {
+  animation: fill-head 6s cubic-bezier(0.2, 0, 0.4, 1) forwards;
+}
+
+.glass .head::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-bottom: 15%;
+  margin-bottom: -7.5%;
+  background: linear-gradient(
+    to right,
+    rgba(178, 178, 178, 1) 0%,
+    rgba(235, 235, 235, 1) 50%,
+    rgba(178, 178, 178, 1) 100%
+  );
+}
+
+.glass .head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding-bottom: 15%;
+  margin-top: -7.5%;
+  border-radius: 50%;
+  background: #f4f4f4;
+}
+
+@keyframes fill-head {
+  0%,
+  35% {
+    padding-bottom: 0%;
+    opacity: 0;
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    padding-bottom: 20.5%;
+  }
+}
