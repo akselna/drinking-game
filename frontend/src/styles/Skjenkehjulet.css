@@ -51,6 +51,24 @@
   animation: pop 0.6s ease-out forwards;
 }
 
+.board-fade {
+  transition: opacity 0.5s ease;
+  opacity: 0.3;
+}
+
+.dimmed {
+  opacity: 0.2;
+}
+
+.highlight {
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 10px yellow);
+}
+
+.chug-mode {
+  background-color: #550000;
+}
+
 @keyframes pop {
   0% {
     transform: scale(0);

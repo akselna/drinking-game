@@ -20,17 +20,21 @@ export interface SkjenkehjuletHandle {
   backToConfig: () => void;
 }
 
+import SpinningWheel from "./SpinningWheel";
+
 const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
-    "config" | "countdown" | "playing" | "result"
+    "config" | "countdown" | "playing" | "result" | "wheel" | "done"
   >("config");
   const [countdownValue, setCountdownValue] = useState(3);
   const [rounds, setRounds] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [displayCount, setDisplayCount] = useState(3);
   const [finalScore, setFinalScore] = useState<string | null>(null);
+  const [finalCategory, setFinalCategory] = useState<string | null>(null);
+  const [highlightIndex, setHighlightIndex] = useState<number | null>(null);
   const [intensity, setIntensity] = useState(
     "Mild" as "Mild" | "Medium" | "Fyllehund" | "Grøfta"
   );
@@ -38,10 +42,49 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     null
   );
 
+  const highlightSlot = (index: number, chug: boolean) => {
+    const sensors = containerRef.current?.querySelectorAll(
+      "#sensors rect"
+    );
+    const points = containerRef.current?.querySelectorAll("#points text");
+    sensors?.forEach((s, i) => {
+      s.classList.add("dimmed");
+      if (i === index) {
+        s.classList.add("highlight");
+      } else {
+        s.classList.remove("highlight");
+      }
+    });
+    points?.forEach((p, i) => {
+      p.classList.add("dimmed");
+      if (i === index) {
+        p.classList.add("highlight");
+      } else {
+        p.classList.remove("highlight");
+      }
+    });
+    if (chug) {
+      containerRef.current?.classList.add("chug-mode");
+    }
+    containerRef.current?.classList.add("board-fade");
+  };
+
+  const playImpactSound = () => {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = 440;
+    osc.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  };
+
   const backToConfig = () => {
     setPhase("config");
     setCurrentRound(1);
     setFinalScore(null);
+    setFinalCategory(null);
+    setHighlightIndex(null);
     boardFuncs.current?.reset();
   };
 
@@ -90,6 +133,14 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       boardFuncs.current.drop();
     }
   }, [phase, ready]);
+
+  useEffect(() => {
+    if (phase === "result") {
+      playImpactSound();
+      const t = setTimeout(() => setPhase("wheel"), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [phase]);
 
   // Initialize plinko board when ready
   const initBoard = () => {
@@ -444,8 +495,13 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             let id = pair.bodyA.id.includes("sensor")
               ? pair.bodyA.id
               : pair.bodyB.id;
-            const score = id.substr(7).split("_")[2];
+            const parts = id.substr(7).split("_");
+            const score = parts[2];
+            const xpos = parseInt(parts[0]);
+            const index = Math.round(xpos / 100 - 0.5);
+            highlightSlot(index, score === "CHUG");
             scoreText.textContent = `~ ${score} ~`;
+            setHighlightIndex(index);
             setFinalScore(score);
             setPhase("result");
           }
@@ -534,6 +590,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       anchorGraphic.setAttribute("cx", String(vbWidth / 2));
       window.Matter.Composite.add(engine.world, anchorConstraint);
       scoreText.textContent = "~ 0 ~";
+      containerRef.current?.classList.remove("board-fade", "chug-mode");
+      const sensors = containerRef.current?.querySelectorAll("#sensors rect");
+      const points = containerRef.current?.querySelectorAll("#points text");
+      sensors?.forEach((s) => s.classList.remove("dimmed", "highlight"));
+      points?.forEach((p) => p.classList.remove("dimmed", "highlight"));
     };
 
     boardFuncs.current = { drop: dropBall, reset };
@@ -648,16 +709,43 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     );
   }
 
+  if (phase === "result") {
+    return (
+      <div className={`skjenkehjulet ${finalScore === "CHUG" ? "chug-mode" : ""}`}>
+        <div ref={containerRef}></div>
+        {finalScore && <div className="result-display">{finalScore}</div>}
+      </div>
+    );
+  }
+
+  if (phase === "wheel") {
+    return (
+      <div className={`skjenkehjulet ${finalScore === "CHUG" ? "chug-mode" : ""}`}>
+        <SpinningWheel
+          onComplete={(cat) => {
+            setFinalCategory(cat);
+            setPhase("done");
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="skjenkehjulet">
+    <div className={`skjenkehjulet ${finalScore === "CHUG" ? "chug-mode" : ""}`}> 
       <div ref={containerRef}></div>
-      {finalScore && <div className="result-display">{finalScore}</div>}
+      {finalCategory && finalScore && (
+        <div className="result-display">
+          {finalCategory}: {finalScore}
+        </div>
+      )}
       {currentRound < rounds ? (
         <button
           className="plinko-btn"
           onClick={() => {
             setCurrentRound((c) => c + 1);
             setFinalScore(null);
+            setFinalCategory(null);
             boardFuncs.current?.reset();
             setPhase("countdown");
           }}
