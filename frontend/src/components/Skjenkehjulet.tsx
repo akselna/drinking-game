@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { CustomSocket } from "../types/socket.types";
+import "../styles/Skjenkehjulet.css";
 
 interface SkjenkehjuletProps {
   sessionId: string;
