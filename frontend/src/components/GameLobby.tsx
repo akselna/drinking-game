@@ -95,6 +95,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     },
     { id: "beat4Beat", name: "Beat4Beat", icon: "🎧", color: "#e53935" },
     {
+      id: "skjenkehjulet",
+      name: "Skjenkehjulet",
+      icon: "🎡",
+      color: "#ff9800",
+    },
+    {
       id: "notAllowedToLaugh",
       name: "Ikke lov å le på vors",
       icon: "😂",
