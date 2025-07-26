@@ -381,6 +381,9 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       if (ballY > canvas.height - 100) {
         ballX = targetX;
         setIsAnimating(false);
+        if (socket && isHost) {
+          socket.emit("skjenkehjulet-ball-finished", sessionId);
+        }
         return;
       }
 
