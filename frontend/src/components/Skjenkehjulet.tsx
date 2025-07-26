@@ -46,10 +46,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
   const [currentCategory, setCurrentCategory] = useState<string>("");
   const [wheelCategories, setWheelCategories] = useState<string[]>([]);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
-  const [ballPosition, setBallPosition] = useState<{ x: number; y: number }>({
-    x: 300,
-    y: 0,
-  });
   const [finalSlot, setFinalSlot] = useState<number>(-1);
   const [wheelIndex, setWheelIndex] = useState<number>(-1);
 
@@ -205,6 +201,13 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     }
   }, [phase]);
 
+  // Start idle wheel spin during countdown
+  useEffect(() => {
+    if (phase === "countdown") {
+      startIdleWheel();
+    }
+  }, [phase, wheelCategories]);
+
   // Start game (host only)
   const startGame = () => {
     if (!socket || !isHost) return;
@@ -227,28 +230,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
     setIsAnimating(true);
 
-    let ballX = canvas.width / 2;
-    let ballY = 50;
-    let velocityX = (Math.random() - 0.5) * 4;
-    let velocityY = 0;
-    const gravity = 0.3;
-    const bounce = 0.7;
-    const friction = 0.98;
-
-    // Create obstacles (pins)
-    const pins: { x: number; y: number }[] = [];
-    for (let row = 0; row < 8; row++) {
-      const pinsInRow = row + 3;
-      const startX = (canvas.width - (pinsInRow - 1) * 60) / 2;
-      for (let col = 0; col < pinsInRow; col++) {
-        pins.push({
-          x: startX + col * 60,
-          y: 120 + row * 50,
-        });
-      }
-    }
-
-    // Punishment slots at bottom
     const slotWidth = canvas.width / 5;
     const slots = [
       {
@@ -280,29 +261,22 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       },
     ];
 
+    const startX = canvas.width / 2;
+    const startY = 50;
+    const endX = slots[targetSlot].x + slots[targetSlot].width / 2;
+    const endY = canvas.height - 90;
+
+    let progress = 0;
+    const step = 0.02;
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw pins
-      pins.forEach((pin) => {
-        ctx.fillStyle = "#FFD700";
-        ctx.beginPath();
-        ctx.arc(pin.x, pin.y, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Pin glow
-        ctx.shadowColor = "#FFD700";
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
 
       // Draw slots
       slots.forEach((slot, index) => {
         ctx.fillStyle = slot.punishment.color;
         ctx.fillRect(slot.x, canvas.height - 80, slot.width - 2, 80);
 
-        // Slot text
         ctx.fillStyle = "white";
         ctx.font = "bold 14px Arial";
         ctx.textAlign = "center";
@@ -312,7 +286,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
           canvas.height - 40
         );
 
-        // Highlight target slot
         if (index === targetSlot) {
           ctx.strokeStyle = "#00FF00";
           ctx.lineWidth = 3;
@@ -320,55 +293,94 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
         }
       });
 
-      // Update ball physics
-      velocityY += gravity;
-      ballX += velocityX;
-      ballY += velocityY;
+      // Parabolic path for ball
+      const t = Math.min(progress, 1);
+      const x = startX + (endX - startX) * t;
+      const y =
+        startY + (endY - startY) * t - Math.sin(t * Math.PI) * 100;
 
-      // Ball collision with pins
-      pins.forEach((pin) => {
-        const dx = ballX - pin.x;
-        const dy = ballY - pin.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < 16) {
-          const angle = Math.atan2(dy, dx);
-          ballX = pin.x + Math.cos(angle) * 16;
-          ballY = pin.y + Math.sin(angle) * 16;
-          velocityX = Math.cos(angle) * 3 + (Math.random() - 0.5);
-          velocityY = Math.sin(angle) * 2;
-        }
-      });
-
-      // Wall collisions
-      if (ballX < 10) {
-        ballX = 10;
-        velocityX *= -bounce;
-      }
-      if (ballX > canvas.width - 10) {
-        ballX = canvas.width - 10;
-        velocityX *= -bounce;
-      }
-
-      // Apply friction
-      velocityX *= friction;
-
-      // Draw ball
       ctx.fillStyle = "#FF6B6B";
       ctx.shadowColor = "#FF6B6B";
       ctx.shadowBlur = 15;
       ctx.beginPath();
-      ctx.arc(ballX, ballY, 10, 0, Math.PI * 2);
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Check if ball reached bottom
-      if (ballY > canvas.height - 100) {
+      if (progress < 1) {
+        progress += step;
+        requestAnimationFrame(animate);
+      } else {
         setIsAnimating(false);
-        return;
       }
+    };
 
-      setBallPosition({ x: ballX, y: ballY });
+    animate();
+  };
+
+  // Idle wheel spin during countdown
+  const startIdleWheel = () => {
+    const canvas = wheelCanvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    let rotation = 0;
+    const speed = 0.02;
+
+    const animate = () => {
+      if (phase !== "countdown") return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const segmentAngle = (2 * Math.PI) / wheelCategories.length;
+
+      wheelCategories.forEach((category, index) => {
+        const startAngle = rotation + index * segmentAngle;
+        const endAngle = startAngle + segmentAngle;
+
+        const hue = (index * 360) / wheelCategories.length;
+        ctx.fillStyle = `hsl(${hue}, 70%, 60%)`;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + segmentAngle / 2);
+        ctx.fillStyle = "#000";
+        ctx.font = "bold 14px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(category, radius * 0.7, 5);
+        ctx.restore();
+      });
+
+      ctx.fillStyle = "#333";
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#FF0000";
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY - radius - 10);
+      ctx.lineTo(centerX - 15, centerY - radius + 10);
+      ctx.lineTo(centerX + 15, centerY - radius + 10);
+      ctx.closePath();
+      ctx.fill();
+
+      rotation += speed;
       requestAnimationFrame(animate);
     };
 
@@ -388,16 +400,19 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     const radius = Math.min(centerX, centerY) - 20;
 
     let rotation = 0;
-    const targetRotation =
-      (targetIndex / wheelCategories.length) * 2 * Math.PI + Math.PI * 6; // Multiple spins
-    const rotationSpeed = 0.2;
+    const segmentAngle = (2 * Math.PI) / wheelCategories.length;
+    const targetRotation = Math.PI * 6 - targetIndex * segmentAngle; // 3 spins then land on index
+    const rotationSpeed = 0.05;
     let currentSpeed = rotationSpeed;
 
     const animate = () => {
+      rotation += currentSpeed;
+      currentSpeed *= 0.97;
+      if (rotation > targetRotation) rotation = targetRotation;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       // Draw wheel segments
-      const segmentAngle = (2 * Math.PI) / wheelCategories.length;
 
       wheelCategories.forEach((category, index) => {
         const startAngle = rotation + index * segmentAngle;
@@ -443,10 +458,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       ctx.lineTo(centerX + 15, centerY - radius + 10);
       ctx.closePath();
       ctx.fill();
-
-      // Update rotation
-      rotation += currentSpeed;
-      currentSpeed *= 0.995; // Slow down
 
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
@@ -558,16 +569,12 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
             <div className="countdown-label">sekunder igjen</div>
           </div>
 
-          <div className="wheel-preview">
-            <h3>Kategorier på hjulet:</h3>
-            <div className="categories-grid">
-              {wheelCategories.map((category, index) => (
-                <div key={index} className="category-item">
-                  {category}
-                </div>
-              ))}
-            </div>
-          </div>
+          <canvas
+            ref={wheelCanvasRef}
+            width={600}
+            height={600}
+            className="wheel-canvas"
+          />
 
           {isHost && (
             <button onClick={returnToLobby} className="back-button">
