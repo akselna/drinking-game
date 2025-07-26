@@ -6,6 +6,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import "../styles/Skjenkehjulet.css";
+import LuckyWheel from "./LuckyWheel";
 
 const matterUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js";
@@ -24,13 +25,16 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
-    "config" | "countdown" | "playing" | "result"
+    "config" | "countdown" | "playing" | "result" | "wheel"
   >("config");
   const [countdownValue, setCountdownValue] = useState(3);
   const [rounds, setRounds] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [displayCount, setDisplayCount] = useState(3);
   const [finalScore, setFinalScore] = useState<string | null>(null);
+  const [selectedSensor, setSelectedSensor] = useState<string | null>(null);
+  const [wheelCategory, setWheelCategory] = useState<string | null>(null);
+  const [danger, setDanger] = useState(false);
   const [intensity, setIntensity] = useState(
     "Mild" as "Mild" | "Medium" | "Fyllehund" | "Grøfta"
   );
@@ -90,6 +94,43 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       boardFuncs.current.drop();
     }
   }, [phase, ready]);
+
+  // Highlight sensor and fade board when result is ready
+  useEffect(() => {
+    if (phase !== "result") return;
+    const holder = containerRef.current;
+    if (!holder) return;
+    const rects = holder.querySelectorAll<SVGRectElement>("#sensors rect");
+    rects.forEach((r) => {
+      const key = r.getAttribute("x") + "_" + r.getAttribute("y");
+      if (key === selectedSensor) {
+        r.classList.add("highlight");
+      } else {
+        r.classList.add("dim");
+      }
+    });
+    const svg = holder.querySelector("svg");
+    svg?.classList.add("fadeout");
+    const toWheel = setTimeout(() => {
+      setPhase("wheel");
+      setDanger(false);
+    }, 1500);
+    return () => clearTimeout(toWheel);
+  }, [phase, selectedSensor]);
+
+  useEffect(() => {
+    if (phase !== "playing" && phase !== "result") {
+      const holder = containerRef.current;
+      if (!holder) return;
+      holder.querySelectorAll("#sensors rect").forEach((r) => {
+        r.classList.remove("highlight", "dim");
+      });
+      holder.querySelector("svg")?.classList.remove("fadeout");
+    }
+    if (phase !== "result") {
+      setDanger(false);
+    }
+  }, [phase]);
 
   // Initialize plinko board when ready
   const initBoard = () => {
@@ -444,9 +485,14 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             let id = pair.bodyA.id.includes("sensor")
               ? pair.bodyA.id
               : pair.bodyB.id;
-            const score = id.substr(7).split("_")[2];
+            const parts = id.substr(7).split("_");
+            const score = parts[2];
             scoreText.textContent = `~ ${score} ~`;
+            setSelectedSensor(`${parts[0]}_${parts[1]}`);
             setFinalScore(score);
+            if (score === "CHUG") {
+              setDanger(true);
+            }
             setPhase("result");
           }
         }
@@ -594,8 +640,10 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
   if (phase === "config") {
     return (
-      <div className="skjenkehjulet config-form">
-        <h2>Skjenkehjulet</h2>
+      <>
+        <div className={`danger-overlay ${danger ? "active" : ""}`}></div>
+        <div className="skjenkehjulet config-form">
+          <h2>Skjenkehjulet</h2>
         <label>
           Nedtelling (sekunder):
           <input
@@ -628,30 +676,80 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         >
           Start spillet
         </button>
-      </div>
+        </div>
+      </>
     );
   }
 
   if (phase === "countdown") {
     return (
-      <div className="skjenkehjulet">
-        <div className="countdown-display">{displayCount}</div>
-      </div>
+      <>
+        <div className={`danger-overlay ${danger ? "active" : ""}`}></div>
+        <div className="skjenkehjulet">
+          <div className="countdown-display">{displayCount}</div>
+        </div>
+      </>
     );
   }
 
   if (phase === "playing") {
     return (
-      <div className="skjenkehjulet">
-        <div ref={containerRef}></div>
-      </div>
+      <>
+        <div className={`danger-overlay ${danger ? "active" : ""}`}></div>
+        <div className="skjenkehjulet">
+          <div ref={containerRef}></div>
+        </div>
+      </>
+    );
+  }
+
+  if (phase === "result") {
+    return (
+      <>
+        <div className={`danger-overlay ${danger ? "active" : ""}`}></div>
+        <div className="skjenkehjulet">
+          <div ref={containerRef}></div>
+          {finalScore && <div className="result-display">{finalScore}</div>}
+        </div>
+      </>
+    );
+  }
+
+  if (phase === "wheel") {
+    return (
+      <>
+        <div className={`danger-overlay ${danger ? "active" : ""}`}></div>
+        <div className="skjenkehjulet">
+          {wheelCategory ? (
+            <div className="result-display">{wheelCategory}</div>
+          ) : (
+            <LuckyWheel
+              categories={[
+                "White socks",
+                "Longest hair",
+                "Glasses",
+                "Tallest",
+              "Red shirt",
+              "Oldest",
+              "Youngest",
+              "Brown shoes",
+              "Earrings",
+              "Blue eyes",
+            ]}
+            onFinish={(c) => setWheelCategory(c)}
+              />
+          )}
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="skjenkehjulet">
-      <div ref={containerRef}></div>
-      {finalScore && <div className="result-display">{finalScore}</div>}
+    <>
+      <div className={`danger-overlay ${danger ? "active" : ""}`}></div>
+      <div className="skjenkehjulet">
+        <div ref={containerRef}></div>
+        {finalScore && <div className="result-display">{finalScore}</div>}
       {currentRound < rounds ? (
         <button
           className="plinko-btn"
@@ -672,7 +770,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           Avslutt
         </button>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 
