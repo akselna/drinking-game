@@ -59,7 +59,7 @@
   height: 0; /* Controlled by React inline style */
   background-size: 100% 100%;
   background-image: url("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1526092/beer.png");
-  /* The transition is now set dynamically via inline style in the React component */
+  /* TRANSITION REMOVED - JavaScript now controls the height on every frame */
 }
 
 .glass .surface {
@@ -96,6 +96,7 @@
 
 /* REFILL ANIMATION - Triggered by .refilling class */
 .glass.refilling .beer {
+  /* This animation is for refilling only */
   animation: fill 6s cubic-bezier(0.2, 0, 0.4, 1) forwards;
 }
 

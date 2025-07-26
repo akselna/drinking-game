@@ -24,6 +24,7 @@ export interface SkjenkehjuletHandle {
 
 const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const animationFrameId = useRef<number | null>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
     | "config"
@@ -32,7 +33,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     | "result"
     | "wheel"
     | "combined-result"
-    | "refilling" // Egen fase for påfylling
+    | "refilling"
   >("config");
   const [countdownValue, setCountdownValue] = useState(10);
   const [rounds, setRounds] = useState(1);
@@ -77,7 +78,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     backToConfig,
   }));
 
-  // Laster inn Matter.js (uendret)
+  // Laster inn Matter.js
   useEffect(() => {
     if (window.Matter) {
       setReady(true);
@@ -93,7 +94,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     };
   }, []);
 
-  // Fading categories (uendret)
+  // Fading categories
   useEffect(() => {
     if (phase !== "countdown") {
       setFadingCategories([]);
@@ -131,34 +132,47 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     return () => clearInterval(animationInterval);
   }, [phase]);
 
-  // Kjører når spillet går inn i en ny fase for å styre logikk og animasjoner
+  // Main Game Logic and Animation Controller
   useEffect(() => {
-    // 1. NEDTELLING
+    // 1. NEDTELLING (NEW requestAnimationFrame LOGIC)
     if (phase === "countdown") {
       setIsGlassVisible(true);
       setIsRefilling(false);
-      setBeerHeight("89%"); // Sett glasset til fullt
 
-      // Liten forsinkelse for å la React rendre det fulle glasset før animasjonen starter
-      const animationStartTimer = setTimeout(() => {
-        setBeerHeight("0%"); // Start tømmingen
-      }, 100);
+      let startTime: number | null = null;
+      const totalDuration = countdownValue * 1000;
 
-      // Logikk for selve tallet som telles ned
-      let count = countdownValue;
-      setDisplayCount(count);
-      const countdownTimer = setInterval(() => {
-        count -= 1;
-        setDisplayCount(count);
-        if (count <= 0) {
-          clearInterval(countdownTimer);
+      const animate = (timestamp: number) => {
+        if (!startTime) {
+          startTime = timestamp;
+        }
+
+        const elapsedTime = timestamp - startTime;
+        const progress = Math.min(elapsedTime / totalDuration, 1);
+
+        // Update beer height (from 89% down to 0%)
+        const newBeerHeight = 100 * (1 - progress);
+        setBeerHeight(`${newBeerHeight}%`);
+
+        // Update countdown number
+        const newDisplayCount = Math.ceil(countdownValue - elapsedTime / 1000);
+        setDisplayCount(newDisplayCount > 0 ? newDisplayCount : 0);
+
+        if (progress < 1) {
+          animationFrameId.current = requestAnimationFrame(animate);
+        } else {
+          setBeerHeight("0%");
+          setDisplayCount(0);
           setPhase("playing");
         }
-      }, 1000);
+      };
+
+      animationFrameId.current = requestAnimationFrame(animate);
 
       return () => {
-        clearInterval(countdownTimer);
-        clearTimeout(animationStartTimer);
+        if (animationFrameId.current) {
+          cancelAnimationFrame(animationFrameId.current);
+        }
       };
     }
 
@@ -193,13 +207,13 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       const refillTimer = setTimeout(() => {
         setIsRefilling(false);
         setPhase("countdown"); // Går til neste runde sin nedtelling
-      }, 6000); // Varer i 6 sekunder
+      }, 6000); // Må matche varigheten av 'fill' animasjonen i CSS
 
       return () => clearTimeout(refillTimer);
     }
   }, [phase, countdownValue, rounds, currentRound]);
 
-  // useEffect for Plinko board (uendret)
+  // useEffect for Plinko board
   useEffect(() => {
     if (phase !== "playing" || !ready) return;
     initBoard();
@@ -208,7 +222,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     }, 1500);
   }, [phase, ready]);
 
-  // useEffects for Plinko-resultat (uendret)
+  // useEffects for Plinko-resultat
   useEffect(() => {
     if (phase !== "result") return;
     const holder = containerRef.current;
@@ -254,13 +268,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       <div className={`glass ${isRefilling ? "refilling" : ""}`}>
         <div className="wrapper">
           <div className="contents">
-            <div
-              className="beer"
-              style={{
-                height: beerHeight,
-                transition: `height ${countdownValue}s linear`,
-              }}
-            >
+            <div className="beer" style={{ height: beerHeight }}>
               <div className="bubbles">
                 <div className="layer"></div>
                 <div className="layer more"></div>
@@ -334,8 +342,9 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   );
 
   const initBoard = () => {
+    // This function remains unchanged...
     if (!ready || !containerRef.current) return;
-    if (containerRef.current.innerHTML !== "") return; // already init
+    if (containerRef.current.innerHTML !== "") return;
 
     containerRef.current.innerHTML = `
           <div class="container">
