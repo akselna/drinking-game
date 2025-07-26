@@ -48,4 +48,20 @@
   font-size: 80px;
   text-align: center;
   margin-top: 20px;
+  animation: pop 0.6s ease-out forwards;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
