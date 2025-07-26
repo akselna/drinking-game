@@ -348,6 +348,12 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       // Check if ball reached bottom
       if (ballY > canvas.height - 100) {
         setIsAnimating(false);
+        // Trigger wheel spin after a short delay so the ball can settle
+        setTimeout(() => {
+          if (socket) {
+            socket.emit("skjenkehjulet-trigger-wheel", sessionId);
+          }
+        }, 1000);
         return;
       }
 
@@ -433,6 +439,13 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
+      } else {
+        // Wheel finished spinning, let the server know
+        setTimeout(() => {
+          if (socket) {
+            socket.emit("skjenkehjulet-show-result", sessionId);
+          }
+        }, 500);
       }
     };
 

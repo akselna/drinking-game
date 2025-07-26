@@ -356,10 +356,7 @@ function startPunishmentSelection(sessionId) {
     targetSlot: selectedPunishment.slotIndex,
   });
 
-  // After animation delay, trigger wheel spin
-  setTimeout(() => {
-    triggerWheelSpin(sessionId);
-  }, 4000); // 4 seconds for ball animation
+  // Wait for the client to finish the ball animation and trigger the wheel
 }
 
 // Trigger wheel spin
@@ -386,10 +383,7 @@ function triggerWheelSpin(sessionId) {
     categoryIndex: categoryIndex,
   });
 
-  // After wheel animation, show result
-  setTimeout(() => {
-    showSkjenkehjuletResult(sessionId);
-  }, 3000); // 3 seconds for wheel animation
+  // The client will notify the server when the wheel animation is complete
 }
 
 
@@ -1263,6 +1257,24 @@ io.on("connection", (socket) => {
       gameMode: session.gameState.gameMode,
       wheelCategories: session.gameState.wheelCategories,
     });
+  });
+
+  // Trigger wheel spin once the client finishes the ball animation
+  socket.on("skjenkehjulet-trigger-wheel", (sessionId) => {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      return;
+    }
+    triggerWheelSpin(sessionId);
+  });
+
+  // Show the result once the wheel animation is done on the client
+  socket.on("skjenkehjulet-show-result", (sessionId) => {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      return;
+    }
+    showSkjenkehjuletResult(sessionId);
   });
 
 
