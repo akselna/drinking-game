@@ -6,6 +6,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import "../styles/Skjenkehjulet.css";
+import SpinWheel from "./SpinWheel";
 
 const matterUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js";
@@ -24,16 +25,36 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
-    "config" | "countdown" | "playing" | "result"
+    | "config"
+    | "countdown"
+    | "playing"
+    | "reveal"
+    | "wheel"
+    | "final"
   >("config");
   const [countdownValue, setCountdownValue] = useState(3);
   const [rounds, setRounds] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [displayCount, setDisplayCount] = useState(3);
   const [finalScore, setFinalScore] = useState<string | null>(null);
+  const [finalCategory, setFinalCategory] = useState<string | null>(null);
+  const [isChug, setIsChug] = useState(false);
+  const [popupStyle, setPopupStyle] = useState<{ left: number; top: number } | null>(null);
   const [intensity, setIntensity] = useState(
     "Mild" as "Mild" | "Medium" | "Fyllehund" | "Grøfta"
   );
+  const categories = [
+    "White socks",
+    "Longest hair",
+    "Glasses",
+    "Tallest",
+    "Youngest",
+    "Oldest",
+    "Beard",
+    "Red shirt",
+    "Tattoo",
+    "Piercing",
+  ];
   const boardFuncs = useRef<{ drop: () => void; reset: () => void } | null>(
     null
   );
@@ -42,6 +63,9 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     setPhase("config");
     setCurrentRound(1);
     setFinalScore(null);
+    setFinalCategory(null);
+    setIsChug(false);
+    setPopupStyle(null);
     boardFuncs.current?.reset();
   };
 
@@ -311,6 +335,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     const pegBodies: any[] = [];
     const cup_separators: any[] = [];
     const sensors: any[] = [];
+    const sensorMap: Record<string, { rect: SVGRectElement; point: SVGTextElement }> = {};
     const spinners: any[] = [];
     const spinnerGraphics: any[] = [];
     const scoreText = document.querySelector("#scoreText") as SVGTextElement;
@@ -411,6 +436,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     const initSensors = () => {
       const sensorHolder = document.querySelector("#sensors") as SVGGElement;
       const sensorGrapghics = sensorHolder.getElementsByTagName("rect");
+      const pointGraphics = document.querySelectorAll("#points text");
+      let idx = 0;
       for (const graphic of Array.from(sensorGrapghics)) {
         const xpos = graphic.getAttribute("x") as string;
         const ypos = graphic.getAttribute("y") as string;
@@ -432,6 +459,9 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         );
         window.Matter.Body.setPosition(sensorBody, { x: body_x, y: body_y });
         sensors.push(sensorBody);
+        const point = pointGraphics[idx] as SVGTextElement;
+        sensorMap[sensorBody.id] = { rect: graphic, point };
+        idx++;
       }
       Events.on(engine, "collisionStart", (event: any) => {
         var pairs = event.pairs;
@@ -447,7 +477,25 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             const score = id.substr(7).split("_")[2];
             scoreText.textContent = `~ ${score} ~`;
             setFinalScore(score);
-            setPhase("result");
+            const mapping = sensorMap[id];
+            if (mapping) {
+              Object.values(sensorMap).forEach(({ rect, point }) => {
+                rect.classList.add("dim-slot");
+                point.classList.add("dim-slot");
+              });
+              mapping.rect.classList.add("winning-slot");
+              mapping.point.classList.add("winning-slot");
+              document.getElementById("svg")?.classList.add("board-fade");
+              const rect = mapping.point.getBoundingClientRect();
+              const cont = containerRef.current!.getBoundingClientRect();
+              setPopupStyle({
+                left: rect.x - cont.x + rect.width / 2,
+                top: rect.y - cont.y,
+              });
+            }
+            setIsChug(score === "CHUG");
+            setPhase("reveal");
+            setTimeout(() => setPhase("wheel"), 2000);
           }
         }
       });
@@ -534,6 +582,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       anchorGraphic.setAttribute("cx", String(vbWidth / 2));
       window.Matter.Composite.add(engine.world, anchorConstraint);
       scoreText.textContent = "~ 0 ~";
+      document.getElementById("svg")?.classList.remove("board-fade");
+      Object.values(sensorMap).forEach(({ rect, point }) => {
+        rect.classList.remove("dim-slot", "winning-slot");
+        point.classList.remove("dim-slot", "winning-slot");
+      });
     };
 
     boardFuncs.current = { drop: dropBall, reset };
@@ -642,38 +695,73 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
   if (phase === "playing") {
     return (
-      <div className="skjenkehjulet">
+      <div className={`skjenkehjulet ${isChug ? "chug-bg" : ""}`}> 
         <div ref={containerRef}></div>
       </div>
     );
   }
 
-  return (
-    <div className="skjenkehjulet">
-      <div ref={containerRef}></div>
-      {finalScore && <div className="result-display">{finalScore}</div>}
-      {currentRound < rounds ? (
-        <button
-          className="plinko-btn"
-          onClick={() => {
-            setCurrentRound((c) => c + 1);
-            setFinalScore(null);
-            boardFuncs.current?.reset();
-            setPhase("countdown");
+  if (phase === "reveal" && popupStyle) {
+    return (
+      <div className={`skjenkehjulet ${isChug ? "chug-bg" : ""}`}> 
+        <div ref={containerRef}></div>
+        {finalScore && (
+          <div
+            className="result-popup show"
+            style={{ left: popupStyle.left, top: popupStyle.top }}
+          >
+            {finalScore}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (phase === "wheel") {
+    return (
+      <div className={`skjenkehjulet ${isChug ? "chug-bg" : ""}`}> 
+        <SpinWheel
+          categories={categories}
+          onFinish={(c) => {
+            setFinalCategory(c);
+            setPhase("final");
           }}
-        >
-          Neste runde
-        </button>
-      ) : (
-        <button
-          className="plinko-btn"
-          onClick={backToConfig}
-        >
-          Avslutt
-        </button>
-      )}
-    </div>
-  );
+        />
+      </div>
+    );
+  }
+
+  if (phase === "final") {
+    return (
+      <div className={`skjenkehjulet ${isChug ? "chug-bg" : ""}`}> 
+        {finalCategory && (
+          <div className="result-display">{finalCategory}</div>
+        )}
+        {currentRound < rounds ? (
+          <button
+            className="plinko-btn"
+            onClick={() => {
+              setCurrentRound((c) => c + 1);
+              setFinalScore(null);
+              setFinalCategory(null);
+              setIsChug(false);
+              setPopupStyle(null);
+              boardFuncs.current?.reset();
+              setPhase("countdown");
+            }}
+          >
+            Neste runde
+          </button>
+        ) : (
+          <button className="plinko-btn" onClick={backToConfig}>
+            Avslutt
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return <div className="skjenkehjulet" ref={containerRef}></div>;
 };
 
 export default Skjenkehjulet;
