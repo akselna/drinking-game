@@ -709,7 +709,37 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     return (
       <div className="skjenkehjulet">
         <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
-        <div className="countdown-display">{displayCount}</div>
+        <div
+          className={`countdown-display ${
+            displayCount <= 10 ? "countdown-warning" : ""
+          }`}
+        >
+          {displayCount}
+        </div>
+
+        {/* Show categories preview during countdown for tension */}
+        <div className="categories-preview">
+          <h3>Hvem må drikke? 🎯</h3>
+          <div className="categories-grid">
+            {[
+              "Hvite sokker",
+              "Lengst hår",
+              "Briller",
+              "Høyest",
+              "Rød skjorte",
+              "Eldst",
+              "Yngst",
+              "Brune sko",
+              "Øredobber",
+              "Blå øyne",
+            ].map((category, index) => (
+              <div key={index} className="category-preview">
+                {category}
+              </div>
+            ))}
+          </div>
+          <p className="tension-text">Hvilken kategori treffer deg? 🤔</p>
+        </div>
       </div>
     );
   }
@@ -719,6 +749,31 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       <div className="skjenkehjulet">
         <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
         <div ref={containerRef}></div>
+
+        {/* Show categories during ball drop for extra tension */}
+        <div className="playing-categories">
+          <div className="playing-categories-text">
+            Snart avgjøres det... 🎯
+          </div>
+          <div className="categories-scroll">
+            {[
+              "Hvite sokker",
+              "Lengst hår",
+              "Briller",
+              "Høyest",
+              "Rød skjorte",
+              "Eldst",
+              "Yngst",
+              "Brune sko",
+              "Øredobber",
+              "Blå øyne",
+            ].map((category, index) => (
+              <span key={index} className="scrolling-category">
+                {category}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -828,16 +883,16 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           <LuckyWheel
             key={`wheel-${currentRound}-${Date.now()}`} // Force component reset
             categories={[
-              "White socks",
-              "Longest hair",
-              "Glasses",
-              "Tallest",
-              "Red shirt",
-              "Oldest",
-              "Youngest",
-              "Brown shoes",
-              "Earrings",
-              "Blue eyes",
+              "Hvite sokker",
+              "Lengst hår",
+              "Briller",
+              "Høyest",
+              "Rød skjorte",
+              "Eldst",
+              "Yngst",
+              "Brune sko",
+              "Øredobber",
+              "Blå øyne",
             ]}
             onFinish={(c) => setWheelCategory(c)}
           />
@@ -850,7 +905,18 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     <div className="skjenkehjulet">
       <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
       <div ref={containerRef}></div>
-      {finalScore && <div className="result-display">{finalScore}</div>}
+      {finalScore && (
+        <div
+          className={`result-display ${
+            finalScore === "CHUG" ? "chug-result" : ""
+          }`}
+        >
+          {finalScore}
+          {finalScore === "CHUG" && (
+            <div className="chug-warning">🍺 CHUG! CHUG! 🍺</div>
+          )}
+        </div>
+      )}
       {currentRound < rounds ? (
         <button
           className="plinko-btn"
