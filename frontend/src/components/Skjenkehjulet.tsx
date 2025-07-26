@@ -232,8 +232,6 @@ const Skjenkehjulet: React.FC = () => {
           <rect id="shadow_2" x="20" width="980" height="20" fill="black" fill-opacity="0.1" />
         </g>
       </svg>
-      <input id="drop_slider" type="range" min="50" max="950" value="500" />
-      <button id="drop_button">DROP</button>
     </div>`;
 
     // JavaScript adapted from snippet
@@ -258,8 +256,6 @@ const Skjenkehjulet: React.FC = () => {
     const sensors: any[] = [];
     const spinners: any[] = [];
     const spinnerGraphics: any[] = [];
-    const dropSlider = document.querySelector("#drop_slider") as HTMLInputElement;
-    const dropButton = document.querySelector("#drop_button") as HTMLButtonElement;
     const scoreText = document.querySelector("#scoreText") as SVGTextElement;
     let dropped = false;
 
@@ -452,7 +448,6 @@ const Skjenkehjulet: React.FC = () => {
     const dropBall = () => {
       dropped = true;
       window.Matter.Composite.remove(engine.world, anchorConstraint);
-      dropButton.innerText = "RESET";
     };
 
     const reset = () => {
@@ -464,8 +459,6 @@ const Skjenkehjulet: React.FC = () => {
       });
       anchorGraphic.setAttribute("cx", String(vbWidth / 2));
       window.Matter.Composite.add(engine.world, anchorConstraint);
-      dropButton.innerText = "DROP";
-      dropSlider.value = String(vbWidth / 2);
       scoreText.textContent = "~ 0 ~";
     };
 
@@ -489,23 +482,6 @@ const Skjenkehjulet: React.FC = () => {
       }
     };
 
-    dropSlider.addEventListener("input", (e) => {
-      const target = e.target as HTMLInputElement;
-      if (dropped) return;
-      window.Matter.Body.setPosition(anchorBody, {
-        x: parseInt(target.value),
-        y: anchorBody.position.y,
-      });
-      anchorGraphic.setAttribute("cx", target.value);
-    });
-
-    dropButton.addEventListener("click", () => {
-      if (!dropped) {
-        dropBall();
-      } else {
-        reset();
-      }
-    });
 
     const initWorld = () => {
       window.Matter.Composite.add(engine.world, [
@@ -593,7 +569,7 @@ const Skjenkehjulet: React.FC = () => {
   return (
     <div className="skjenkehjulet">
       <div ref={containerRef}></div>
-      {finalScore && <div className="result-display">{finalScore}</div>}
+      {finalScore && <div className="result-display pop">{finalScore}</div>}
       {currentRound < rounds ? (
         <button
           className="plinko-btn"
