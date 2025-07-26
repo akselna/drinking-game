@@ -451,26 +451,30 @@ const Game: React.FC = () => {
     );
   };
 
+  const isSkjenkehjulet = sessionData.gameType === GAME_TYPES.SKJENKEHJULET;
+
   return (
-    <div className="game-container">
-      {/* Show the participant panel in all game views */}
-      {!isReconnecting && !error && sessionData.sessionId && (
-        <ParticipantPanel
-          players={sessionData.players}
-          isHost={sessionData.isHost}
-          currentUserId={socket?.id || ""}
-          socket={socket}
-          sessionId={sessionData.sessionId}
-          lamboVotes={lamboVotes}
-        />
-      )}
+    <div className={`game-container${isSkjenkehjulet ? " full-width" : ""}`}>
+      {/* Show the participant panel unless Skjenkehjulet is active */}
+      {!isSkjenkehjulet &&
+        !isReconnecting &&
+        !error &&
+        sessionData.sessionId && (
+          <ParticipantPanel
+            players={sessionData.players}
+            isHost={sessionData.isHost}
+            currentUserId={socket?.id || ""}
+            socket={socket}
+            sessionId={sessionData.sessionId}
+            lamboVotes={lamboVotes}
+          />
+        )}
 
       {/* Render game content */}
       <div className="game-content">{renderGame()}</div>
 
       {/* Mobile buttons container for better layout */}
-
-      {/* Mobile buttons container for better layout */}
+      {!isSkjenkehjulet && (
       <div className="game-mobile-buttons">
         {/* Main Menu button for host */}
         {sessionData.isHost && sessionData.gameType !== GAME_TYPES.NONE && (
@@ -516,6 +520,7 @@ const Game: React.FC = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Leave confirmation dialog */}
       {renderLeaveConfirmation()}

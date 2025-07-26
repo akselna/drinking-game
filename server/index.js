@@ -389,7 +389,7 @@ function triggerWheelSpin(sessionId) {
   // After wheel animation, show result
   setTimeout(() => {
     showSkjenkehjuletResult(sessionId);
-  }, 5000); // 5 seconds for wheel animation
+  }, 7000); // Allow a slower wheel spin
 }
 
 
