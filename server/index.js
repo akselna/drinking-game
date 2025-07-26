@@ -301,20 +301,6 @@ function shuffleArray(array) {
 }
 
 // Socket event handlers for Skjenkehjulet
-
-// Add to game selection logic:
-if (gameType === GAME_TYPES.SKJENKEHJULET) {
-  session.gameState = {
-    phase: "setup",
-    countdownTime: 10,
-    gameMode: "medium",
-    timeRemaining: 0,
-    currentPunishment: null,
-    currentCategory: "",
-    wheelCategories: [],
-    roundNumber: 1,
-  };
-}
 //Skjenkehjulet - Start Game
 socket.on("skjenkehjulet-start-game", (sessionId, settings) => {
   const session = sessions[sessionId];
@@ -1309,16 +1295,27 @@ io.on("connection", (socket) => {
         votes: {},
         revealedSongs: [],
       };
-    } else if (gameType === GAME_TYPES.BEAT4BEAT) {
-      session.gameState = {
-        phase: "waiting",
-        buzzOrder: [],
-        roundActive: false,
-        roundNumber: 1,
-        scores: {},
-        winnerId: null,
-      };
-    } else if (gameType === GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
+      } else if (gameType === GAME_TYPES.BEAT4BEAT) {
+        session.gameState = {
+          phase: "waiting",
+          buzzOrder: [],
+          roundActive: false,
+          roundNumber: 1,
+          scores: {},
+          winnerId: null,
+        };
+      } else if (gameType === GAME_TYPES.SKJENKEHJULET) {
+        session.gameState = {
+          phase: "setup",
+          countdownTime: 10,
+          gameMode: "medium",
+          timeRemaining: 0,
+          currentPunishment: null,
+          currentCategory: "",
+          wheelCategories: [],
+          roundNumber: 1,
+        };
+      } else if (gameType === GAME_TYPES.NOT_ALLOWED_TO_LAUGH) {
       session.gameState = {
         phase: "setup",
         responses: [],
