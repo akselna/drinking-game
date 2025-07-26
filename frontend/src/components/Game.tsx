@@ -11,6 +11,7 @@ import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
 import Skjenkehjulet from "./Skjenkehjulet";
+import Plinko from "./Plinko";
 
 const GAME_TYPES = {
   NONE: "none",
@@ -20,6 +21,7 @@ const GAME_TYPES = {
   BEAT4BEAT: "beat4Beat",
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh",
   SKJENKEHJULET: "skjenkehjulet", // Add new game type
+  PLINKO: "plinko",
 };
 
 const Game: React.FC = () => {
@@ -411,6 +413,10 @@ const Game: React.FC = () => {
             leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
           />
+        );
+      case GAME_TYPES.PLINKO:
+        return (
+          <Plinko mode="mild" />
         );
       case GAME_TYPES.NONE:
       default:
