@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { CustomSocket } from "../types/socket.types";
+import "../styles/Skjenkehjulet.css";
 
 interface SkjenkehjuletProps {
   sessionId: string;
@@ -347,7 +348,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       // Check if ball reached bottom
       if (ballY > canvas.height - 100) {
         setIsAnimating(false);
-        // Trigger wheel spin after a delay
+        // Trigger wheel spin after a short delay so everyone sees the ball land
         setTimeout(() => {
           if (socket) {
             socket.emit("skjenkehjulet-trigger-wheel", sessionId);
@@ -439,7 +440,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
       } else {
-        // Animation complete
+        // Notify server that the wheel animation has finished
         setTimeout(() => {
           if (socket) {
             socket.emit("skjenkehjulet-show-result", sessionId);
