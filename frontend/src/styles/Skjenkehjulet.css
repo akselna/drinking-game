@@ -179,9 +179,31 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
+  align-items: center;
+  max-width: none;
+  width: 100%;
+  padding: 0;
 }
 
-.countdown-display {
+.wheel-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.countdown-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.countdown-overlay {
   background: linear-gradient(135deg, #1e3c72, #2a5298);
   padding: 40px;
   border-radius: 20px;
@@ -189,7 +211,7 @@
   transition: all 0.3s ease;
 }
 
-.countdown-display.warning {
+.countdown-overlay.warning {
   background: linear-gradient(135deg, #ff4444, #cc0000);
   animation: pulse-warning 1s infinite;
   transform: scale(1.05);
@@ -283,6 +305,9 @@
   flex-direction: column;
   gap: 24px;
   align-items: center;
+  max-width: none;
+  width: 100%;
+  padding: 0;
 }
 
 .current-punishment {
@@ -303,6 +328,10 @@
   border-radius: 50%;
   background-color: #333;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  width: 90vmin;
+  height: 90vmin;
+  max-width: 90vmin;
+  max-height: 90vmin;
 }
 
 /* Result Phase */
@@ -551,7 +580,7 @@
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
-  .countdown-display.warning {
+  .countdown-overlay.warning {
     animation: none;
   }
 
