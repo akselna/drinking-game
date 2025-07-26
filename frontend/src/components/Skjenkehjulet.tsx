@@ -240,17 +240,25 @@ const Skjenkehjulet: React.FC = () => {
     const { Engine, Events, Runner, Bodies, World, Constraint } = window.Matter;
     const svg = document.querySelector("#svg") as SVGSVGElement;
     const namespace = "http://www.w3.org/2000/svg";
-    const viewboxArray = (svg.getAttribute("viewBox") || "0 0 1000 1000").split(" ");
+    const viewboxArray = (svg.getAttribute("viewBox") || "0 0 1000 1000").split(
+      " "
+    );
     const vbWidth = parseInt(viewboxArray[2]);
     const vbHeight = parseInt(viewboxArray[3]);
     const engine = Engine.create();
     const runner = Runner.create();
-    const ballGraphic = document.getElementById("ballGraphic") as SVGCircleElement;
+    const ballGraphic = document.getElementById(
+      "ballGraphic"
+    ) as unknown as SVGCircleElement;
     let ballBody: any;
-    const anchorGraphic = document.getElementById("anchorGraphic") as SVGCircleElement;
+    const anchorGraphic = document.getElementById(
+      "anchorGraphic"
+    ) as unknown as SVGCircleElement;
     let anchorBody: any;
     let anchorConstraint: any;
-    const anchorConstraintGraphic = document.querySelector("#chain") as SVGPathElement;
+    const anchorConstraintGraphic = document.querySelector(
+      "#chain"
+    ) as SVGPathElement;
     let floor: any, right_wall: any, left_wall: any;
     const wallThickness = 50;
     const pegBodies: any[] = [];
@@ -258,8 +266,12 @@ const Skjenkehjulet: React.FC = () => {
     const sensors: any[] = [];
     const spinners: any[] = [];
     const spinnerGraphics: any[] = [];
-    const dropSlider = document.querySelector("#drop_slider") as HTMLInputElement;
-    const dropButton = document.querySelector("#drop_button") as HTMLButtonElement;
+    const dropSlider = document.querySelector(
+      "#drop_slider"
+    ) as HTMLInputElement;
+    const dropButton = document.querySelector(
+      "#drop_button"
+    ) as HTMLButtonElement;
     const scoreText = document.querySelector("#scoreText") as SVGTextElement;
     let dropped = false;
 
@@ -347,7 +359,10 @@ const Skjenkehjulet: React.FC = () => {
           restitution: 1,
           isStatic: true,
         });
-        window.Matter.Body.setPosition(pegBody, { x: parseInt(xpos), y: parseInt(ypos) });
+        window.Matter.Body.setPosition(pegBody, {
+          x: parseInt(xpos),
+          y: parseInt(ypos),
+        });
         pegBodies.push(pegBody);
       }
     };
@@ -363,11 +378,17 @@ const Skjenkehjulet: React.FC = () => {
         const score = graphic.dataset.score as string;
         const body_x = parseInt(xpos) + parseInt(w) / 2;
         const body_y = parseInt(ypos) + parseInt(h) / 2;
-        const sensorBody = Bodies.rectangle(0, 0, parseInt(w), parseInt(h) / 2, {
-          id: `sensor_${xpos}_${ypos}_${score}`,
-          isSensor: true,
-          isStatic: true,
-        });
+        const sensorBody = Bodies.rectangle(
+          0,
+          0,
+          parseInt(w),
+          parseInt(h) / 2,
+          {
+            id: `sensor_${xpos}_${ypos}_${score}`,
+            isSensor: true,
+            isStatic: true,
+          }
+        );
         window.Matter.Body.setPosition(sensorBody, { x: body_x, y: body_y });
         sensors.push(sensorBody);
       }
@@ -405,7 +426,10 @@ const Skjenkehjulet: React.FC = () => {
           restitution: 0.5,
           isStatic: true,
         });
-        window.Matter.Body.setPosition(sep, { x: xpos + parseInt(w) / 2, y: ypos + parseInt(h) / 2 });
+        window.Matter.Body.setPosition(sep, {
+          x: xpos + parseInt(w) / 2,
+          y: ypos + parseInt(h) / 2,
+        });
         cup_separators.push(sep);
       }
     };
@@ -417,7 +441,9 @@ const Skjenkehjulet: React.FC = () => {
         const x = parseInt(spinnerGraphic.getAttribute("x") as string);
         const y = parseInt(spinnerGraphic.getAttribute("y") as string);
         const width = parseInt(spinnerGraphic.getAttribute("width") as string);
-        const height = parseInt(spinnerGraphic.getAttribute("height") as string);
+        const height = parseInt(
+          spinnerGraphic.getAttribute("height") as string
+        );
         const xpos = x + width / 2;
         const ypos = y + height / 2;
         spinnerGraphics.push(spinnerGraphic);
@@ -445,7 +471,10 @@ const Skjenkehjulet: React.FC = () => {
         const spinnerGraphic = spinnerGraphics[i];
         window.Matter.Body.rotate(spinner, -0.04, bodyPos, true);
         const angle = (spinner.angle * 180) / Math.PI;
-        spinnerGraphic.setAttribute("transform", `rotate(${angle} ${bodyPos.x}, ${bodyPos.y})`);
+        spinnerGraphic.setAttribute(
+          "transform",
+          `rotate(${angle} ${bodyPos.x}, ${bodyPos.y})`
+        );
       }
     };
 
