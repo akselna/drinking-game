@@ -1,0 +1,34 @@
+.skjenkehjulet-container {
+  text-align: center;
+  padding: 20px;
+}
+
+.spin-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  margin-bottom: 20px;
+}
+
+.wheel-wrapper {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.plinko-wheel {
+  width: 100%;
+  height: 100%;
+}
+
+.spinning {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
