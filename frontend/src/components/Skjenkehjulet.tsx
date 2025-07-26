@@ -13,6 +13,17 @@ declare global {
 const Skjenkehjulet: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
+  const [phase, setPhase] = useState<
+    "config" | "countdown" | "playing" | "result"
+  >("config");
+  const [countdownValue, setCountdownValue] = useState(3);
+  const [rounds, setRounds] = useState(1);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [displayCount, setDisplayCount] = useState(3);
+  const [finalScore, setFinalScore] = useState<string | null>(null);
+  const boardFuncs = useRef<{ drop: () => void; reset: () => void } | null>(
+    null
+  );
 
   // Load Matter.js dynamically when component mounts
   useEffect(() => {
@@ -29,6 +40,32 @@ const Skjenkehjulet: React.FC = () => {
       document.body.removeChild(script);
     };
   }, []);
+
+  // Handle countdown when phase changes to countdown
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    let count = countdownValue;
+    setDisplayCount(count);
+    const int = setInterval(() => {
+      count -= 1;
+      if (count <= 0) {
+        clearInterval(int);
+        setPhase("playing");
+      } else {
+        setDisplayCount(count);
+      }
+    }, 1000);
+    return () => clearInterval(int);
+  }, [phase, countdownValue]);
+
+  // Start board and drop ball when entering playing phase
+  useEffect(() => {
+    if (phase !== "playing" || !ready) return;
+    initBoard();
+    if (boardFuncs.current) {
+      boardFuncs.current.drop();
+    }
+  }, [phase, ready]);
 
   // Initialize plinko board when ready
   const initBoard = () => {
@@ -338,10 +375,17 @@ const Skjenkehjulet: React.FC = () => {
         var pairs = event.pairs;
         for (var i = 0; i < pairs.length; ++i) {
           var pair = pairs[i];
-          if (pair.bodyA.id.includes("sensor") || pair.bodyB.id.includes("sensor")) {
-            let id = pair.bodyA.id.includes("sensor") ? pair.bodyA.id : pair.bodyB.id;
+          if (
+            pair.bodyA.id.includes("sensor") ||
+            pair.bodyB.id.includes("sensor")
+          ) {
+            let id = pair.bodyA.id.includes("sensor")
+              ? pair.bodyA.id
+              : pair.bodyB.id;
             const score = id.substr(7).split("_")[2];
             scoreText.textContent = `~ ${score} ~`;
+            setFinalScore(score);
+            setPhase("result");
           }
         }
       });
@@ -414,12 +458,18 @@ const Skjenkehjulet: React.FC = () => {
     const reset = () => {
       dropped = false;
       window.Matter.Body.setPosition(ballBody, { x: vbWidth / 2, y: 50 });
-      window.Matter.Body.setPosition(anchorBody, { x: vbWidth / 2, y: anchorBody.position.y });
+      window.Matter.Body.setPosition(anchorBody, {
+        x: vbWidth / 2,
+        y: anchorBody.position.y,
+      });
       anchorGraphic.setAttribute("cx", String(vbWidth / 2));
       window.Matter.Composite.add(engine.world, anchorConstraint);
       dropButton.innerText = "DROP";
       dropSlider.value = String(vbWidth / 2);
+      scoreText.textContent = "~ 0 ~";
     };
+
+    boardFuncs.current = { drop: dropBall, reset };
 
     const drawBall = () => {
       const pos = ballBody.position;
@@ -493,12 +543,82 @@ const Skjenkehjulet: React.FC = () => {
     update();
   };
 
+  if (phase === "config") {
+    return (
+      <div className="skjenkehjulet config-form">
+        <h2>Skjenkehjulet</h2>
+        <label>
+          Nedtelling (sekunder):
+          <input
+            type="number"
+            value={countdownValue}
+            onChange={(e) => setCountdownValue(parseInt(e.target.value) || 0)}
+          />
+        </label>
+        <label>
+          Runder:
+          <input
+            type="number"
+            value={rounds}
+            onChange={(e) => setRounds(parseInt(e.target.value) || 0)}
+          />
+        </label>
+        <button
+          className="plinko-btn"
+          onClick={() => setPhase("countdown")}
+          disabled={!ready}
+        >
+          Start spillet
+        </button>
+      </div>
+    );
+  }
+
+  if (phase === "countdown") {
+    return (
+      <div className="skjenkehjulet">
+        <div className="countdown-display">{displayCount}</div>
+      </div>
+    );
+  }
+
+  if (phase === "playing") {
+    return (
+      <div className="skjenkehjulet">
+        <div ref={containerRef}></div>
+      </div>
+    );
+  }
+
   return (
     <div className="skjenkehjulet">
-      <button className="plinko-btn" onClick={initBoard} disabled={!ready}>
-        Test Plinko Wheel
-      </button>
       <div ref={containerRef}></div>
+      {finalScore && <div className="result-display">{finalScore}</div>}
+      {currentRound < rounds ? (
+        <button
+          className="plinko-btn"
+          onClick={() => {
+            setCurrentRound((c) => c + 1);
+            setFinalScore(null);
+            boardFuncs.current?.reset();
+            setPhase("countdown");
+          }}
+        >
+          Neste runde
+        </button>
+      ) : (
+        <button
+          className="plinko-btn"
+          onClick={() => {
+            setPhase("config");
+            setCurrentRound(1);
+            setFinalScore(null);
+            boardFuncs.current?.reset();
+          }}
+        >
+          Avslutt
+        </button>
+      )}
     </div>
   );
 };

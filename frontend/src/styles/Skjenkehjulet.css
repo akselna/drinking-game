@@ -29,3 +29,23 @@
   border-radius: 4px;
   cursor: pointer;
 }
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 300px;
+  margin: 20px auto;
+}
+
+.countdown-display {
+  font-size: 120px;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.result-display {
+  font-size: 80px;
+  text-align: center;
+  margin-top: 20px;
+}
