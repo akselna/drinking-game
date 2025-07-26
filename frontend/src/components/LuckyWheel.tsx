@@ -86,10 +86,10 @@ const LuckyWheel: React.FC<LuckyWheelProps> = ({ categories, onFinish }) => {
         const index =
           Math.floor(categories.length - finalDeg / slice) % categories.length;
         onFinish(categories[index]);
-      }, 5000);
+      }, 7000);
 
       return () => clearTimeout(timeout);
-    }, 100);
+    }, 500);
   }, [categories, onFinish]);
 
   return (

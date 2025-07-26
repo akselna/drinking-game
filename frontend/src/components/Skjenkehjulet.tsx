@@ -91,12 +91,16 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   }, [phase, countdownValue]);
 
   // Start board and drop ball when entering playing phase
+  // NEW:
   useEffect(() => {
     if (phase !== "playing" || !ready) return;
     initBoard();
-    if (boardFuncs.current) {
-      boardFuncs.current.drop();
-    }
+    // Add a delay before dropping the ball to build tension
+    setTimeout(() => {
+      if (boardFuncs.current) {
+        boardFuncs.current.drop();
+      }
+    }, 1500); // 1.5 second delay before ball drops
   }, [phase, ready]);
 
   // Highlight sensor and fade board when result is ready
@@ -591,16 +595,50 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
     const dropBall = () => {
       dropped = true;
+
+      // Avoid extreme left and right - keep it in the "sweet spot"
+      const positions = [
+        250, // Left side
+        350, // Left-center
+        450, // Center-left
+        550, // Center-right
+        650, // Right-center
+        750, // Right side
+      ];
+
+      // Pick a random position from the balanced array
+      const randomX = positions[Math.floor(Math.random() * positions.length)];
+
+      // Add some extra randomness within that zone
+      const finalX = randomX + (Math.random() - 0.5) * 40; // ±20 pixels
+
+      console.log(`Ball dropping from X position: ${finalX}`); // Debug log
+
+      // FIRST: Remove the constraint so it doesn't pull back to center
       window.Matter.Composite.remove(engine.world, anchorConstraint);
+
+      // THEN: Set the new position
+      window.Matter.Body.setPosition(ballBody, { x: finalX, y: 50 });
+      window.Matter.Body.setPosition(anchorBody, { x: finalX, y: 10 });
+
+      // Update the visual elements
+      ballGraphic.setAttribute("cx", String(finalX));
+      anchorGraphic.setAttribute("cx", String(finalX));
+
+      // Give the ball a small random horizontal velocity for more chaos
+      const randomVelocity = (Math.random() - 0.5) * 0.02; // Random left/right push
+      window.Matter.Body.setVelocity(ballBody, { x: randomVelocity, y: 0 });
     };
 
     const reset = () => {
       dropped = false;
+      // Reset ball to center position
       window.Matter.Body.setPosition(ballBody, { x: vbWidth / 2, y: 50 });
       window.Matter.Body.setPosition(anchorBody, {
         x: vbWidth / 2,
         y: anchorBody.position.y,
       });
+      ballGraphic.setAttribute("cx", String(vbWidth / 2));
       anchorGraphic.setAttribute("cx", String(vbWidth / 2));
       window.Matter.Composite.add(engine.world, anchorConstraint);
       scoreText.textContent = "~ 0 ~";
