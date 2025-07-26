@@ -300,50 +300,6 @@ function shuffleArray(array) {
   return newArray;
 }
 
-// Socket event handlers for Skjenkehjulet
-//Skjenkehjulet - Start Game
-socket.on("skjenkehjulet-start-game", (sessionId, settings) => {
-  const session = sessions[sessionId];
-
-  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
-    socket.emit("error", { message: "Invalid session or game type" });
-    return;
-  }
-
-  // Only the host can start the game
-  if (socket.id !== session.host) {
-    socket.emit("error", { message: "Only the host can start the game" });
-    return;
-  }
-
-  updateSessionActivity(sessionId);
-
-  // Initialize game state
-  session.gameState = {
-    phase: "countdown",
-    countdownTime: settings.countdownTime || 10,
-    gameMode: settings.gameMode || "medium",
-    timeRemaining: settings.countdownTime || 10,
-    currentPunishment: null,
-    currentCategory: "",
-    wheelCategories: shuffleArray(skjenkehjuletCategories).slice(0, 10), // Select 10 random categories
-    roundNumber: 1,
-  };
-
-  console.log(
-    `Skjenkehjulet game started in session ${sessionId} with ${settings.gameMode} mode`
-  );
-
-  // Start countdown timer
-  startSkjenkehjuletCountdown(sessionId);
-
-  // Notify all clients
-  io.to(sessionId).emit("skjenkehjulet-game-start", {
-    countdownTime: session.gameState.countdownTime,
-    gameMode: session.gameState.gameMode,
-    wheelCategories: session.gameState.wheelCategories,
-  });
-});
 
 // Countdown timer function
 function startSkjenkehjuletCountdown(sessionId) {
@@ -436,16 +392,6 @@ function triggerWheelSpin(sessionId) {
   }, 3000); // 3 seconds for wheel animation
 }
 
-// Manual trigger wheel (from client after ball animation)
-socket.on("skjenkehjulet-trigger-wheel", (sessionId) => {
-  const session = sessions[sessionId];
-
-  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
-    return;
-  }
-
-  triggerWheelSpin(sessionId);
-});
 
 // Show result
 function showSkjenkehjuletResult(sessionId) {
@@ -465,65 +411,7 @@ function showSkjenkehjuletResult(sessionId) {
   });
 }
 
-// Manual show result (from client after wheel animation)
-socket.on("skjenkehjulet-show-result", (sessionId) => {
-  const session = sessions[sessionId];
 
-  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
-    return;
-  }
-
-  showSkjenkehjuletResult(sessionId);
-});
-
-// Next round
-socket.on("skjenkehjulet-next-round", (sessionId) => {
-  const session = sessions[sessionId];
-
-  if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
-    socket.emit("error", { message: "Invalid session or game type" });
-    return;
-  }
-
-  // Only the host can start next round
-  if (socket.id !== session.host) {
-    socket.emit("error", { message: "Only the host can start the next round" });
-    return;
-  }
-
-  updateSessionActivity(sessionId);
-
-  // Clear any existing timer
-  if (session.gameState.timerId) {
-    clearInterval(session.gameState.timerId);
-  }
-
-  // Increment round number and shuffle categories
-  session.gameState.roundNumber++;
-  session.gameState.wheelCategories = shuffleArray(
-    skjenkehjuletCategories
-  ).slice(0, 10);
-
-  // Reset state for new round
-  session.gameState.phase = "countdown";
-  session.gameState.timeRemaining = session.gameState.countdownTime;
-  session.gameState.currentPunishment = null;
-  session.gameState.currentCategory = "";
-
-  console.log(
-    `Starting round ${session.gameState.roundNumber} in session ${sessionId}`
-  );
-
-  // Start countdown
-  startSkjenkehjuletCountdown(sessionId);
-
-  // Notify clients
-  io.to(sessionId).emit("skjenkehjulet-next-round", {
-    countdownTime: session.gameState.countdownTime,
-    wheelCategories: session.gameState.wheelCategories,
-    roundNumber: session.gameState.roundNumber,
-  });
-});
 
 // Cleanup timers when game is restarted or session ends
 function cleanupSkjenkehjuletTimers(sessionId) {
@@ -1330,6 +1218,121 @@ io.on("connection", (socket) => {
     io.to(sessionId).emit("game-selected", {
       gameType: session.gameType,
       gameState: session.gameState,
+    });
+  });
+
+  // Skjenkehjulet - Start Game
+  socket.on("skjenkehjulet-start-game", (sessionId, settings) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can start the game
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can start the game" });
+      return;
+    }
+
+    updateSessionActivity(sessionId);
+
+    // Initialize game state
+    session.gameState = {
+      phase: "countdown",
+      countdownTime: settings.countdownTime || 10,
+      gameMode: settings.gameMode || "medium",
+      timeRemaining: settings.countdownTime || 10,
+      currentPunishment: null,
+      currentCategory: "",
+      wheelCategories: shuffleArray(skjenkehjuletCategories).slice(0, 10),
+      roundNumber: 1,
+    };
+
+    console.log(
+      `Skjenkehjulet game started in session ${sessionId} with ${settings.gameMode} mode`
+    );
+
+    // Start countdown timer
+    startSkjenkehjuletCountdown(sessionId);
+
+    // Notify all clients
+    io.to(sessionId).emit("skjenkehjulet-game-start", {
+      countdownTime: session.gameState.countdownTime,
+      gameMode: session.gameState.gameMode,
+      wheelCategories: session.gameState.wheelCategories,
+    });
+  });
+
+  // Manual trigger wheel (from client after ball animation)
+  socket.on("skjenkehjulet-trigger-wheel", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      return;
+    }
+
+    triggerWheelSpin(sessionId);
+  });
+
+  // Manual show result (from client after wheel animation)
+  socket.on("skjenkehjulet-show-result", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      return;
+    }
+
+    showSkjenkehjuletResult(sessionId);
+  });
+
+  // Next round
+  socket.on("skjenkehjulet-next-round", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SKJENKEHJULET) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can start next round
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can start the next round" });
+      return;
+    }
+
+    updateSessionActivity(sessionId);
+
+    // Clear any existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+    }
+
+    // Increment round number and shuffle categories
+    session.gameState.roundNumber++;
+    session.gameState.wheelCategories = shuffleArray(
+      skjenkehjuletCategories
+    ).slice(0, 10);
+
+    // Reset state for new round
+    session.gameState.phase = "countdown";
+    session.gameState.timeRemaining = session.gameState.countdownTime;
+    session.gameState.currentPunishment = null;
+    session.gameState.currentCategory = "";
+
+    console.log(
+      `Starting round ${session.gameState.roundNumber} in session ${sessionId}`
+    );
+
+    // Start countdown
+    startSkjenkehjuletCountdown(sessionId);
+
+    // Notify clients
+    io.to(sessionId).emit("skjenkehjulet-next-round", {
+      countdownTime: session.gameState.countdownTime,
+      wheelCategories: session.gameState.wheelCategories,
+      roundNumber: session.gameState.roundNumber,
     });
   });
 
