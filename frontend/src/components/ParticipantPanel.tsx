@@ -9,6 +9,7 @@ interface ParticipantPanelProps {
   socket: CustomSocket | null;
   sessionId: string;
   lamboVotes: string[]; // Added prop for lambo votes
+  hostBackHandler?: () => void;
 }
 
 const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
@@ -18,6 +19,7 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
   socket,
   sessionId,
   lamboVotes,
+  hostBackHandler,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -70,10 +72,10 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
       {!isOpen && (
         <button
           className={`participant-toggle ${isHost ? "is-host" : ""}`}
-          onClick={togglePanel}
-          aria-label="Vis deltakere"
+          onClick={isHost && hostBackHandler ? hostBackHandler : togglePanel}
+          aria-label={isHost && hostBackHandler ? "Tilbake" : "Vis deltakere"}
         >
-          👥
+          {isHost && hostBackHandler ? "←" : "👥"}
         </button>
       )}
 
