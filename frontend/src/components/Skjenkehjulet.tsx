@@ -236,24 +236,8 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
     let ballX = canvas.width / 2;
     let ballY = 50;
-    let velocityX = (Math.random() - 0.5) * 4;
-    let velocityY = 0;
-    const gravity = 0.3;
-    const bounce = 0.7;
-    const friction = 0.98;
-
-    // Create obstacles (pins)
-    const pins: { x: number; y: number }[] = [];
-    for (let row = 0; row < 8; row++) {
-      const pinsInRow = row + 3;
-      const startX = (canvas.width - (pinsInRow - 1) * 60) / 2;
-      for (let col = 0; col < pinsInRow; col++) {
-        pins.push({
-          x: startX + col * 60,
-          y: 120 + row * 50,
-        });
-      }
-    }
+    let velocityY = 2;
+    const gravity = 0.4;
 
     // Punishment slots at bottom
     const slotWidth = canvas.width / 5;
@@ -287,29 +271,16 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       },
     ];
 
+    const targetX = slots[targetSlot].x + slots[targetSlot].width / 2;
+
     const animate = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Draw pins
-      pins.forEach((pin) => {
-        ctx.fillStyle = "#FFD700";
-        ctx.beginPath();
-        ctx.arc(pin.x, pin.y, 8, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Pin glow
-        ctx.shadowColor = "#FFD700";
-        ctx.shadowBlur = 10;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      });
 
       // Draw slots
       slots.forEach((slot, index) => {
         ctx.fillStyle = slot.punishment.color;
         ctx.fillRect(slot.x, canvas.height - 80, slot.width - 2, 80);
 
-        // Slot text
         ctx.fillStyle = "white";
         ctx.font = "bold 14px Arial";
         ctx.textAlign = "center";
@@ -319,7 +290,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
           canvas.height - 40
         );
 
-        // Highlight target slot
         if (index === targetSlot) {
           ctx.strokeStyle = "#00FF00";
           ctx.lineWidth = 3;
@@ -327,40 +297,26 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
         }
       });
 
-      // Update ball physics
-      velocityY += gravity;
-      ballX += velocityX;
-      ballY += velocityY;
+      // Move ball towards target slot
+      if (ballY < canvas.height - 90) {
+        ballX += (targetX - ballX) * 0.05;
+        ballY += velocityY;
+        velocityY += gravity;
+      } else {
+        ballY = canvas.height - 90;
+        ballX += (targetX - ballX) * 0.1;
 
-      // Ball collision with pins
-      pins.forEach((pin) => {
-        const dx = ballX - pin.x;
-        const dy = ballY - pin.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < 16) {
-          const angle = Math.atan2(dy, dx);
-          ballX = pin.x + Math.cos(angle) * 16;
-          ballY = pin.y + Math.sin(angle) * 16;
-          velocityX = Math.cos(angle) * 3 + (Math.random() - 0.5);
-          velocityY = Math.sin(angle) * 2;
+        if (Math.abs(ballX - targetX) < 1) {
+          ballX = targetX;
+          setIsAnimating(false);
+          ctx.fillStyle = "#FF6B6B";
+          ctx.beginPath();
+          ctx.arc(ballX, ballY, 10, 0, Math.PI * 2);
+          ctx.fill();
+          return;
         }
-      });
-
-      // Wall collisions
-      if (ballX < 10) {
-        ballX = 10;
-        velocityX *= -bounce;
-      }
-      if (ballX > canvas.width - 10) {
-        ballX = canvas.width - 10;
-        velocityX *= -bounce;
       }
 
-      // Apply friction
-      velocityX *= friction;
-
-      // Draw ball
       ctx.fillStyle = "#FF6B6B";
       ctx.shadowColor = "#FF6B6B";
       ctx.shadowBlur = 15;
@@ -369,13 +325,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Check if ball reached bottom
-      if (ballY > canvas.height - 100) {
-        setIsAnimating(false);
-        return;
-      }
-
-      setBallPosition({ x: ballX, y: ballY });
       requestAnimationFrame(animate);
     };
 
@@ -464,9 +413,12 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     const radius = Math.min(centerX, centerY) - 20;
 
     let rotation = 0;
+    const segmentAngle = (2 * Math.PI) / wheelCategories.length;
+    const spins = 4;
     const targetRotation =
-      (targetIndex / wheelCategories.length) * 2 * Math.PI + Math.PI * 6; // Multiple spins
-    const rotationSpeed = 0.05;
+      spins * 2 * Math.PI +
+      (Math.PI * 1.5 - (targetIndex + 0.5) * segmentAngle);
+    const rotationSpeed = 0.3;
     let currentSpeed = rotationSpeed;
 
     const animate = () => {
@@ -522,10 +474,12 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
       // Update rotation
       rotation += currentSpeed;
-      currentSpeed *= 0.97; // Slow down gradually
+      currentSpeed *= 0.97;
 
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
+      } else {
+        rotation = targetRotation;
       }
     };
 
