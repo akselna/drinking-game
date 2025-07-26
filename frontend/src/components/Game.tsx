@@ -10,6 +10,7 @@ import DrinkOrJudge from "./DrinkOrJudge";
 import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
+import Skjenkehjulet from "./Skjenkehjulet";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
@@ -19,6 +20,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge",
   BEAT4BEAT: "beat4Beat",
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SKJENKEHJULET: "skjenkehjulet",
 };
 
 const Game: React.FC = () => {
@@ -385,6 +387,10 @@ const Game: React.FC = () => {
             leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
           />
+        );
+      case GAME_TYPES.SKJENKEHJULET:
+        return (
+          <Skjenkehjulet />
         );
       case GAME_TYPES.NOT_ALLOWED_TO_LAUGH:
         return (
