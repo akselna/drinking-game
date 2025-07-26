@@ -25,7 +25,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
-    "config" | "countdown" | "playing" | "result" | "wheel"
+    "config" | "countdown" | "playing" | "result" | "wheel" | "combined-result"
   >("config");
   const [countdownValue, setCountdownValue] = useState(3);
   const [rounds, setRounds] = useState(1);
@@ -42,12 +42,14 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   );
 
   const dangerActive =
-    finalScore === "CHUG" && (phase === "result" || phase === "wheel");
+    finalScore === "CHUG" &&
+    (phase === "result" || phase === "wheel" || phase === "combined-result");
 
   const backToConfig = () => {
     setPhase("config");
     setCurrentRound(1);
     setFinalScore(null);
+    setWheelCategory(null);
     boardFuncs.current?.reset();
   };
 
@@ -128,24 +130,36 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     }
   }, [phase]);
 
-  // After the wheel stops, automatically start next round or finish
+  // After the wheel stops, show combined result then proceed to next round
   useEffect(() => {
     if (phase === "wheel" && wheelCategory) {
       const t = setTimeout(() => {
+        setPhase("combined-result");
+      }, 1000); // Show wheel result for 1 second first
+      return () => clearTimeout(t);
+    }
+  }, [phase, wheelCategory]);
+
+  // Handle combined result phase
+  useEffect(() => {
+    if (phase === "combined-result") {
+      const t = setTimeout(() => {
         if (currentRound < rounds) {
+          // Reset everything for next round
           setCurrentRound((c) => c + 1);
           setFinalScore(null);
           setWheelCategory(null);
           boardFuncs.current?.reset();
           setPhase("countdown");
         } else {
+          // Game finished, go back to config
           setWheelCategory(null);
           backToConfig();
         }
-      }, 2000);
+      }, 4000); // Show combined result for 4 seconds
       return () => clearTimeout(t);
     }
-  }, [phase, wheelCategory]);
+  }, [phase, currentRound, rounds]);
 
   // Initialize plinko board when ready
   const initBoard = () => {
@@ -153,166 +167,166 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     if (containerRef.current.innerHTML !== "") return; // already init
 
     containerRef.current.innerHTML = `
-    <div class="container">
-      <svg id="svg" width="600" height="600" viewBox="0 0 1000 1000" fill="none">
-        <defs>
-          <filter id="shadow" width="140%" height="140%">
-            <feDropShadow dx="10" dy="10" stdDeviation="0" flood-color="black" flood-opacity=".3" />
-          </filter>
-          <radialGradient id="ball_gradient" cx="20%" cy="20%" fx="20%" fy="20%">
-            <stop offset="0%" stop-color="#FF7373" />
-            <stop offset="100%" stop-color="#790202" />
-          </radialGradient>
-          <radialGradient id="background_gradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(57 82.5) rotate(60.4845) scale(712.461 356.231)">
-            <stop stop-color="#BFBDBD" />
-            <stop offset="1" stop-color="#737373" />
-          </radialGradient>
-        </defs>
-        <rect id="background" class="innerShadow" width="1000" height="1000" fill="url(#background_gradient)" />
-        <text id="scoreText" class="scoreText" x="500" y="115" text-anchor="middle">~ 0 ~</text>
-        <path id="chain" d="" stroke="white" stroke-width="3" />
-        <g id="pegs" filter="url(#shadow)" fill="#FEFF9F">
-          <circle id="peg_92" cx="137" cy="210" r="10" />
-          <circle id="peg_91" cx="216" cy="210" r="10" />
-          <circle id="peg_90" cx="295" cy="210" r="10" />
-          <circle id="peg_89" cx="374" cy="210" r="10" />
-          <circle id="peg_88" cx="453" cy="210" r="10" />
-          <circle id="peg_87" cx="532" cy="210" r="10" />
-          <circle id="peg_86" cx="611" cy="210" r="10" />
-          <circle id="peg_85" cx="690" cy="210" r="10" />
-          <circle id="peg_84" cx="769" cy="210" r="10" />
-          <circle id="peg_83" cx="848" cy="210" r="10" />
-          <circle id="peg_82" cx="927" cy="210" r="10" />
-          <circle id="peg_81" cx="58" cy="210" r="10" />
-          <circle id="peg_80" cx="184" cy="280" r="10" />
-          <circle id="peg_79" cx="263" cy="280" r="10" />
-          <circle id="peg_78" cx="342" cy="280" r="10" />
-          <circle id="peg_77" cx="421" cy="280" r="10" />
-          <circle id="peg_76" cx="500" cy="280" r="10" />
-          <circle id="peg_75" cx="579" cy="280" r="10" />
-          <circle id="peg_74" cx="658" cy="280" r="10" />
-          <circle id="peg_73" cx="737" cy="280" r="10" />
-          <circle id="peg_72" cx="816" cy="280" r="10" />
-          <circle id="peg_71" cx="895" cy="280" r="10" />
-          <circle id="peg_70" cx="105" cy="280" r="10" />
-          <circle id="peg_69" cx="137" cy="350" r="10" />
-          <circle id="peg_68" cx="216" cy="350" r="10" />
-          <circle id="peg_67" cx="295" cy="350" r="10" />
-          <circle id="peg_66" cx="374" cy="350" r="10" />
-          <circle id="peg_65" cx="453" cy="350" r="10" />
-          <circle id="peg_64" cx="532" cy="350" r="10" />
-          <circle id="peg_63" cx="611" cy="350" r="10" />
-          <circle id="peg_62" cx="690" cy="350" r="10" />
-          <circle id="peg_61" cx="769" cy="350" r="10" />
-          <circle id="peg_60" cx="848" cy="350" r="10" />
-          <circle id="peg_59" cx="927" cy="350" r="10" />
-          <circle id="peg_58" cx="58" cy="350" r="10" />
-          <circle id="peg_57" cx="184" cy="420" r="10" />
-          <circle id="peg_56" cx="263" cy="420" r="10" />
-          <circle id="peg_55" cx="342" cy="420" r="10" />
-          <circle id="peg_54" cx="421" cy="420" r="10" />
-          <circle id="peg_53" cx="500" cy="420" r="10" />
-          <circle id="peg_52" cx="579" cy="420" r="10" />
-          <circle id="peg_51" cx="658" cy="420" r="10" />
-          <circle id="peg_50" cx="737" cy="420" r="10" />
-          <circle id="peg_49" cx="816" cy="420" r="10" />
-          <circle id="peg_48" cx="895" cy="420" r="10" />
-          <circle id="peg_47" cx="105" cy="420" r="10" />
-          <circle id="peg_46" cx="137" cy="490" r="10" />
-          <circle id="peg_45" cx="216" cy="490" r="10" />
-          <circle id="peg_44" cx="295" cy="490" r="10" />
-          <circle id="peg_43" cx="374" cy="490" r="10" />
-          <circle id="peg_42" cx="453" cy="490" r="10" />
-          <circle id="peg_41" cx="532" cy="490" r="10" />
-          <circle id="peg_40" cx="611" cy="490" r="10" />
-          <circle id="peg_39" cx="690" cy="490" r="10" />
-          <circle id="peg_38" cx="769" cy="490" r="10" />
-          <circle id="peg_37" cx="848" cy="490" r="10" />
-          <circle id="peg_36" cx="927" cy="490" r="10" />
-          <circle id="peg_35" cx="58" cy="490" r="10" />
-          <circle id="peg_34" cx="184" cy="560" r="10" />
-          <circle id="peg_33" cx="263" cy="560" r="10" />
-          <circle id="peg_32" cx="342" cy="560" r="10" />
-          <circle id="peg_31" cx="421" cy="560" r="10" />
-          <circle id="peg_30" cx="500" cy="560" r="10" />
-          <circle id="peg_29" cx="579" cy="560" r="10" />
-          <circle id="peg_28" cx="658" cy="560" r="10" />
-          <circle id="peg_27" cx="737" cy="560" r="10" />
-          <circle id="peg_26" cx="816" cy="560" r="10" />
-          <circle id="peg_25" cx="895" cy="560" r="10" />
-          <circle id="peg_24" cx="105" cy="560" r="10" />
-          <circle id="peg_23" cx="137" cy="630" r="10" />
-          <circle id="peg_22" cx="216" cy="630" r="10" />
-          <circle id="peg_21" cx="295" cy="630" r="10" />
-          <circle id="peg_20" cx="374" cy="630" r="10" />
-          <circle id="peg_19" cx="453" cy="630" r="10" />
-          <circle id="peg_18" cx="532" cy="630" r="10" />
-          <circle id="peg_17" cx="611" cy="630" r="10" />
-          <circle id="peg_16" cx="690" cy="630" r="10" />
-          <circle id="peg_15" cx="769" cy="630" r="10" />
-          <circle id="peg_14" cx="848" cy="630" r="10" />
-          <circle id="peg_13" cx="927" cy="630" r="10" />
-          <circle id="peg_12" cx="58" cy="630" r="10" />
-          <circle id="peg_11" cx="184" cy="700" r="10" />
-          <circle id="peg_10" cx="263" cy="700" r="10" />
-          <circle id="peg_09" cx="342" cy="700" r="10" />
-          <circle id="peg_08" cx="421" cy="700" r="10" />
-          <circle id="peg_07" cx="500" cy="700" r="10" />
-          <circle id="peg_06" cx="579" cy="700" r="10" />
-          <circle id="peg_05" cx="658" cy="700" r="10" />
-          <circle id="peg_04" cx="737" cy="700" r="10" />
-          <circle id="peg_03" cx="816" cy="700" r="10" />
-          <circle id="peg_02" cx="895" cy="700" r="10" />
-          <circle id="peg_01" cx="105" cy="700" r="10" />
-        </g>
-        <g id="sensors">
-          <rect id="sensor_1" data-score="10" x="0" y="900" width="100" height="100" fill="#D7FFEC" />
-          <rect id="sensor_2" data-score="50" x="100" y="900" width="100" height="100" fill="#95FFCC" />
-          <rect id="sensor_3" data-score="100" x="200" y="900" width="100" height="100" fill="#00FF85" />
-          <rect id="sensor_4" data-score="50" x="300" y="900" width="100" height="100" fill="#95FFCC" />
-          <rect id="sensor_5" data-score="10" x="400" y="900" width="100" height="100" fill="#D7FFEC" />
-          <rect id="sensor_6" data-score="10" x="500" y="900" width="100" height="100" fill="#D7FFEC" />
-          <rect id="sensor_7" data-score="50" x="600" y="900" width="100" height="100" fill="#95FFCC" />
-          <rect id="sensor_8" data-score="100" x="700" y="900" width="100" height="100" fill="#00FF85" />
-          <rect id="sensor_9" data-score="50" x="800" y="900" width="100" height="100" fill="#95FFCC" />
-          <rect id="sensor_10" data-score="10" x="900" y="900" width="100" height="100" fill="#D7FFEC" />
-        </g>
-        <g id="points" fill="darkgreen" >
-          <text class="points" id="10" x="50" y="965" text-anchor="middle">10</text>
-          <text class="points" id="50" x="150" y="965" text-anchor="middle">50</text>
-          <text class="points" id="100" x="250" y="965" text-anchor="middle">100</text>
-          <text class="points" id="50_2" x="350" y="965" text-anchor="middle">50</text>
-          <text class="points" id="10_2" x="450" y="965" text-anchor="middle">10</text>
-          <text class="points" id="10" x="550" y="965" text-anchor="middle">10</text>
-          <text class="points" id="50" x="650" y="965" text-anchor="middle">50</text>
-          <text class="points" id="100" x="750" y="965" text-anchor="middle">100</text>
-          <text class="points" id="50_2" x="850" y="965" text-anchor="middle">50</text>
-          <text class="points" id="10_2" x="950" y="965" text-anchor="middle">10</text>
-        </g>
-        <g id="cupwalls" filter="url(#shadow)">
-          <rect id="cupwall_0" x="95" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_1" x="195" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_2" x="295" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_3" x="395" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_4" x="495" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_5" x="595" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_6" x="695" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_7" x="795" y="890" width="10" height="110" fill="#202020" />
-          <rect id="cupwall_8" x="895" y="890" width="10" height="110" fill="#202020" />
-        </g>
-        <g id="spinners" filter="url(#shadow)">
-          <rect id="spinner_3" x="745" y="750" rx="5" ry="5" width="10" height="120" fill="#F64E8B" />
-          <rect id="spinner_2" x="496" y="750" rx="5" ry="5" width="10" height="120" fill="#D3EE98" />
-          <rect id="spinner_1" x="245" y="750" rx="5" ry="5" width="10" height="120" fill="#F64E8B" />
-        </g>
-        <circle id="ballGraphic" cx="500" cy="50" r="20" fill="url(#ball_gradient)" filter="url(#shadow)" />
-        <circle id="anchorGraphic" cx="500" cy="10" r="7" fill="white" stroke="black" filter="url(#shadow)" />
-        <g id="shadows">
-          <rect id="shadow" width="20" height="1000" fill="black" fill-opacity="0.1" />
-          <rect id="shadow_2" x="20" width="980" height="20" fill="black" fill-opacity="0.1" />
-        </g>
-      </svg>
-    </div>`;
+      <div class="container">
+        <svg id="svg" width="600" height="600" viewBox="0 0 1000 1000" fill="none">
+          <defs>
+            <filter id="shadow" width="140%" height="140%">
+              <feDropShadow dx="10" dy="10" stdDeviation="0" flood-color="black" flood-opacity=".3" />
+            </filter>
+            <radialGradient id="ball_gradient" cx="20%" cy="20%" fx="20%" fy="20%">
+              <stop offset="0%" stop-color="#FF7373" />
+              <stop offset="100%" stop-color="#790202" />
+            </radialGradient>
+            <radialGradient id="background_gradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(57 82.5) rotate(60.4845) scale(712.461 356.231)">
+              <stop stop-color="#BFBDBD" />
+              <stop offset="1" stop-color="#737373" />
+            </radialGradient>
+          </defs>
+          <rect id="background" class="innerShadow" width="1000" height="1000" fill="url(#background_gradient)" />
+          <text id="scoreText" class="scoreText" x="500" y="115" text-anchor="middle">~ 0 ~</text>
+          <path id="chain" d="" stroke="white" stroke-width="3" />
+          <g id="pegs" filter="url(#shadow)" fill="#FEFF9F">
+            <circle id="peg_92" cx="137" cy="210" r="10" />
+            <circle id="peg_91" cx="216" cy="210" r="10" />
+            <circle id="peg_90" cx="295" cy="210" r="10" />
+            <circle id="peg_89" cx="374" cy="210" r="10" />
+            <circle id="peg_88" cx="453" cy="210" r="10" />
+            <circle id="peg_87" cx="532" cy="210" r="10" />
+            <circle id="peg_86" cx="611" cy="210" r="10" />
+            <circle id="peg_85" cx="690" cy="210" r="10" />
+            <circle id="peg_84" cx="769" cy="210" r="10" />
+            <circle id="peg_83" cx="848" cy="210" r="10" />
+            <circle id="peg_82" cx="927" cy="210" r="10" />
+            <circle id="peg_81" cx="58" cy="210" r="10" />
+            <circle id="peg_80" cx="184" cy="280" r="10" />
+            <circle id="peg_79" cx="263" cy="280" r="10" />
+            <circle id="peg_78" cx="342" cy="280" r="10" />
+            <circle id="peg_77" cx="421" cy="280" r="10" />
+            <circle id="peg_76" cx="500" cy="280" r="10" />
+            <circle id="peg_75" cx="579" cy="280" r="10" />
+            <circle id="peg_74" cx="658" cy="280" r="10" />
+            <circle id="peg_73" cx="737" cy="280" r="10" />
+            <circle id="peg_72" cx="816" cy="280" r="10" />
+            <circle id="peg_71" cx="895" cy="280" r="10" />
+            <circle id="peg_70" cx="105" cy="280" r="10" />
+            <circle id="peg_69" cx="137" cy="350" r="10" />
+            <circle id="peg_68" cx="216" cy="350" r="10" />
+            <circle id="peg_67" cx="295" cy="350" r="10" />
+            <circle id="peg_66" cx="374" cy="350" r="10" />
+            <circle id="peg_65" cx="453" cy="350" r="10" />
+            <circle id="peg_64" cx="532" cy="350" r="10" />
+            <circle id="peg_63" cx="611" cy="350" r="10" />
+            <circle id="peg_62" cx="690" cy="350" r="10" />
+            <circle id="peg_61" cx="769" cy="350" r="10" />
+            <circle id="peg_60" cx="848" cy="350" r="10" />
+            <circle id="peg_59" cx="927" cy="350" r="10" />
+            <circle id="peg_58" cx="58" cy="350" r="10" />
+            <circle id="peg_57" cx="184" cy="420" r="10" />
+            <circle id="peg_56" cx="263" cy="420" r="10" />
+            <circle id="peg_55" cx="342" cy="420" r="10" />
+            <circle id="peg_54" cx="421" cy="420" r="10" />
+            <circle id="peg_53" cx="500" cy="420" r="10" />
+            <circle id="peg_52" cx="579" cy="420" r="10" />
+            <circle id="peg_51" cx="658" cy="420" r="10" />
+            <circle id="peg_50" cx="737" cy="420" r="10" />
+            <circle id="peg_49" cx="816" cy="420" r="10" />
+            <circle id="peg_48" cx="895" cy="420" r="10" />
+            <circle id="peg_47" cx="105" cy="420" r="10" />
+            <circle id="peg_46" cx="137" cy="490" r="10" />
+            <circle id="peg_45" cx="216" cy="490" r="10" />
+            <circle id="peg_44" cx="295" cy="490" r="10" />
+            <circle id="peg_43" cx="374" cy="490" r="10" />
+            <circle id="peg_42" cx="453" cy="490" r="10" />
+            <circle id="peg_41" cx="532" cy="490" r="10" />
+            <circle id="peg_40" cx="611" cy="490" r="10" />
+            <circle id="peg_39" cx="690" cy="490" r="10" />
+            <circle id="peg_38" cx="769" cy="490" r="10" />
+            <circle id="peg_37" cx="848" cy="490" r="10" />
+            <circle id="peg_36" cx="927" cy="490" r="10" />
+            <circle id="peg_35" cx="58" cy="490" r="10" />
+            <circle id="peg_34" cx="184" cy="560" r="10" />
+            <circle id="peg_33" cx="263" cy="560" r="10" />
+            <circle id="peg_32" cx="342" cy="560" r="10" />
+            <circle id="peg_31" cx="421" cy="560" r="10" />
+            <circle id="peg_30" cx="500" cy="560" r="10" />
+            <circle id="peg_29" cx="579" cy="560" r="10" />
+            <circle id="peg_28" cx="658" cy="560" r="10" />
+            <circle id="peg_27" cx="737" cy="560" r="10" />
+            <circle id="peg_26" cx="816" cy="560" r="10" />
+            <circle id="peg_25" cx="895" cy="560" r="10" />
+            <circle id="peg_24" cx="105" cy="560" r="10" />
+            <circle id="peg_23" cx="137" cy="630" r="10" />
+            <circle id="peg_22" cx="216" cy="630" r="10" />
+            <circle id="peg_21" cx="295" cy="630" r="10" />
+            <circle id="peg_20" cx="374" cy="630" r="10" />
+            <circle id="peg_19" cx="453" cy="630" r="10" />
+            <circle id="peg_18" cx="532" cy="630" r="10" />
+            <circle id="peg_17" cx="611" cy="630" r="10" />
+            <circle id="peg_16" cx="690" cy="630" r="10" />
+            <circle id="peg_15" cx="769" cy="630" r="10" />
+            <circle id="peg_14" cx="848" cy="630" r="10" />
+            <circle id="peg_13" cx="927" cy="630" r="10" />
+            <circle id="peg_12" cx="58" cy="630" r="10" />
+            <circle id="peg_11" cx="184" cy="700" r="10" />
+            <circle id="peg_10" cx="263" cy="700" r="10" />
+            <circle id="peg_09" cx="342" cy="700" r="10" />
+            <circle id="peg_08" cx="421" cy="700" r="10" />
+            <circle id="peg_07" cx="500" cy="700" r="10" />
+            <circle id="peg_06" cx="579" cy="700" r="10" />
+            <circle id="peg_05" cx="658" cy="700" r="10" />
+            <circle id="peg_04" cx="737" cy="700" r="10" />
+            <circle id="peg_03" cx="816" cy="700" r="10" />
+            <circle id="peg_02" cx="895" cy="700" r="10" />
+            <circle id="peg_01" cx="105" cy="700" r="10" />
+          </g>
+          <g id="sensors">
+            <rect id="sensor_1" data-score="10" x="0" y="900" width="100" height="100" fill="#D7FFEC" />
+            <rect id="sensor_2" data-score="50" x="100" y="900" width="100" height="100" fill="#95FFCC" />
+            <rect id="sensor_3" data-score="100" x="200" y="900" width="100" height="100" fill="#00FF85" />
+            <rect id="sensor_4" data-score="50" x="300" y="900" width="100" height="100" fill="#95FFCC" />
+            <rect id="sensor_5" data-score="10" x="400" y="900" width="100" height="100" fill="#D7FFEC" />
+            <rect id="sensor_6" data-score="10" x="500" y="900" width="100" height="100" fill="#D7FFEC" />
+            <rect id="sensor_7" data-score="50" x="600" y="900" width="100" height="100" fill="#95FFCC" />
+            <rect id="sensor_8" data-score="100" x="700" y="900" width="100" height="100" fill="#00FF85" />
+            <rect id="sensor_9" data-score="50" x="800" y="900" width="100" height="100" fill="#95FFCC" />
+            <rect id="sensor_10" data-score="10" x="900" y="900" width="100" height="100" fill="#D7FFEC" />
+          </g>
+          <g id="points" fill="darkgreen" >
+            <text class="points" id="10" x="50" y="965" text-anchor="middle">10</text>
+            <text class="points" id="50" x="150" y="965" text-anchor="middle">50</text>
+            <text class="points" id="100" x="250" y="965" text-anchor="middle">100</text>
+            <text class="points" id="50_2" x="350" y="965" text-anchor="middle">50</text>
+            <text class="points" id="10_2" x="450" y="965" text-anchor="middle">10</text>
+            <text class="points" id="10" x="550" y="965" text-anchor="middle">10</text>
+            <text class="points" id="50" x="650" y="965" text-anchor="middle">50</text>
+            <text class="points" id="100" x="750" y="965" text-anchor="middle">100</text>
+            <text class="points" id="50_2" x="850" y="965" text-anchor="middle">50</text>
+            <text class="points" id="10_2" x="950" y="965" text-anchor="middle">10</text>
+          </g>
+          <g id="cupwalls" filter="url(#shadow)">
+            <rect id="cupwall_0" x="95" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_1" x="195" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_2" x="295" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_3" x="395" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_4" x="495" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_5" x="595" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_6" x="695" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_7" x="795" y="890" width="10" height="110" fill="#202020" />
+            <rect id="cupwall_8" x="895" y="890" width="10" height="110" fill="#202020" />
+          </g>
+          <g id="spinners" filter="url(#shadow)">
+            <rect id="spinner_3" x="745" y="750" rx="5" ry="5" width="10" height="120" fill="#F64E8B" />
+            <rect id="spinner_2" x="496" y="750" rx="5" ry="5" width="10" height="120" fill="#D3EE98" />
+            <rect id="spinner_1" x="245" y="750" rx="5" ry="5" width="10" height="120" fill="#F64E8B" />
+          </g>
+          <circle id="ballGraphic" cx="500" cy="50" r="20" fill="url(#ball_gradient)" filter="url(#shadow)" />
+          <circle id="anchorGraphic" cx="500" cy="10" r="7" fill="white" stroke="black" filter="url(#shadow)" />
+          <g id="shadows">
+            <rect id="shadow" width="20" height="1000" fill="black" fill-opacity="0.1" />
+            <rect id="shadow_2" x="20" width="980" height="20" fill="black" fill-opacity="0.1" />
+          </g>
+        </svg>
+      </div>`;
 
     const layouts: Record<string, (string | number)[]> = {
       Mild: [3, 3, 6, 6, 3, 3, 6, 6, 3, 3],
@@ -719,6 +733,91 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     );
   }
 
+  if (phase === "combined-result") {
+    return (
+      <div className="skjenkehjulet">
+        <div className={`danger-overlay ${dangerActive ? "active" : ""}`}></div>
+        <div className="combined-result-display">
+          <h2
+            style={{
+              fontSize: "2.5rem",
+              marginBottom: "2rem",
+              color: dangerActive ? "#ff4444" : "#fff",
+              textAlign: "center",
+            }}
+          >
+            🎯 Final Result! 🎯
+          </h2>
+
+          <div
+            style={{
+              fontSize: "1.8rem",
+              marginBottom: "1.5rem",
+              padding: "2rem",
+              backgroundColor: "rgba(0,0,0,0.3)",
+              borderRadius: "1rem",
+              textAlign: "center",
+              lineHeight: "1.6",
+            }}
+          >
+            Everyone who{" "}
+            <span
+              style={{
+                color: "#ffd700",
+                fontWeight: "bold",
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+              }}
+            >
+              {wheelCategory}
+            </span>{" "}
+            has to drink{" "}
+            <span
+              style={{
+                color: finalScore === "CHUG" ? "#ff4444" : "#4caf50",
+                fontWeight: "bold",
+                fontSize: "2.2rem",
+                textShadow: "2px 2px 4px rgba(0,0,0,0.5)",
+              }}
+            >
+              {finalScore === "CHUG" ? "CHUG!" : `${finalScore} sips`}
+            </span>
+          </div>
+
+          {finalScore === "CHUG" && (
+            <div
+              style={{
+                fontSize: "1.4rem",
+                color: "#ff6666",
+                fontWeight: "bold",
+                textAlign: "center",
+                animation: "pulse 1.5s infinite",
+                marginBottom: "1rem",
+              }}
+            >
+              🍺 CHUG CHUG CHUG! 🍺
+            </div>
+          )}
+
+          <div
+            style={{
+              fontSize: "1.2rem",
+              opacity: 0.8,
+              textAlign: "center",
+            }}
+          >
+            {currentRound < rounds ? (
+              <>
+                Round {currentRound} of {rounds} complete!
+              </>
+            ) : (
+              <>🎉 Game Complete! 🎉</>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (phase === "wheel") {
     return (
       <div className="skjenkehjulet">
@@ -727,6 +826,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           <div className="result-display">{wheelCategory}</div>
         ) : (
           <LuckyWheel
+            key={`wheel-${currentRound}-${Date.now()}`} // Force component reset
             categories={[
               "White socks",
               "Longest hair",

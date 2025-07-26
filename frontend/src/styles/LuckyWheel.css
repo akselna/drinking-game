@@ -2,18 +2,49 @@
   margin: 40px auto;
   width: 80%;
   text-align: center;
+  max-width: 600px;
 }
 
 .luckywheel-svg {
   width: 100%;
   max-width: 500px;
+  height: auto;
+}
+
+.wheel {
+  transform-origin: 50% 50%;
 }
 
 .sector-label {
-  font-family: "Raleway", sans-serif;
-  font-size: 20px;
+  font-family: "Raleway", Arial, sans-serif;
+  font-size: 16px;
+  font-weight: bold;
   text-anchor: middle;
   dominant-baseline: middle;
   fill: #fff;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  user-select: none;
 }
-.wheel { transform-origin: 50% 50%; }
+
+.pointer {
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .luckywheel-container {
+    width: 95%;
+    margin: 20px auto;
+  }
+
+  .sector-label {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sector-label {
+    font-size: 12px;
+  }
+}
