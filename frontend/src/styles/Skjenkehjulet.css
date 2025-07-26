@@ -51,6 +51,28 @@
   animation: pop 0.6s ease-out forwards;
 }
 
+.highlight-slot {
+  filter: brightness(1.2);
+}
+
+.dim-slot {
+  opacity: 0.2;
+}
+
+.fade-board {
+  animation: fadeout 0.5s forwards;
+}
+
+.red-bg {
+  background-color: rgba(255, 0, 0, 0.5);
+}
+
+@keyframes fadeout {
+  to {
+    opacity: 0;
+  }
+}
+
 @keyframes pop {
   0% {
     transform: scale(0);

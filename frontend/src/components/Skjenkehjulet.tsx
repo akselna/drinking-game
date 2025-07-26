@@ -6,6 +6,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import "../styles/Skjenkehjulet.css";
+import SpinningWheel from "./SpinningWheel";
 
 const matterUrl =
   "https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js";
@@ -24,16 +25,19 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
-    "config" | "countdown" | "playing" | "result"
+    "config" | "countdown" | "playing" | "result" | "wheel"
   >("config");
   const [countdownValue, setCountdownValue] = useState(3);
   const [rounds, setRounds] = useState(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [displayCount, setDisplayCount] = useState(3);
   const [finalScore, setFinalScore] = useState<string | null>(null);
+  const [finalCategory, setFinalCategory] = useState<string | null>(null);
   const [intensity, setIntensity] = useState(
     "Mild" as "Mild" | "Medium" | "Fyllehund" | "Grøfta"
   );
+  const [winningIndex, setWinningIndex] = useState<number | null>(null);
+  const [showRed, setShowRed] = useState(false);
   const boardFuncs = useRef<{ drop: () => void; reset: () => void } | null>(
     null
   );
@@ -90,6 +94,25 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       boardFuncs.current.drop();
     }
   }, [phase, ready]);
+
+  useEffect(() => {
+    if (phase !== "result" || winningIndex === null) return;
+    sensorElems.forEach((s, i) => {
+      if (i === winningIndex) {
+        s.rect.classList.add("highlight-slot");
+        s.text.classList.add("highlight-slot");
+      } else {
+        s.rect.classList.add("dim-slot");
+        s.text.classList.add("dim-slot");
+      }
+    });
+    const board = containerRef.current?.querySelector("svg");
+    board?.classList.add("fade-board");
+    const timer = setTimeout(() => {
+      setPhase("wheel");
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [phase, winningIndex]);
 
   // Initialize plinko board when ready
   const initBoard = () => {
@@ -310,7 +333,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     const wallThickness = 50;
     const pegBodies: any[] = [];
     const cup_separators: any[] = [];
-    const sensors: any[] = [];
+    const sensorBodies: any[] = [];
+    const sensorElems: { rect: SVGRectElement; text: SVGTextElement }[] = [];
     const spinners: any[] = [];
     const spinnerGraphics: any[] = [];
     const scoreText = document.querySelector("#scoreText") as SVGTextElement;
@@ -410,8 +434,9 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
     const initSensors = () => {
       const sensorHolder = document.querySelector("#sensors") as SVGGElement;
-      const sensorGrapghics = sensorHolder.getElementsByTagName("rect");
-      for (const graphic of Array.from(sensorGrapghics)) {
+      const sensorGraphics = sensorHolder.getElementsByTagName("rect");
+      const points = document.querySelectorAll("#points text");
+      for (const [idx, graphic] of Array.from(sensorGraphics).entries()) {
         const xpos = graphic.getAttribute("x") as string;
         const ypos = graphic.getAttribute("y") as string;
         const w = graphic.getAttribute("width") as string;
@@ -431,7 +456,9 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           }
         );
         window.Matter.Body.setPosition(sensorBody, { x: body_x, y: body_y });
-        sensors.push(sensorBody);
+        sensorBodies.push(sensorBody);
+        const textEl = points[idx] as SVGTextElement;
+        sensorElems.push({ rect: graphic as SVGRectElement, text: textEl });
       }
       Events.on(engine, "collisionStart", (event: any) => {
         var pairs = event.pairs;
@@ -445,8 +472,11 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
               ? pair.bodyA.id
               : pair.bodyB.id;
             const score = id.substr(7).split("_")[2];
+            const index = sensorBodies.findIndex((b) => b.id === id);
             scoreText.textContent = `~ ${score} ~`;
             setFinalScore(score);
+            setWinningIndex(index);
+            setShowRed(score === "CHUG");
             setPhase("result");
           }
         }
@@ -534,6 +564,14 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       anchorGraphic.setAttribute("cx", String(vbWidth / 2));
       window.Matter.Composite.add(engine.world, anchorConstraint);
       scoreText.textContent = "~ 0 ~";
+      sensorElems.forEach((s) => {
+        s.rect.classList.remove("highlight-slot", "dim-slot");
+        s.text.classList.remove("highlight-slot", "dim-slot");
+      });
+      const board = containerRef.current?.querySelector("svg");
+      board?.classList.remove("fade-board");
+      setShowRed(false);
+      setWinningIndex(null);
     };
 
     boardFuncs.current = { drop: dropBall, reset };
@@ -566,7 +604,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         right_wall,
         ...pegBodies,
         ...cup_separators,
-        ...sensors,
+        ...sensorBodies,
         ...spinners,
       ]);
       Runner.run(runner, engine);
@@ -648,16 +686,30 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     );
   }
 
+  if (phase === "wheel") {
+    return (
+      <div className="skjenkehjulet">
+        <SpinningWheel
+          onComplete={(cat) => {
+            setFinalCategory(cat);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="skjenkehjulet">
+    <div className={`skjenkehjulet ${showRed ? "red-bg" : ""}`}>
       <div ref={containerRef}></div>
       {finalScore && <div className="result-display">{finalScore}</div>}
+      {finalCategory && <div className="result-display">{finalCategory}</div>}
       {currentRound < rounds ? (
         <button
           className="plinko-btn"
           onClick={() => {
             setCurrentRound((c) => c + 1);
             setFinalScore(null);
+            setFinalCategory(null);
             boardFuncs.current?.reset();
             setPhase("countdown");
           }}
