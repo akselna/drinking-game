@@ -9,6 +9,8 @@ interface ParticipantPanelProps {
   socket: CustomSocket | null;
   sessionId: string;
   lamboVotes: string[]; // Added prop for lambo votes
+  showBackArrow?: boolean;
+  onBackArrowClick?: () => void;
 }
 
 const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
@@ -18,6 +20,8 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
   socket,
   sessionId,
   lamboVotes,
+  showBackArrow = false,
+  onBackArrowClick,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -68,13 +72,23 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
     <>
       {/* Only show toggle button when panel is closed */}
       {!isOpen && (
-        <button
-          className={`participant-toggle ${isHost ? "is-host" : ""}`}
-          onClick={togglePanel}
-          aria-label="Vis deltakere"
-        >
-          👥
-        </button>
+        showBackArrow && isHost ? (
+          <button
+            className="back-arrow"
+            onClick={onBackArrowClick}
+            aria-label="Tilbake"
+          >
+            ←
+          </button>
+        ) : (
+          <button
+            className={`participant-toggle ${isHost ? "is-host" : ""}`}
+            onClick={togglePanel}
+            aria-label="Vis deltakere"
+          >
+            👥
+          </button>
+        )
       )}
 
       {/* Overlay shown when panel is open */}

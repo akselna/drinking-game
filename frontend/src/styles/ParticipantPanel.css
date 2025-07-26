@@ -35,6 +35,38 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
+/* Back arrow shown in Skjenkehjulet */
+.back-arrow {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 100;
+  background-color: rgba(124, 77, 255, 0.2);
+  color: white;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: none;
+  cursor: pointer;
+  font-size: 24px;
+  transition: all 0.2s ease;
+}
+
+.back-arrow:hover {
+  background-color: rgba(124, 77, 255, 0.4);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.back-arrow:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
 .participant-panel {
   position: fixed;
   top: 0;

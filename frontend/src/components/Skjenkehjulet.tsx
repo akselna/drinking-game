@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle } from "react";
 import "../styles/Skjenkehjulet.css";
 
 const matterUrl =
@@ -10,7 +10,14 @@ declare global {
   }
 }
 
-const Skjenkehjulet: React.FC = () => {
+export interface SkjenkehjuletHandle {
+  goToConfig: () => void;
+}
+
+const Skjenkehjulet: React.ForwardRefRenderFunction<SkjenkehjuletHandle> = (
+  _,
+  ref
+) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ready, setReady] = useState(false);
   const [phase, setPhase] = useState<
@@ -27,6 +34,10 @@ const Skjenkehjulet: React.FC = () => {
   const boardFuncs = useRef<{ drop: () => void; reset: () => void } | null>(
     null
   );
+
+  useImperativeHandle(ref, () => ({
+    goToConfig: () => setPhase("config"),
+  }));
 
   // Load Matter.js dynamically when component mounts
   useEffect(() => {
@@ -660,4 +671,4 @@ const Skjenkehjulet: React.FC = () => {
   );
 };
 
-export default Skjenkehjulet;
+export default forwardRef(Skjenkehjulet);

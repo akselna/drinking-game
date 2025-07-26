@@ -10,7 +10,7 @@ import DrinkOrJudge from "./DrinkOrJudge";
 import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
-import Skjenkehjulet from "./Skjenkehjulet";
+import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
@@ -50,6 +50,7 @@ const Game: React.FC = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   // Flag to track if we've successfully joined a session
   const hasJoinedRef = useRef(false);
+  const skjRef = useRef<SkjenkehjuletHandle>(null);
 
   useEffect(() => {
     if (!socket) {
@@ -390,7 +391,7 @@ const Game: React.FC = () => {
         );
       case GAME_TYPES.SKJENKEHJULET:
         return (
-          <Skjenkehjulet />
+          <Skjenkehjulet ref={skjRef} />
         );
       case GAME_TYPES.NOT_ALLOWED_TO_LAUGH:
         return (
@@ -455,6 +456,8 @@ const Game: React.FC = () => {
           socket={socket}
           sessionId={sessionData.sessionId}
           lamboVotes={lamboVotes}
+          showBackArrow={sessionData.gameType === GAME_TYPES.SKJENKEHJULET}
+          onBackArrowClick={sessionData.gameType === GAME_TYPES.SKJENKEHJULET ? () => skjRef.current?.goToConfig() : undefined}
         />
       )}
 
@@ -479,7 +482,10 @@ const Game: React.FC = () => {
         )}
 
         {/* Lambo button - now with a proper container */}
-        {!isReconnecting && !error && sessionData.sessionId && (
+        {!isReconnecting &&
+          !error &&
+          sessionData.sessionId &&
+          sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
           <div className="lambo-button-container">
             <button
               onClick={handleLamboVote}
@@ -499,15 +505,17 @@ const Game: React.FC = () => {
         )}
 
         {/* Leave Session button */}
-        <div className="mobile-leave-button-container">
-          <button
-            onClick={confirmLeaveSession}
-            className="mobile-leave-button"
-            aria-label="Leave Session"
-          >
-            Leave Session
-          </button>
-        </div>
+        {sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
+          <div className="mobile-leave-button-container">
+            <button
+              onClick={confirmLeaveSession}
+              className="mobile-leave-button"
+              aria-label="Leave Session"
+            >
+              Leave Session
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Leave confirmation dialog */}
