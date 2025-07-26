@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;700&display=swap');
+
+.container {
+  margin: 20px auto;
+  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.points {
+  font-size: 40px;
+  font-weight: bold;
+}
+
+.scoreText {
+  font-size: 100px;
+  font-weight: bold;
+  opacity: 0.38;
+  fill: white;
+}
+
+#drop_slider {
+  width: 90%;
+  margin: 0 auto;
+}
