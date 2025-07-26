@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { CustomSocket } from "../types/socket.types";
+import "../styles/Skjenkehjulet.css";
 
 interface SkjenkehjuletProps {
   sessionId: string;
@@ -50,6 +51,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     y: 0,
   });
   const [finalSlot, setFinalSlot] = useState<number>(-1);
+  const [wheelIndex, setWheelIndex] = useState<number>(-1);
 
   // Canvas refs
   const ballCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -143,13 +145,13 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     const handlePunishmentAnimation = (data: any) => {
       setPhase("punishment-animation");
       setCurrentPunishment(data.punishment);
-      startBallAnimation(data.punishment, data.targetSlot);
+      setFinalSlot(data.targetSlot);
     };
 
     const handleWheelSpin = (data: any) => {
       setPhase("wheel-spin");
       setCurrentCategory(data.category);
-      startWheelAnimation(data.categoryIndex);
+      setWheelIndex(data.categoryIndex);
     };
 
     const handleResult = (data: any) => {
@@ -186,6 +188,23 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     };
   }, [socket]);
 
+  // Start animations after phase change so canvas is mounted
+  useEffect(() => {
+    if (
+      phase === "punishment-animation" &&
+      currentPunishment &&
+      finalSlot >= 0
+    ) {
+      startBallAnimation(currentPunishment, finalSlot);
+    }
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === "wheel-spin" && wheelIndex >= 0) {
+      startWheelAnimation(wheelIndex);
+    }
+  }, [phase]);
+
   // Start game (host only)
   const startGame = () => {
     if (!socket || !isHost) return;
@@ -207,7 +226,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
     if (!ctx) return;
 
     setIsAnimating(true);
-    setFinalSlot(targetSlot);
 
     let ballX = canvas.width / 2;
     let ballY = 50;
@@ -347,12 +365,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
       // Check if ball reached bottom
       if (ballY > canvas.height - 100) {
         setIsAnimating(false);
-        // Trigger wheel spin after a delay
-        setTimeout(() => {
-          if (socket) {
-            socket.emit("skjenkehjulet-trigger-wheel", sessionId);
-          }
-        }, 1000);
         return;
       }
 
@@ -438,13 +450,6 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
 
       if (rotation < targetRotation) {
         requestAnimationFrame(animate);
-      } else {
-        // Animation complete
-        setTimeout(() => {
-          if (socket) {
-            socket.emit("skjenkehjulet-show-result", sessionId);
-          }
-        }, 500);
       }
     };
 
@@ -584,7 +589,7 @@ const Skjenkehjulet: React.FC<SkjenkehjuletProps> = ({
             className="ball-canvas"
           />
 
-          {currentPunishment && (
+          {currentPunishment && !isAnimating && (
             <div className="punishment-display">
               <h3>Straff: {currentPunishment.type}</h3>
             </div>
