@@ -6,6 +6,7 @@ require("dotenv").config();
 const spotifyService = require("./spotify");
 const path = require("path");
 const sessionTimers = new Map();
+const { pairPlayers, calculateResults, updateLeaderboard } = require("../splitOrStealGameEngine");
 
 function generateSessionId(length = 6) {
   const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789"; // Exclude 0 and O
@@ -168,6 +169,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
   BEAT4BEAT: "beat4Beat", // Add this line
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SPLIT_OR_STEAL: "splitOrSteal",
   SKJENKEHJULET: "skjenkehjulet",
 };
 
@@ -986,6 +988,16 @@ io.on("connection", (socket) => {
       };
     } else if (gameType === GAME_TYPES.SKJENKEHJULET) {
       session.gameState = { phase: "idle" };
+    } else if (gameType === GAME_TYPES.SPLIT_OR_STEAL) {
+      session.gameState = {
+        phase: "config",
+        countdown: 30,
+        participants: [],
+        pairs: [],
+        choices: {},
+        leaderboard: {},
+        results: [],
+      };
     }
 
     // Notify all players about the game selection
@@ -2581,6 +2593,119 @@ function moveToNextStatement(sessionId) {
     totalStatements: session.gameState.availableStatements.length,
   });
 }
+
+  // ===== Split or Steal =====
+  socket.on("split-steal-set-config", (sessionId, config) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only host can configure" });
+      return;
+    }
+
+    session.gameState.phase = "countdown";
+    session.gameState.countdown = parseInt(config.countdown) || 30;
+    session.gameState.participants = config.participants || [];
+
+    io.to(sessionId).emit("split-steal-phase", {
+      phase: "countdown",
+      countdown: session.gameState.countdown,
+    });
+  });
+
+  socket.on("split-steal-start-round", (sessionId) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+    if (socket.id !== session.host) return;
+
+    const players = session.players.filter((p) =>
+      session.gameState.participants.includes(p.id)
+    );
+    session.gameState.pairs = pairPlayers(players);
+    session.gameState.phase = "negotiation";
+    session.gameState.choices = {};
+
+    io.to(sessionId).emit("split-steal-round-start", {
+      pairs: session.gameState.pairs,
+      countdown: 60,
+    });
+  });
+
+  socket.on("split-steal-open-decisions", (sessionId) => {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+    if (socket.id !== session.host) return;
+
+    session.gameState.phase = "decision";
+    session.gameState.pairs.forEach((pair, idx) => {
+      session.gameState.pairs[idx].turn = pair[0].id;
+    });
+
+    session.gameState.pairs.forEach((pair, idx) => {
+      const chooser = pair[0];
+      io.to(chooser.id).emit("split-steal-your-turn", { playerId: chooser.id });
+    });
+  });
+
+  socket.on("split-steal-choice", (sessionId, choice) => {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+
+    const player = session.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    session.gameState.choices[socket.id] = choice;
+
+    // find pair
+    const pair = session.gameState.pairs.find((p) =>
+      p.some((pl) => pl && pl.id === socket.id)
+    );
+    if (!pair) return;
+
+    const [a, b] = pair;
+    if (!b) return;
+
+    if (!session.gameState.choices[a.id] || !session.gameState.choices[b.id]) {
+      const next = !session.gameState.choices[a.id] ? a : b;
+      io.to(next.id).emit("split-steal-your-turn", { playerId: next.id });
+      return;
+    }
+
+    // when both have chosen
+    const results = calculateResults([pair], session.gameState.choices);
+    session.gameState.results = session.gameState.results || [];
+    session.gameState.results.push(results[0]);
+
+    const allPairsDone = session.gameState.pairs.every(([pa, pb]) =>
+      pa && pb
+        ? session.gameState.choices[pa.id] && session.gameState.choices[pb.id]
+        : true
+    );
+
+    if (allPairsDone) {
+      session.gameState.phase = "reveal";
+      session.gameState.leaderboard = updateLeaderboard(
+        session.gameState.leaderboard || {},
+        session.gameState.results
+      );
+
+      io.to(sessionId).emit("split-steal-reveal", {
+        results: session.gameState.results,
+        leaderboard: session.gameState.leaderboard,
+        countdown: 10,
+      });
+    }
+  });
 
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
