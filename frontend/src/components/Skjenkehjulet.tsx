@@ -1020,16 +1020,6 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             className={`danger-overlay ${dangerActive ? "active" : ""}`}
           ></div>
           <div className="combined-result-display">
-            <h2
-              style={{
-                fontSize: "2.5rem",
-                marginBottom: "2rem",
-                color: dangerActive ? "#ff4444" : "#fff",
-                textAlign: "center",
-              }}
-            >
-              🎯 Final Result! 🎯
-            </h2>
             <div
               style={{
                 fontSize: "1.8rem",
@@ -1039,13 +1029,14 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
                 borderRadius: "1rem",
                 textAlign: "center",
                 lineHeight: "1.6",
+                marginTop: "2rem", // Keeps content centered after removing title
               }}
             >
               Everyone who{" "}
               <span style={{ color: "#ffd700", fontWeight: "bold" }}>
                 {wheelCategory}
               </span>{" "}
-              must drink{" "}
+              drinks{" "}
               <span
                 style={{
                   color: finalScore === "CHUG" ? "#ff4444" : "#4caf50",
@@ -1066,15 +1057,13 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             )}
             <div
               style={{
-                fontSize: "1.2rem",
-                opacity: 0.8,
+                fontSize: "1.1rem",
+                color: "rgba(255, 255, 255, 0.5)",
                 textAlign: "center",
-                marginTop: "2rem",
+                marginTop: "3rem",
               }}
             >
-              {currentRound < rounds
-                ? `Round ${currentRound} of ${rounds} complete!`
-                : `🎉 Game Over! 🎉`}
+              Round {currentRound} / {rounds}
             </div>
           </div>
         </div>
