@@ -22,9 +22,11 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
   returnToLobby,
 }) => {
   const [countdownDuration, setCountdownDuration] = useState<number>(30);
+  // The host chooses which players participate. Start with an empty list so
+  // only manually added players are included in the game configuration.
   const [participants, setParticipants] = useState<
     Array<{ id: string; name: string }>
-  >(players.map((p) => ({ id: p.id, name: p.name })));
+  >([]);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
 
   const handleAddParticipant = () => {

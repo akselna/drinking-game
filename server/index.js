@@ -2231,13 +2231,10 @@ io.on("connection", (socket) => {
 
     console.log(`Configuring Split or Steal game in session ${sessionId}`);
 
-    // Filter out non-player entities from the participant list
+    // Validate participants. The host will manually configure the list, so
+    // we simply ensure each entry has an id and a name.
     const validParticipants = config.participants.filter(
-      (p) =>
-        p &&
-        p.id &&
-        p.name &&
-        !["host", "control device"].includes(p.name.toLowerCase())
+      (p) => p && p.id && p.name
     );
 
     // Initialize game state
