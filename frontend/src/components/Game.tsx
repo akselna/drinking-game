@@ -11,6 +11,10 @@ import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
 import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
+// 1. First, add the import for Split or Steal components at the top:
+import SplitOrStealSetup from "./SplitOrStealSetup";
+import SplitOrStealDashboard from "./SplitOrStealDashboard";
+import SplitOrStealController from "./SplitOrStealController";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
@@ -19,8 +23,9 @@ const GAME_TYPES = {
   MUSIC_GUESS: "musicGuess",
   DRINK_OR_JUDGE: "drinkOrJudge",
   BEAT4BEAT: "beat4Beat",
-  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh",
   SKJENKEHJULET: "skjenkehjulet",
+  SPLIT_OR_STEAL: "splitOrSteal", // Add this line
 };
 
 const Game: React.FC = () => {
@@ -362,6 +367,50 @@ const Game: React.FC = () => {
             returnToLobby={returnToLobby}
           />
         );
+      case GAME_TYPES.SPLIT_OR_STEAL:
+        // Determine which component to render based on host status and game phase
+        if (sessionData.gameState?.phase === "setup") {
+          // Setup phase - show setup component
+          return (
+            <SplitOrStealSetup
+              sessionId={sessionData.sessionId}
+              players={sessionData.players}
+              isHost={sessionData.isHost}
+              socket={socket}
+              restartGame={restartGame}
+              leaveSession={confirmLeaveSession}
+              returnToLobby={returnToLobby}
+            />
+          );
+        } else if (sessionData.isHost) {
+          // Host view - show dashboard during game
+          return (
+            <SplitOrStealDashboard
+              sessionId={sessionData.sessionId}
+              players={sessionData.players}
+              isHost={sessionData.isHost}
+              gameState={sessionData.gameState}
+              socket={socket}
+              restartGame={restartGame}
+              leaveSession={confirmLeaveSession}
+              returnToLobby={returnToLobby}
+            />
+          );
+        } else {
+          // Player view - show controller
+          return (
+            <SplitOrStealController
+              sessionId={sessionData.sessionId}
+              players={sessionData.players}
+              isHost={sessionData.isHost}
+              gameState={sessionData.gameState}
+              socket={socket}
+              restartGame={restartGame}
+              leaveSession={confirmLeaveSession}
+              returnToLobby={returnToLobby}
+            />
+          );
+        }
 
       case GAME_TYPES.DRINK_OR_JUDGE:
         return (

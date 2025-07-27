@@ -74,6 +74,10 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     }, 300);
   };
 
+  // Updates needed for frontend/src/components/GameLobby.tsx
+
+  // Find the gameOptions array and add the Split or Steal option:
+
   const gameOptions: GameOption[] = [
     {
       id: "neverHaveIEver",
@@ -93,15 +97,34 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       icon: "👀",
       color: "#9c27b0",
     },
-    { id: "beat4Beat", name: "Beat4Beat", icon: "🎧", color: "#e53935" },
+    {
+      id: "beat4Beat",
+      name: "Beat4Beat",
+      icon: "🎧",
+      color: "#e53935",
+    },
     {
       id: "notAllowedToLaugh",
       name: "Ikke lov å le på vors",
       icon: "😂",
       color: "#6200ea",
     },
-    { id: "skjenkehjulet", name: "Skjenkehjulet", icon: "🍻", color: "#ff9800" },
+    {
+      id: "skjenkehjulet",
+      name: "Skjenkehjulet",
+      icon: "🍻",
+      color: "#ff9800",
+    },
+    // Add this new option:
+    {
+      id: "splitOrSteal",
+      name: "Split or Steal",
+      icon: "💰",
+      color: "#f39c12",
+    },
   ];
+
+  // That's all the changes needed for GameLobby.tsx
 
   // Find the host's name for the waiting message
   const hostName = isHost

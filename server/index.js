@@ -161,14 +161,16 @@ let sessions = {};
 
 // Keeps track of which socket belongs to which player
 let playerSessions = {};
+// First, add the new game type to the GAME_TYPES constant:
 const GAME_TYPES = {
   NONE: "none",
   NEVER_HAVE_I_EVER: "neverHaveIEver",
   MUSIC_GUESS: "musicGuess",
-  DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
-  BEAT4BEAT: "beat4Beat", // Add this line
-  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  DRINK_OR_JUDGE: "drinkOrJudge",
+  BEAT4BEAT: "beat4Beat",
+  NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh",
   SKJENKEHJULET: "skjenkehjulet",
+  SPLIT_OR_STEAL: "splitOrSteal", // Add this line
 };
 
 // Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
@@ -802,6 +804,20 @@ io.on("connection", (socket) => {
         usedStatements: [],
       };
       shuffleArray(session.gameState.statements);
+    } else if (gameType === GAME_TYPES.SPLIT_OR_STEAL) {
+      session.gameState = {
+        phase: "setup",
+        countdownDuration: 30,
+        participants: [],
+        scoreboard: {},
+        leaderboard: [],
+        currentPair: null,
+        choices: {},
+        results: null,
+        timeLeft: 0,
+        currentPlayer: null,
+        timerId: null,
+      };
     } else if (gameType === GAME_TYPES.NEVER_HAVE_I_EVER) {
       const defaultStatements = [
         "🎤 Møtt en kjendis",
@@ -1977,6 +1993,487 @@ io.on("connection", (socket) => {
 
   // Enhanced version of restart-game
 
+  // sPLIT OR STEAL CODE------------
+
+  // Add these functions before the socket event handlers:
+
+  function startSplitStealCountdown(sessionId, duration) {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+
+    session.gameState.phase = "countdown";
+    session.gameState.timeLeft = duration;
+    session.gameState.currentPair = null;
+    session.gameState.results = null;
+    session.gameState.currentPlayer = null;
+
+    // Broadcast initial state
+    io.to(sessionId).emit("split-steal-state", {
+      phase: "countdown",
+      timeLeft: duration,
+      leaderboard: session.gameState.leaderboard,
+      participants: session.gameState.participants,
+    });
+
+    // Clear any existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+    }
+
+    // Start countdown timer
+    const timerId = setInterval(() => {
+      if (
+        !sessions[sessionId] ||
+        sessions[sessionId].gameType !== GAME_TYPES.SPLIT_OR_STEAL
+      ) {
+        clearInterval(timerId);
+        return;
+      }
+
+      session.gameState.timeLeft--;
+
+      // Emit timer update
+      io.to(sessionId).emit("split-steal-timer", {
+        timeLeft: session.gameState.timeLeft,
+      });
+
+      // When countdown reaches 0, start negotiation
+      if (session.gameState.timeLeft <= 0) {
+        clearInterval(timerId);
+        startNegotiation(sessionId);
+      }
+    }, 1000);
+
+    session.gameState.timerId = timerId;
+  }
+
+  function startNegotiation(sessionId) {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+
+    // Pair players
+    const pair = pairPlayers(session.gameState.participants);
+
+    if (!pair) {
+      // Not enough players, restart countdown
+      console.log(
+        `Not enough participants in session ${sessionId}, restarting countdown`
+      );
+      startSplitStealCountdown(sessionId, session.gameState.countdownDuration);
+      return;
+    }
+
+    session.gameState.phase = "negotiation";
+    session.gameState.timeLeft = 60; // 60 seconds for negotiation
+    session.gameState.currentPair = pair;
+    session.gameState.choices = {};
+
+    // Broadcast negotiation state
+    io.to(sessionId).emit("split-steal-state", {
+      phase: "negotiation",
+      timeLeft: 60,
+      currentPair: pair,
+      leaderboard: session.gameState.leaderboard,
+      participants: session.gameState.participants,
+    });
+
+    // Clear any existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+    }
+
+    // Start negotiation timer
+    const timerId = setInterval(() => {
+      if (
+        !sessions[sessionId] ||
+        sessions[sessionId].gameType !== GAME_TYPES.SPLIT_OR_STEAL
+      ) {
+        clearInterval(timerId);
+        return;
+      }
+
+      session.gameState.timeLeft--;
+
+      // Emit timer update
+      io.to(sessionId).emit("split-steal-timer", {
+        timeLeft: session.gameState.timeLeft,
+      });
+
+      // When negotiation time is up, start decision phase
+      if (session.gameState.timeLeft <= 0) {
+        clearInterval(timerId);
+        startDecision(sessionId);
+      }
+    }, 1000);
+
+    session.gameState.timerId = timerId;
+  }
+
+  function startDecision(sessionId) {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+
+    session.gameState.phase = "decision";
+    session.gameState.currentPlayer = session.gameState.currentPair.player1.id; // Start with player 1
+    session.gameState.choices = {};
+
+    // Broadcast decision state
+    io.to(sessionId).emit("split-steal-state", {
+      phase: "decision",
+      currentPair: session.gameState.currentPair,
+      currentPlayer: session.gameState.currentPlayer,
+      leaderboard: session.gameState.leaderboard,
+      participants: session.gameState.participants,
+    });
+
+    // Clear any existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+    }
+  }
+
+  function startReveal(sessionId) {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+
+    const pair = session.gameState.currentPair;
+    const choice1 = session.gameState.choices[pair.player1.id];
+    const choice2 = session.gameState.choices[pair.player2.id];
+
+    // Calculate results
+    const results = calculateResults(
+      pair.player1,
+      pair.player2,
+      choice1,
+      choice2
+    );
+
+    // Update leaderboard
+    session.gameState.scoreboard = updateLeaderboard(
+      session.gameState.scoreboard,
+      pair.player1.id,
+      pair.player2.id,
+      results.player1Points,
+      results.player2Points
+    );
+
+    // Create sorted leaderboard for display
+    session.gameState.leaderboard = getSortedLeaderboard(
+      session.gameState.scoreboard,
+      session.gameState.participants
+    );
+
+    session.gameState.phase = "reveal";
+    session.gameState.timeLeft = 10; // 10 seconds to show results
+    session.gameState.results = results;
+
+    // Broadcast reveal state
+    io.to(sessionId).emit("split-steal-state", {
+      phase: "reveal",
+      timeLeft: 10,
+      currentPair: pair,
+      results: results,
+      leaderboard: session.gameState.leaderboard,
+      participants: session.gameState.participants,
+    });
+
+    // Clear any existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+    }
+
+    // Start reveal timer
+    const timerId = setInterval(() => {
+      if (
+        !sessions[sessionId] ||
+        sessions[sessionId].gameType !== GAME_TYPES.SPLIT_OR_STEAL
+      ) {
+        clearInterval(timerId);
+        return;
+      }
+
+      session.gameState.timeLeft--;
+
+      // Emit timer update
+      io.to(sessionId).emit("split-steal-timer", {
+        timeLeft: session.gameState.timeLeft,
+      });
+
+      // When reveal time is up, restart countdown
+      if (session.gameState.timeLeft <= 0) {
+        clearInterval(timerId);
+        startSplitStealCountdown(
+          sessionId,
+          session.gameState.countdownDuration
+        );
+      }
+    }, 1000);
+
+    session.gameState.timerId = timerId;
+  }
+
+  // Add these event handlers inside the io.on("connection", (socket) => { block:
+
+  // Split or Steal - Game Configuration
+  socket.on("split-steal-config", (sessionId, config) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can configure the game
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can configure the game" });
+      return;
+    }
+
+    console.log(`Configuring Split or Steal game in session ${sessionId}`);
+
+    // Initialize game state
+    session.gameState = {
+      phase: "countdown",
+      countdownDuration: config.countdownDuration,
+      participants: config.participants,
+      scoreboard: {}, // player_id -> points
+      leaderboard: [], // sorted array for display
+      currentPair: null,
+      choices: {},
+      results: null,
+      timeLeft: config.countdownDuration,
+      currentPlayer: null,
+      timerId: null,
+    };
+
+    // Initialize scoreboard for all participants
+    config.participants.forEach((participant) => {
+      session.gameState.scoreboard[participant.id] = 0;
+    });
+
+    // Create initial leaderboard
+    session.gameState.leaderboard = getSortedLeaderboard(
+      session.gameState.scoreboard,
+      session.gameState.participants
+    );
+
+    // Start the countdown
+    startSplitStealCountdown(sessionId, config.countdownDuration);
+    // Notify all clients about the game state change (without timerId)
+    const { timerId, ...sanitizedGameState } = session.gameState;
+    io.to(sessionId).emit("game-selected", {
+      gameType: session.gameType,
+      gameState: sanitizedGameState,
+    });
+    console.log(
+      `Split or Steal game started in session ${sessionId} with ${config.participants.length} participants`
+    );
+  });
+
+  // Split or Steal - Player Choice
+  socket.on("split-steal-choice", (sessionId, choice) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    if (session.gameState.phase !== "decision") {
+      socket.emit("error", { message: "Not in decision phase" });
+      return;
+    }
+
+    // Check if it's this player's turn
+    if (session.gameState.currentPlayer !== socket.id) {
+      socket.emit("error", { message: "Not your turn" });
+      return;
+    }
+
+    // Validate choice
+    if (choice !== "SPLIT" && choice !== "STEAL") {
+      socket.emit("error", { message: "Invalid choice" });
+      return;
+    }
+
+    console.log(`Player ${socket.id} chose ${choice} in session ${sessionId}`);
+
+    // Store the choice
+    session.gameState.choices[socket.id] = choice;
+
+    const pair = session.gameState.currentPair;
+
+    // Check if both players have made their choices
+    if (Object.keys(session.gameState.choices).length === 2) {
+      // Both players have chosen, start reveal
+      startReveal(sessionId);
+    } else {
+      // Switch to the other player
+      session.gameState.currentPlayer =
+        session.gameState.currentPlayer === pair.player1.id
+          ? pair.player2.id
+          : pair.player1.id;
+
+      // Broadcast updated state
+      io.to(sessionId).emit("split-steal-state", {
+        phase: "decision",
+        currentPair: pair,
+        currentPlayer: session.gameState.currentPlayer,
+        leaderboard: session.gameState.leaderboard,
+        participants: session.gameState.participants,
+      });
+    }
+  });
+
+  // Split or Steal - Add Player
+  socket.on("split-steal-add-player", (sessionId, playerName) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    if (!playerName || !playerName.trim()) {
+      socket.emit("error", { message: "Player name is required" });
+      return;
+    }
+
+    const trimmedName = playerName.trim();
+
+    // Check if name already exists
+    if (
+      session.gameState.participants.some(
+        (p) => p.name.toLowerCase() === trimmedName.toLowerCase()
+      )
+    ) {
+      socket.emit("error", {
+        message: "A participant with this name already exists",
+      });
+      return;
+    }
+
+    // Add new participant
+    const newParticipant = {
+      id: `custom_${Date.now()}_${Math.random()}`,
+      name: trimmedName,
+    };
+
+    session.gameState.participants.push(newParticipant);
+
+    // Initialize their score
+    session.gameState.scoreboard[newParticipant.id] = 0;
+
+    // Update leaderboard
+    session.gameState.leaderboard = getSortedLeaderboard(
+      session.gameState.scoreboard,
+      session.gameState.participants
+    );
+
+    console.log(`Added participant ${trimmedName} to session ${sessionId}`);
+
+    // Broadcast updated participants
+    io.to(sessionId).emit("split-steal-state", {
+      phase: session.gameState.phase,
+      timeLeft: session.gameState.timeLeft,
+      currentPair: session.gameState.currentPair,
+      results: session.gameState.results,
+      leaderboard: session.gameState.leaderboard,
+      participants: session.gameState.participants,
+      currentPlayer: session.gameState.currentPlayer,
+    });
+  });
+
+  // Split or Steal - Remove Player
+  socket.on("split-steal-remove-player", (sessionId, playerId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Remove participant
+    session.gameState.participants = session.gameState.participants.filter(
+      (p) => p.id !== playerId
+    );
+
+    // Remove from scoreboard
+    delete session.gameState.scoreboard[playerId];
+
+    // Update leaderboard
+    session.gameState.leaderboard = getSortedLeaderboard(
+      session.gameState.scoreboard,
+      session.gameState.participants
+    );
+
+    console.log(`Removed participant ${playerId} from session ${sessionId}`);
+
+    // If this player was in the current pair, restart the round
+    if (
+      session.gameState.currentPair &&
+      (session.gameState.currentPair.player1.id === playerId ||
+        session.gameState.currentPair.player2.id === playerId)
+    ) {
+      console.log(
+        `Removed player was in current pair, restarting round in session ${sessionId}`
+      );
+
+      // Clear current round and restart countdown
+      if (session.gameState.timerId) {
+        clearInterval(session.gameState.timerId);
+      }
+      startSplitStealCountdown(sessionId, session.gameState.countdownDuration);
+    } else {
+      // Broadcast updated participants
+      io.to(sessionId).emit("split-steal-state", {
+        phase: session.gameState.phase,
+        timeLeft: session.gameState.timeLeft,
+        currentPair: session.gameState.currentPair,
+        results: session.gameState.results,
+        leaderboard: session.gameState.leaderboard,
+        participants: session.gameState.participants,
+        currentPlayer: session.gameState.currentPlayer,
+      });
+    }
+  });
+
+  // Split or Steal - Skip Round
+  socket.on("split-steal-skip-round", (sessionId) => {
+    const session = sessions[sessionId];
+
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game type" });
+      return;
+    }
+
+    // Only the host can skip rounds
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only the host can skip rounds" });
+      return;
+    }
+
+    console.log(`Host skipped round in session ${sessionId}`);
+
+    // Clear any existing timer
+    if (session.gameState.timerId) {
+      clearInterval(session.gameState.timerId);
+    }
+
+    // Restart countdown
+    startSplitStealCountdown(sessionId, session.gameState.countdownDuration);
+  });
+
+  // Also update the select-game handler to include Split or Steal initialization:
+  // Find the existing select-game handler and add this case:
+
+  // Also make sure to clear Split or Steal timers in the handlePlayerDisconnect function:
+  // Add this to the existing cleanup code in handlePlayerDisconnect:
+
+  // Clear Split or Steal timers
+
+  module.exports = { app, server };
+
   socket.on("restart-game", (sessionId, returnToLobby = false) => {
     const session = sessions[sessionId];
 
@@ -2316,6 +2813,7 @@ function handlePlayerDisconnect(socketId) {
                   // No players left, clean up the session
                   if (session.gameState && session.gameState.timerId) {
                     clearInterval(session.gameState.timerId);
+                    session.gameState.timerId = null;
                   }
                   delete sessions[sessionId];
                 }
@@ -2589,7 +3087,6 @@ function shuffleArray(array) {
   }
   return array;
 }
-
 // Start the server only when this file is run directly
 const PORT = process.env.PORT || 3001;
 if (require.main === module) {
@@ -2598,4 +3095,12 @@ if (require.main === module) {
   });
 }
 
-module.exports = { app, server };
+// Add this to server/index.js
+
+// Import the game engine utilities at the top of the file
+const {
+  pairPlayers,
+  calculateResults,
+  updateLeaderboard,
+  getSortedLeaderboard,
+} = require("./splitOrStealGameEngine");

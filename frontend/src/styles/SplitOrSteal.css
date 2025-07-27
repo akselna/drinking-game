@@ -1,0 +1,559 @@
+/* SplitOrSteal.css */
+
+.split-or-steal {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.split-or-steal h1 {
+  font-size: 3rem;
+  margin-bottom: 2rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.split-or-steal h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+/* Setup Phase */
+.setup-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 600px;
+  backdrop-filter: blur(10px);
+}
+
+.setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 16px;
+}
+
+.form-group input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.participants-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.participants-list {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  min-height: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.participant-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+.participant-name {
+  font-weight: 500;
+}
+
+.remove-participant {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.remove-participant:hover {
+  background: #c0392b;
+}
+
+.add-participant-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.add-participant-input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.add-participant-button {
+  background: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.add-participant-button:hover {
+  background: #2ecc71;
+}
+
+.start-game-button {
+  background: #f39c12;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.start-game-button:hover {
+  background: #e67e22;
+  transform: translateY(-2px);
+}
+
+.start-game-button:disabled {
+  background: #7f8c8d;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Dashboard and Controller Common */
+.countdown-display {
+  font-size: 4rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 2rem 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.countdown-display.warning {
+  animation: flash-red 1s infinite;
+}
+
+@keyframes flash-red {
+  0%,
+  100% {
+    color: #e74c3c;
+  }
+  50% {
+    color: #c0392b;
+  }
+}
+
+.countdown-label {
+  font-size: 1.2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+/* Dashboard */
+.dashboard-container {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.settings-button {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.settings-button:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.phase-container {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.negotiation-info,
+.decision-info {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.player-pair {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.player-vs {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #f39c12;
+}
+
+.reveal-results {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
+}
+
+.outcome-message {
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.choice-display {
+  display: flex;
+  justify-content: center;
+  gap: 3rem;
+  margin: 1.5rem 0;
+}
+
+.choice-item {
+  text-align: center;
+}
+
+.choice-name {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.choice-value {
+  font-size: 2rem;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-weight: bold;
+}
+
+.choice-split {
+  background: #27ae60;
+  color: white;
+}
+
+.choice-steal {
+  background: #e74c3c;
+  color: white;
+}
+
+.choice-unknown {
+  background: #7f8c8d;
+  color: white;
+}
+
+.drinking-penalty {
+  background: rgba(231, 76, 60, 0.2);
+  border: 2px solid #e74c3c;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.penalty-title {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  color: #e74c3c;
+}
+
+/* Controller */
+.controller-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.choice-buttons {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+}
+
+.choice-button {
+  flex: 1;
+  padding: 2rem 1rem;
+  border: none;
+  border-radius: 16px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.choice-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.split-button {
+  background: #27ae60;
+  color: white;
+}
+
+.split-button:hover:not(:disabled) {
+  background: #2ecc71;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(39, 174, 96, 0.3);
+}
+
+.steal-button {
+  background: #e74c3c;
+  color: white;
+}
+
+.steal-button:hover:not(:disabled) {
+  background: #c0392b;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(231, 76, 60, 0.3);
+}
+
+.wait-message {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.wait-message h3 {
+  margin-bottom: 1rem;
+}
+
+.current-player-indicator {
+  background: rgba(241, 196, 15, 0.2);
+  border: 2px solid #f1c40f;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.your-turn {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #f1c40f;
+}
+
+/* Leaderboard */
+.leaderboard {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  width: 100%;
+  max-width: 500px;
+  backdrop-filter: blur(10px);
+}
+
+.leaderboard h3 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.leaderboard-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.leaderboard-item.first-place {
+  background: rgba(241, 196, 15, 0.2);
+  border: 2px solid #f1c40f;
+}
+
+.leaderboard-item.current-user {
+  border: 2px solid #3498db;
+}
+
+.player-rank {
+  font-weight: bold;
+  margin-right: 1rem;
+  min-width: 30px;
+}
+
+.player-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.player-score {
+  font-weight: bold;
+  color: #f1c40f;
+}
+
+/* Settings Modal */
+.settings-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.settings-content {
+  background: #2c3e50;
+  border-radius: 16px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.settings-content h3 {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.settings-actions button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-settings {
+  background: #7f8c8d;
+  color: white;
+}
+
+.close-settings:hover {
+  background: #95a5a6;
+}
+
+.skip-round {
+  background: #e67e22;
+  color: white;
+}
+
+.skip-round:hover {
+  background: #f39c12;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .split-or-steal h1 {
+    font-size: 2rem;
+  }
+
+  .countdown-display {
+    font-size: 3rem;
+  }
+
+  .setup-container,
+  .dashboard-container,
+  .controller-container {
+    padding: 1rem;
+  }
+
+  .choice-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .choice-button {
+    padding: 1.5rem;
+    font-size: 1.2rem;
+  }
+
+  .player-pair {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .choice-display {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .settings-content {
+    width: 95%;
+    padding: 1.5rem;
+  }
+}
