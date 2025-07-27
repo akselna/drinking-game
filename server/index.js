@@ -2231,11 +2231,20 @@ io.on("connection", (socket) => {
 
     console.log(`Configuring Split or Steal game in session ${sessionId}`);
 
+    // Filter out non-player entities from the participant list
+    const validParticipants = config.participants.filter(
+      (p) =>
+        p &&
+        p.id &&
+        p.name &&
+        !["host", "control device"].includes(p.name.toLowerCase())
+    );
+
     // Initialize game state
     session.gameState = {
       phase: "countdown",
       countdownDuration: config.countdownDuration,
-      participants: config.participants,
+      participants: validParticipants,
       scoreboard: {}, // player_id -> points
       leaderboard: [], // sorted array for display
       currentPair: null,
@@ -2247,7 +2256,7 @@ io.on("connection", (socket) => {
     };
 
     // Initialize scoreboard for all participants
-    config.participants.forEach((participant) => {
+    validParticipants.forEach((participant) => {
       session.gameState.scoreboard[participant.id] = 0;
     });
 
