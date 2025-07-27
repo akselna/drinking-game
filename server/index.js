@@ -6,6 +6,7 @@ require("dotenv").config();
 const spotifyService = require("./spotify");
 const path = require("path");
 const sessionTimers = new Map();
+const splitOrStealEngine = require("./splitOrStealGameEngine");
 
 function generateSessionId(length = 6) {
   const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789"; // Exclude 0 and O
@@ -169,6 +170,7 @@ const GAME_TYPES = {
   BEAT4BEAT: "beat4Beat", // Add this line
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
   SKJENKEHJULET: "skjenkehjulet",
+  SPLIT_OR_STEAL: "splitOrSteal",
 };
 
 // Predefinerte "Jeg har aldri" setninger som brukes når brukerne går tom for egne
@@ -986,6 +988,8 @@ io.on("connection", (socket) => {
       };
     } else if (gameType === GAME_TYPES.SKJENKEHJULET) {
       session.gameState = { phase: "idle" };
+    } else if (gameType === GAME_TYPES.SPLIT_OR_STEAL) {
+      session.gameState = splitOrStealEngine.initGame(session.players);
     }
 
     // Notify all players about the game selection
@@ -2115,6 +2119,56 @@ io.on("connection", (socket) => {
 
     // Set phase to ended
     session.gameState.phase = "ended";
+  });
+
+  // ----- Split or Steal events -----
+  socket.on("split-or-steal-start-round", (sessionId) => {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+    session.gameState.round += 1;
+    session.gameState.pairs = splitOrStealEngine.pairPlayers(session.players);
+    session.gameState.choices = {};
+    session.gameState.phase = "negotiation";
+    io.to(sessionId).emit("split-or-steal-round-start", {
+      pairs: session.gameState.pairs,
+      round: session.gameState.round,
+      totalRounds: session.gameState.totalRounds,
+    });
+  });
+
+  socket.on("split-or-steal-choice", (sessionId, choice) => {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+    session.gameState.choices[socket.id] = choice;
+
+    // Check if all players in all pairs have chosen
+    const allChosen = session.gameState.pairs.every(([a, b]) => {
+      if (!b) return true;
+      return (
+        session.gameState.choices[a] && session.gameState.choices[b]
+      );
+    });
+
+    if (allChosen) {
+      const results = splitOrStealEngine.calculateResults(session.gameState);
+      splitOrStealEngine.updateLeaderboard(session.gameState, results);
+      session.gameState.phase = "reveal";
+      session.gameState.results = results;
+      io.to(sessionId).emit("split-or-steal-round-results", {
+        results,
+        leaderboard: session.gameState.leaderboard,
+        round: session.gameState.round,
+      });
+    }
+  });
+
+  socket.on("split-or-steal-chat", (sessionId, message) => {
+    const session = sessions[sessionId];
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+    io.to(sessionId).emit("split-or-steal-chat", {
+      from: socket.id,
+      message,
+    });
   });
 
   // Explicitly leave a session

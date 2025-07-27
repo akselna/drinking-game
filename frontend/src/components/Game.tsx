@@ -10,6 +10,8 @@ import DrinkOrJudge from "./DrinkOrJudge";
 import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
+import SplitOrStealDashboard from "./SplitOrStealDashboard";
+import SplitOrStealController from "./SplitOrStealController";
 import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
 
 // Game type constants (must match server constants)
@@ -21,6 +23,7 @@ const GAME_TYPES = {
   BEAT4BEAT: "beat4Beat",
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
   SKJENKEHJULET: "skjenkehjulet",
+  SPLIT_OR_STEAL: "splitOrSteal",
 };
 
 const Game: React.FC = () => {
@@ -379,6 +382,30 @@ const Game: React.FC = () => {
       case GAME_TYPES.BEAT4BEAT:
         return (
           <Beat4Beat
+            sessionId={sessionData.sessionId}
+            players={sessionData.players}
+            isHost={sessionData.isHost}
+            gameState={sessionData.gameState}
+            socket={socket}
+            restartGame={restartGame}
+            leaveSession={confirmLeaveSession}
+            returnToLobby={returnToLobby}
+          />
+        );
+      case GAME_TYPES.SPLIT_OR_STEAL:
+        return sessionData.isHost ? (
+          <SplitOrStealDashboard
+            sessionId={sessionData.sessionId}
+            players={sessionData.players}
+            isHost={sessionData.isHost}
+            gameState={sessionData.gameState}
+            socket={socket}
+            restartGame={restartGame}
+            leaveSession={confirmLeaveSession}
+            returnToLobby={returnToLobby}
+          />
+        ) : (
+          <SplitOrStealController
             sessionId={sessionData.sessionId}
             players={sessionData.players}
             isHost={sessionData.isHost}

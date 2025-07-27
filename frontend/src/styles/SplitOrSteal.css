@@ -1,0 +1,45 @@
+.split-or-steal-dashboard.dark,
+.split-or-steal-controller.dark {
+  background: #222;
+  color: #eee;
+  padding: 20px;
+  text-align: center;
+}
+
+.pairings .pair {
+  margin: 10px 0;
+}
+
+.choices button {
+  padding: 20px;
+  font-size: 1.5rem;
+  margin: 10px;
+  width: 40%;
+}
+
+.choice.split {
+  background: #357edd;
+  color: #fff;
+}
+
+.choice.steal {
+  background: #e63946;
+  color: #fff;
+}
+
+.choice.selected {
+  opacity: 0.5;
+}
+
+.chat-box {
+  margin-bottom: 10px;
+}
+.chat-box .messages {
+  max-height: 100px;
+  overflow-y: auto;
+  margin-bottom: 5px;
+}
+.timer {
+  font-size: 2rem;
+  margin: 10px 0;
+}
