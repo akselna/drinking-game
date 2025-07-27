@@ -100,6 +100,12 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       icon: "😂",
       color: "#6200ea",
     },
+    {
+      id: "splitOrSteal",
+      name: "Split or Steal",
+      icon: "💰",
+      color: "#3f51b5",
+    },
     { id: "skjenkehjulet", name: "Skjenkehjulet", icon: "🍻", color: "#ff9800" },
   ];
 
