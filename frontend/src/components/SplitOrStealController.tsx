@@ -50,8 +50,15 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
 
-      // Check if it's my turn
-      if (gameState.currentPair && gameState.currentPlayer) {
+      // Determine if this device acts as a shared controller
+      const isParticipant = gameState.participants?.some(
+        (p: any) => p.id === socket?.id
+      );
+
+      if (!isHost && !isParticipant) {
+        // Shared controller can always act when there's a current player
+        setIsMyTurn(!!gameState.currentPlayer);
+      } else if (gameState.currentPair && gameState.currentPlayer) {
         setIsMyTurn(gameState.currentPlayer === socket?.id);
       } else {
         setIsMyTurn(false);
@@ -95,7 +102,14 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       // Update current player and my turn status
       if (data.currentPlayer !== undefined) {
         setCurrentPlayer(data.currentPlayer);
-        setIsMyTurn(data.currentPlayer === socket?.id);
+        // On a shared controller we always allow making the choice
+        // for the current player regardless of this socket's id.
+        const isParticipant = participants.some((p) => p.id === socket?.id);
+        if (!isHost && !isParticipant) {
+          setIsMyTurn(true);
+        } else {
+          setIsMyTurn(data.currentPlayer === socket?.id);
+        }
       }
 
       // Reset choice when phase changes
@@ -120,10 +134,13 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   };
 
   const handleChoice = (choice: "SPLIT" | "STEAL") => {
-    if (!socket || !isMyTurn || myChoice) return;
+    if (!socket || !isMyTurn || myChoice || !currentPlayer) return;
 
     setMyChoice(choice);
-    socket.emit("split-steal-choice", sessionId, choice);
+    socket.emit("split-steal-choice", sessionId, {
+      choice,
+      playerId: currentPlayer,
+    });
   };
 
   const handleAddParticipant = () => {
@@ -146,6 +163,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     currentPair.player2 &&
     (currentPair.player1.id === socket.id ||
       currentPair.player2.id === socket.id);
+
+  const isParticipant = participants.some((p) => p.id === socket?.id);
+  const isController = !isHost && !isParticipant;
 
   const getMyPointsFromLeaderboard = (): number => {
     if (!socket?.id) return 0;
@@ -213,7 +233,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   );
 
   const renderDecisionPhase = () => {
-    if (!isInCurrentDuel) {
+    if (!isInCurrentDuel && !isController) {
       return (
         <div className="controller-container">
           <div className="wait-message">
@@ -232,16 +252,23 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       );
     }
 
+    const currentPlayerObj = participants.find((p) => p.id === currentPlayer);
+
     return (
       <div className="controller-container">
-        {isMyTurn && (
+        {isController ? (
+          <div className="current-player-indicator">
+            <div className="your-turn">
+              {currentPlayerObj ? `${currentPlayerObj.name}'s turn` : "Player's turn"}
+            </div>
+            <p>Choose the strategy for this player:</p>
+          </div>
+        ) : isMyTurn ? (
           <div className="current-player-indicator">
             <div className="your-turn">It's your turn!</div>
             <p>Choose your strategy: Split or Steal?</p>
           </div>
-        )}
-
-        {!isMyTurn && currentPlayer && currentPair && (
+        ) : (
           <div className="wait-message">
             <h3>Waiting for opponent</h3>
             <p>
