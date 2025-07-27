@@ -2051,16 +2051,8 @@ io.on("connection", (socket) => {
     const session = sessions[sessionId];
     if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
 
-    // Filter out non-player entities like host and control device
-    const eligibleParticipants = session.gameState.participants.filter(
-      (p) =>
-        p &&
-        p.name &&
-        !["host", "control device"].includes(p.name.toLowerCase())
-    );
-
-    // Pair players
-    const pair = pairPlayers(eligibleParticipants);
+    // Pair players from the configured participants list
+    const pair = pairPlayers(session.gameState.participants);
 
     if (!pair) {
       // Not enough players, restart countdown
@@ -2279,7 +2271,7 @@ io.on("connection", (socket) => {
   });
 
   // Split or Steal - Player Choice
-  socket.on("split-steal-choice", (sessionId, choice) => {
+  socket.on("split-steal-choice", (sessionId, data) => {
     const session = sessions[sessionId];
 
     if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
@@ -2292,8 +2284,19 @@ io.on("connection", (socket) => {
       return;
     }
 
+    let choice;
+    let playerId;
+
+    if (typeof data === "string") {
+      choice = data;
+      playerId = socket.id;
+    } else {
+      choice = data.choice;
+      playerId = data.playerId;
+    }
+
     // Check if it's this player's turn
-    if (session.gameState.currentPlayer !== socket.id) {
+    if (session.gameState.currentPlayer !== playerId) {
       socket.emit("error", { message: "Not your turn" });
       return;
     }
@@ -2304,10 +2307,10 @@ io.on("connection", (socket) => {
       return;
     }
 
-    console.log(`Player ${socket.id} chose ${choice} in session ${sessionId}`);
+    console.log(`Player ${playerId} chose ${choice} in session ${sessionId}`);
 
     // Store the choice
-    session.gameState.choices[socket.id] = choice;
+    session.gameState.choices[playerId] = choice;
 
     const pair = session.gameState.currentPair;
 
