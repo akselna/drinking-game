@@ -11,6 +11,9 @@ import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
 import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
+import SplitOrStealDashboard from "./SplitOrStealDashboard";
+import SplitOrStealController from "./SplitOrStealController";
+import SplitOrStealSetup from "./SplitOrStealSetup";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
@@ -20,6 +23,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge",
   BEAT4BEAT: "beat4Beat",
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SPLIT_OR_STEAL: "splitOrSteal",
   SKJENKEHJULET: "skjenkehjulet",
 };
 
@@ -187,6 +191,21 @@ const Game: React.FC = () => {
       }));
     };
 
+    // Split or Steal state updates
+    const handleSplitStealState = (state: any) => {
+      setSessionData((prev) => ({
+        ...prev,
+        gameState: state,
+      }));
+    };
+
+    const handleSplitStealTimer = (t: number) => {
+      setSessionData((prev) => ({
+        ...prev,
+        gameState: { ...(prev.gameState || {}), timer: t },
+      }));
+    };
+
     const handleDisconnect = (reason: string) => {
       console.log("Socket disconnected:", reason);
       // Only set error if we're not already reconnecting
@@ -223,6 +242,8 @@ const Game: React.FC = () => {
     socket.on("error", handleError);
     socket.on("game-restarted", handleGameRestarted);
     socket.on("disconnect", handleDisconnect);
+    socket.on("split-steal-state", handleSplitStealState);
+    socket.on("split-steal-timer", handleSplitStealTimer);
 
     // Lambo event listeners
     socket.on("lambo-votes-update", handleLamboVotesUpdate);
@@ -244,6 +265,8 @@ const Game: React.FC = () => {
       socket.off("error", handleError);
       socket.off("game-restarted", handleGameRestarted);
       socket.off("disconnect", handleDisconnect);
+      socket.off("split-steal-state", handleSplitStealState);
+      socket.off("split-steal-timer", handleSplitStealTimer);
 
       // Lambo cleanup
       socket.off("lambo-votes-update", handleLamboVotesUpdate);
@@ -387,6 +410,31 @@ const Game: React.FC = () => {
             restartGame={restartGame}
             leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
+          />
+        );
+      case GAME_TYPES.SPLIT_OR_STEAL:
+        if (sessionData.isHost) {
+          if (sessionData.gameState?.phase === "setup") {
+            return (
+              <SplitOrStealSetup
+                sessionId={sessionData.sessionId}
+                socket={socket}
+              />
+            );
+          }
+          return (
+            <SplitOrStealDashboard
+              sessionId={sessionData.sessionId}
+              gameState={sessionData.gameState}
+              socket={socket}
+            />
+          );
+        }
+        return (
+          <SplitOrStealController
+            sessionId={sessionData.sessionId}
+            gameState={sessionData.gameState}
+            socket={socket}
           />
         );
       case GAME_TYPES.SKJENKEHJULET:
