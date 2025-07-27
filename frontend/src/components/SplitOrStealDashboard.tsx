@@ -32,6 +32,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [penaltySystem, setPenaltySystem] = useState<string>(
+    gameState?.penaltySystem || ""
+  );
+  const [penalties, setPenalties] = useState<any>(gameState?.penalties || null);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -41,6 +45,8 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
       setParticipants(gameState.participants || []);
+      setPenaltySystem(gameState.penaltySystem || "");
+      setPenalties(gameState.penalties || null);
     }
   }, [gameState]);
 
@@ -67,6 +73,13 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+
+      if (data.penaltySystem) {
+        setPenaltySystem(data.penaltySystem);
+      }
+      if (data.penalties) {
+        setPenalties(data.penalties);
       }
     };
 
@@ -105,6 +118,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     setShowSettings(false);
   };
 
+  const formatPenalty = (p: any) =>
+    typeof p === "number" ? `${p} sips` : p;
+
   const renderCountdownPhase = () => (
     <div className="phase-container">
       <div className="countdown-label">Time until next duel</div>
@@ -114,6 +130,17 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
         Players are preparing for the next duel...
       </p>
+      {penalties && (
+        <div style={{ marginTop: "1rem", textAlign: "center" }}>
+          <strong>Next up:</strong>
+          <div>Split: {formatPenalty(penalties.splitSplit)}</div>
+          <div>
+            Split/Steal: {formatPenalty(penalties.splitSteal.splitter)}/
+            {formatPenalty(penalties.splitSteal.stealer)}
+          </div>
+          <div>Steal/Steal: {formatPenalty(penalties.stealSteal)}</div>
+        </div>
+      )}
     </div>
   );
 
@@ -224,7 +251,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                       return (
                         <div key={playerId} style={{ marginTop: "0.5rem" }}>
                           <strong>{player?.name || "Unknown Player"}</strong>{" "}
-                          must drink!
+                          must drink {formatPenalty(results.penaltyAmounts[playerId])}!
                         </div>
                       );
                     })}
