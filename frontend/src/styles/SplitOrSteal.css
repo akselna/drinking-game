@@ -1,0 +1,53 @@
+.split-steal {
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+.split-steal .choice-buttons button {
+  font-size: 2rem;
+  margin: 10px;
+  padding: 20px 40px;
+}
+
+.split-steal .chat-box {
+  border: 1px solid #444;
+  padding: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.split-steal .messages {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.split-steal .input-row {
+  display: flex;
+}
+
+.split-steal .input-row input {
+  flex: 1;
+  padding: 4px;
+  margin-right: 4px;
+}
+
+.split-steal.dash .pair {
+  margin: 5px 0;
+}
+
+.split-steal .timer {
+  font-size: 3rem;
+  margin-top: 10px;
+}
+
+.split-steal .timer.danger {
+  color: red;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
