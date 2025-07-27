@@ -2023,6 +2023,7 @@ io.on("connection", (socket) => {
       timeLeft: duration,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2085,6 +2086,7 @@ io.on("connection", (socket) => {
       currentPair: pair,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2134,6 +2136,7 @@ io.on("connection", (socket) => {
       currentPlayer: session.gameState.currentPlayer,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2185,6 +2188,7 @@ io.on("connection", (socket) => {
       results: results,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2252,6 +2256,7 @@ io.on("connection", (socket) => {
       phase: "countdown",
       countdownDuration: config.countdownDuration,
       participants: validParticipants,
+      penaltyMode: config.penaltyMode || "party",
       scoreboard: {}, // player_id -> points
       leaderboard: [], // sorted array for display
       currentPair: null,
@@ -2348,6 +2353,7 @@ io.on("connection", (socket) => {
         currentPlayer: session.gameState.currentPlayer,
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
+        penaltyMode: session.gameState.penaltyMode,
       });
     }
   });
@@ -2408,6 +2414,7 @@ io.on("connection", (socket) => {
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
       currentPlayer: session.gameState.currentPlayer,
+      penaltyMode: session.gameState.penaltyMode,
     });
   });
 
@@ -2461,6 +2468,7 @@ io.on("connection", (socket) => {
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
         currentPlayer: session.gameState.currentPlayer,
+        penaltyMode: session.gameState.penaltyMode,
       });
     }
   });

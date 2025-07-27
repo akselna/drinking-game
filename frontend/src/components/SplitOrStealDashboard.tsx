@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CustomSocket } from "../types/socket.types";
+import { PENALTY_SYSTEMS, PenaltyMode } from "../data/penaltySystems";
 import "../styles/SplitOrSteal.css";
 
 interface SplitOrStealDashboardProps {
@@ -31,6 +32,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   const [participants, setParticipants] = useState<
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
+  const [penaltyMode, setPenaltyMode] = useState<PenaltyMode>(
+    gameState?.penaltyMode || "party"
+  );
   const [newParticipantName, setNewParticipantName] = useState<string>("");
 
   // Initialize state from gameState
@@ -41,6 +45,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
       setParticipants(gameState.participants || []);
+      setPenaltyMode(gameState.penaltyMode || "party");
     }
   }, [gameState]);
 
@@ -67,6 +72,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+
+      if (data.penaltyMode) {
+        setPenaltyMode(data.penaltyMode);
       }
     };
 
@@ -114,6 +123,21 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
         Players are preparing for the next duel...
       </p>
+      <div className="penalty-info">
+        <h4 style={{ marginBottom: "0.5rem" }}>Next up:</h4>
+        {(() => {
+          const p = PENALTY_SYSTEMS[penaltyMode];
+          return (
+            <ul style={{ margin: 0, paddingLeft: "1.2rem", lineHeight: 1.4 }}>
+              <li>Split/Split: {p.splitSplit}</li>
+              <li>
+                Split/Steal: {p.splitSteal.splitter}/{p.splitSteal.stealer}
+              </li>
+              <li>Steal/Steal: {p.stealSteal}</li>
+            </ul>
+          );
+        })()}
+      </div>
     </div>
   );
 
@@ -221,10 +245,27 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                         (currentPair.player1.id === playerId
                           ? currentPair.player1
                           : currentPair.player2);
+
+                      const p = PENALTY_SYSTEMS[penaltyMode];
+                      let amount = "";
+                      const c1 = results.choices[currentPair.player1.id];
+                      const c2 = results.choices[currentPair.player2.id];
+                      if (c1 === "SPLIT" && c2 === "SPLIT") {
+                        amount = p.splitSplit;
+                      } else if (c1 === "STEAL" && c2 === "STEAL") {
+                        amount = p.stealSteal;
+                      } else {
+                        const isSplitter =
+                          (playerId === currentPair.player1.id && c1 === "SPLIT") ||
+                          (playerId === currentPair.player2.id && c2 === "SPLIT");
+                        amount = isSplitter
+                          ? p.splitSteal.splitter
+                          : p.splitSteal.stealer;
+                      }
                       return (
                         <div key={playerId} style={{ marginTop: "0.5rem" }}>
                           <strong>{player?.name || "Unknown Player"}</strong>{" "}
-                          must drink!
+                          must drink {amount}
                         </div>
                       );
                     })}
