@@ -2013,7 +2013,8 @@ io.on("connection", (socket) => {
 
     session.gameState.phase = "countdown";
     session.gameState.timeLeft = duration;
-    session.gameState.currentPair = null;
+    // Pre-select the next pair so clients can see who's up next
+    session.gameState.currentPair = pairPlayers(session.gameState.participants);
     session.gameState.results = null;
     session.gameState.currentPlayer = null;
 
@@ -2021,6 +2022,8 @@ io.on("connection", (socket) => {
     io.to(sessionId).emit("split-steal-state", {
       phase: "countdown",
       timeLeft: duration,
+      currentPair: session.gameState.currentPair,
+      penaltyMode: session.gameState.penaltyMode,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2061,8 +2064,11 @@ io.on("connection", (socket) => {
     const session = sessions[sessionId];
     if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
 
-    // Pair players from the configured participants list
-    const pair = pairPlayers(session.gameState.participants);
+    // Use the pair selected during countdown, or choose a new one if missing
+    let pair = session.gameState.currentPair;
+    if (!pair) {
+      pair = pairPlayers(session.gameState.participants);
+    }
 
     if (!pair) {
       // Not enough players, restart countdown
@@ -2083,6 +2089,7 @@ io.on("connection", (socket) => {
       phase: "negotiation",
       timeLeft: 60,
       currentPair: pair,
+      penaltyMode: session.gameState.penaltyMode,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2132,6 +2139,7 @@ io.on("connection", (socket) => {
       phase: "decision",
       currentPair: session.gameState.currentPair,
       currentPlayer: session.gameState.currentPlayer,
+      penaltyMode: session.gameState.penaltyMode,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2183,6 +2191,7 @@ io.on("connection", (socket) => {
       timeLeft: 10,
       currentPair: pair,
       results: results,
+      penaltyMode: session.gameState.penaltyMode,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2260,6 +2269,7 @@ io.on("connection", (socket) => {
       timeLeft: config.countdownDuration,
       currentPlayer: null,
       timerId: null,
+      penaltyMode: config.penaltyMode || "party",
     };
 
     // Initialize scoreboard for all participants
@@ -2346,6 +2356,7 @@ io.on("connection", (socket) => {
         phase: "decision",
         currentPair: pair,
         currentPlayer: session.gameState.currentPlayer,
+        penaltyMode: session.gameState.penaltyMode,
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
       });
@@ -2405,6 +2416,7 @@ io.on("connection", (socket) => {
       timeLeft: session.gameState.timeLeft,
       currentPair: session.gameState.currentPair,
       results: session.gameState.results,
+      penaltyMode: session.gameState.penaltyMode,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
       currentPlayer: session.gameState.currentPlayer,
@@ -2458,6 +2470,7 @@ io.on("connection", (socket) => {
         timeLeft: session.gameState.timeLeft,
         currentPair: session.gameState.currentPair,
         results: session.gameState.results,
+        penaltyMode: session.gameState.penaltyMode,
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
         currentPlayer: session.gameState.currentPlayer,

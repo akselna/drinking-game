@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CustomSocket } from "../types/socket.types";
+import { penaltyModes } from "../data/penaltyModes";
 import "../styles/SplitOrSteal.css";
 
 interface SplitOrStealDashboardProps {
@@ -28,6 +29,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   const [currentPair, setCurrentPair] = useState<any>(null);
   const [results, setResults] = useState<any>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [penaltyMode, setPenaltyMode] = useState<string>(gameState?.penaltyMode || "party");
   const [participants, setParticipants] = useState<
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
@@ -41,6 +43,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
       setParticipants(gameState.participants || []);
+      if (gameState.penaltyMode) {
+        setPenaltyMode(gameState.penaltyMode);
+      }
     }
   }, [gameState]);
 
@@ -67,6 +72,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+
+      if (data.penaltyMode) {
+        setPenaltyMode(data.penaltyMode);
       }
     };
 
@@ -105,17 +114,40 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     setShowSettings(false);
   };
 
-  const renderCountdownPhase = () => (
-    <div className="phase-container">
-      <div className="countdown-label">Time until next duel</div>
-      <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
-        {formatTime(timeLeft)}
+  const renderCountdownPhase = () => {
+    const mode = penaltyModes.find((m) => m.id === penaltyMode);
+    return (
+      <div className="phase-container">
+        <div className="countdown-label">Time until next duel</div>
+        <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
+          {formatTime(timeLeft)}
+        </div>
+
+        {currentPair && currentPair.player1 && currentPair.player2 && mode && (
+          <>
+            <h3>Next Up:</h3>
+            <div className="player-pair">
+              <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+                {currentPair.player1.name}
+              </span>
+              <span className="player-vs">VS</span>
+              <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+                {currentPair.player2.name}
+              </span>
+            </div>
+            <div className="penalty-info">
+              <div>Split: {mode.splitSplit}</div>
+              <div>
+                Split/Steal: {mode.splitStealSplitter}/{" "}
+                {mode.splitStealStealer}
+              </div>
+              <div>Steal/Steal: {mode.stealSteal}</div>
+            </div>
+          </>
+        )}
       </div>
-      <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
-        Players are preparing for the next duel...
-      </p>
-    </div>
-  );
+    );
+  };
 
   const renderNegotiationPhase = () => (
     <div className="phase-container">
