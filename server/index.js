@@ -2051,8 +2051,16 @@ io.on("connection", (socket) => {
     const session = sessions[sessionId];
     if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
 
+    // Filter out non-player entities like host and control device
+    const eligibleParticipants = session.gameState.participants.filter(
+      (p) =>
+        p &&
+        p.name &&
+        !["host", "control device"].includes(p.name.toLowerCase())
+    );
+
     // Pair players
-    const pair = pairPlayers(session.gameState.participants);
+    const pair = pairPlayers(eligibleParticipants);
 
     if (!pair) {
       // Not enough players, restart countdown
