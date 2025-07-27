@@ -2023,6 +2023,8 @@ io.on("connection", (socket) => {
       timeLeft: duration,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltySystem: session.gameState.penaltySystem,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2085,6 +2087,8 @@ io.on("connection", (socket) => {
       currentPair: pair,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltySystem: session.gameState.penaltySystem,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2134,6 +2138,8 @@ io.on("connection", (socket) => {
       currentPlayer: session.gameState.currentPlayer,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltySystem: session.gameState.penaltySystem,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2157,6 +2163,25 @@ io.on("connection", (socket) => {
       choice1,
       choice2
     );
+
+    // Determine drink amounts based on selected penalty system
+    const p = session.gameState.penalties;
+    const penaltyAmounts = {};
+    if (choice1 === "SPLIT" && choice2 === "SPLIT") {
+      penaltyAmounts[pair.player1.id] = p.splitSplit;
+      penaltyAmounts[pair.player2.id] = p.splitSplit;
+    } else if (choice1 === "STEAL" && choice2 === "STEAL") {
+      penaltyAmounts[pair.player1.id] = p.stealSteal;
+      penaltyAmounts[pair.player2.id] = p.stealSteal;
+    } else if (choice1 === "STEAL" && choice2 === "SPLIT") {
+      penaltyAmounts[pair.player1.id] = p.splitSteal.stealer;
+      penaltyAmounts[pair.player2.id] = p.splitSteal.splitter;
+    } else {
+      penaltyAmounts[pair.player1.id] = p.splitSteal.splitter;
+      penaltyAmounts[pair.player2.id] = p.splitSteal.stealer;
+    }
+
+    results.penaltyAmounts = penaltyAmounts;
 
     // Update leaderboard
     session.gameState.scoreboard = updateLeaderboard(
@@ -2185,6 +2210,8 @@ io.on("connection", (socket) => {
       results: results,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltySystem: session.gameState.penaltySystem,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2247,6 +2274,8 @@ io.on("connection", (socket) => {
       (p) => p && p.id && p.name
     );
 
+    const penaltySystem = config.penaltySystem || "party";
+
     // Initialize game state
     session.gameState = {
       phase: "countdown",
@@ -2260,6 +2289,8 @@ io.on("connection", (socket) => {
       timeLeft: config.countdownDuration,
       currentPlayer: null,
       timerId: null,
+      penaltySystem,
+      penalties: PENALTY_SYSTEMS[penaltySystem],
     };
 
     // Initialize scoreboard for all participants
@@ -2348,6 +2379,8 @@ io.on("connection", (socket) => {
         currentPlayer: session.gameState.currentPlayer,
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
+        penaltySystem: session.gameState.penaltySystem,
+        penalties: session.gameState.penalties,
       });
     }
   });
@@ -2408,6 +2441,8 @@ io.on("connection", (socket) => {
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
       currentPlayer: session.gameState.currentPlayer,
+      penaltySystem: session.gameState.penaltySystem,
+      penalties: session.gameState.penalties,
     });
   });
 
@@ -2461,6 +2496,8 @@ io.on("connection", (socket) => {
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
         currentPlayer: session.gameState.currentPlayer,
+        penaltySystem: session.gameState.penaltySystem,
+        penalties: session.gameState.penalties,
       });
     }
   });
@@ -3130,4 +3167,5 @@ const {
   calculateResults,
   updateLeaderboard,
   getSortedLeaderboard,
+  PENALTY_SYSTEMS,
 } = require("./splitOrStealGameEngine");

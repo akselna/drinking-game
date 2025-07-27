@@ -1,6 +1,28 @@
 // splitOrStealGameEngine.js
 // Game logic utilities for Split or Steal
 
+// Penalty presets for different modes
+const PENALTY_SYSTEMS = {
+  party: {
+    name: "Party Mode",
+    splitSplit: 5,
+    splitSteal: { splitter: 10, stealer: 0 },
+    stealSteal: 20,
+  },
+  casual: {
+    name: "Casual Mode",
+    splitSplit: 2,
+    splitSteal: { splitter: 5, stealer: 0 },
+    stealSteal: 10,
+  },
+  blackout: {
+    name: "Blackout Mode",
+    splitSplit: 10,
+    splitSteal: { splitter: "½-chug (~12–15)", stealer: 0 },
+    stealSteal: "Full chug (~30–35)",
+  },
+};
+
 /**
  * Randomly pair players for a duel
  * @param {Array} participants - Array of participant objects {id, name}
@@ -148,4 +170,5 @@ module.exports = {
   calculateResults,
   updateLeaderboard,
   getSortedLeaderboard,
+  PENALTY_SYSTEMS,
 };
