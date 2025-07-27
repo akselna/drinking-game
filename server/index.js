@@ -168,6 +168,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
   BEAT4BEAT: "beat4Beat", // Add this line
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SPLIT_OR_STEAL: "splitOrSteal",
   SKJENKEHJULET: "skjenkehjulet",
 };
 
@@ -986,6 +987,15 @@ io.on("connection", (socket) => {
       };
     } else if (gameType === GAME_TYPES.SKJENKEHJULET) {
       session.gameState = { phase: "idle" };
+    } else if (gameType === GAME_TYPES.SPLIT_OR_STEAL) {
+      session.gameState = {
+        phase: "roundSetup",
+        round: 1,
+        totalRounds: 5,
+        pairs: [],
+        choices: {},
+        leaderboard: {},
+      };
     }
 
     // Notify all players about the game selection

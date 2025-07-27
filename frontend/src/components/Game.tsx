@@ -11,6 +11,8 @@ import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
 import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
+import SplitOrStealDashboard from "./SplitOrStealDashboard";
+import SplitOrStealController from "./SplitOrStealController";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
@@ -20,6 +22,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge",
   BEAT4BEAT: "beat4Beat",
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SPLIT_OR_STEAL: "splitOrSteal",
   SKJENKEHJULET: "skjenkehjulet",
 };
 
@@ -387,6 +390,22 @@ const Game: React.FC = () => {
             restartGame={restartGame}
             leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
+          />
+        );
+      case GAME_TYPES.SPLIT_OR_STEAL:
+        return sessionData.isHost ? (
+          <SplitOrStealDashboard
+            sessionId={sessionData.sessionId}
+            players={sessionData.players}
+            gameState={sessionData.gameState}
+            socket={socket}
+          />
+        ) : (
+          <SplitOrStealController
+            sessionId={sessionData.sessionId}
+            players={sessionData.players}
+            gameState={sessionData.gameState}
+            socket={socket}
           />
         );
       case GAME_TYPES.SKJENKEHJULET:
