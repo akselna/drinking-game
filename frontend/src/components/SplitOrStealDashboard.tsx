@@ -22,83 +22,70 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   gameState,
   socket,
 }) => {
-  const [phase, setPhase] = useState<string>(gameState?.phase || "roundSetup");
-  const [pairs, setPairs] = useState<Pairing[]>([]);
-  const [countdown, setCountdown] = useState<number>(20);
-  const [results, setResults] = useState<any[]>([]);
+  const [phase, setPhase] = useState<string>(gameState?.phase || "setup");
+  const [currentPair, setCurrentPair] = useState<Pairing | null>(null);
+  const [timer, setTimer] = useState<number>(0);
+  const [results, setResults] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any>({});
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleRoundStart = (data: any) => {
-      setPhase("negotiation");
-      setPairs(
-        data.pairs.map((p: any) => ({
-          idA: p[0].id,
-          nameA: p[0].name,
-          idB: p[1]?.id,
-          nameB: p[1]?.name,
-        }))
-      );
-      setResults([]);
-      setCountdown(20);
+    const handleState = (state: any) => {
+      setPhase(state.phase);
+      setTimer(state.timer || 0);
+      if (state.currentPair) {
+        setCurrentPair({
+          idA: state.currentPair[0].id,
+          nameA: state.currentPair[0].name,
+          idB: state.currentPair[1]?.id,
+          nameB: state.currentPair[1]?.name,
+        });
+      } else {
+        setCurrentPair(null);
+      }
+      if (state.leaderboard) setLeaderboard(state.leaderboard);
+      if (state.results) setResults(state.results);
     };
 
-    const handleReveal = (data: any) => {
-      setPhase("reveal");
-      setResults(data.results);
-      setLeaderboard(data.leaderboard);
-    };
-
-    socket.on("split-steal-round-start", handleRoundStart);
-    socket.on("split-steal-reveal", handleReveal);
+    socket.on("split-steal-state", handleState);
+    socket.on("split-steal-timer", (t: number) => setTimer(t));
     return () => {
-      socket.off("split-steal-round-start", handleRoundStart);
-      socket.off("split-steal-reveal", handleReveal);
+      socket.off("split-steal-state", handleState);
+      socket.off("split-steal-timer");
     };
   }, [socket]);
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (phase === "negotiation" && countdown > 0) {
-      timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    }
-    return () => clearTimeout(timer);
-  }, [phase, countdown]);
-
-  const startRound = () => {
+  const startCountdown = () => {
     if (socket) {
-      socket.emit("split-steal-start-round", sessionId);
+      socket.emit("split-steal-start", sessionId);
     }
   };
 
-  const renderPairs = () => (
-    <div className="pairs">
-      {pairs.map((p, idx) => (
-        <div key={idx} className="pair">
-          <span>{p.nameA}</span>
-          <span>vs</span>
-          <span>{p.nameB || "Sitter over"}</span>
-        </div>
-      ))}
-    </div>
-  );
+  const renderPair = () => {
+    if (!currentPair) return null;
+    return (
+      <div className="pair">
+        <span>{currentPair.nameA}</span>
+        <span>vs</span>
+        <span>{currentPair.nameB || "Sitter over"}</span>
+      </div>
+    );
+  };
 
-  const renderResults = () => (
-    <div className="results">
-      {results.map((r, idx) => {
-        const [a, b] = r.pair;
-        return (
-          <div key={idx} className="result">
-            <span>{a.name}</span>
-            <span>{r.outcome}</span>
-            <span>{b ? b.name : ""}</span>
-          </div>
-        );
-      })}
-    </div>
-  );
+  const renderResults = () => {
+    if (!results) return null;
+    const [a, b] = results.pair;
+    return (
+      <div className="results">
+        <div className="result">
+          <span>{a.name}</span>
+          <span>{results.outcome}</span>
+          <span>{b ? b.name : ""}</span>
+        </div>
+      </div>
+    );
+  };
 
   const renderLeaderboard = () => (
     <div className="leaderboard">
@@ -116,24 +103,39 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
   return (
     <div className="split-steal dash">
-      {phase === "roundSetup" && (
+      {phase === "setup" && (
         <div className="center">
-          <button onClick={startRound} className="btn-primary">
-            Start Round
+          <button onClick={startCountdown} className="btn-primary">
+            Start
           </button>
+        </div>
+      )}
+      {phase === "countdown" && (
+        <div>
+          <h3>Time until next duel</h3>
+          <div
+            className={`countdown-text ${timer <= 10 ? "flash" : ""}`}
+          >
+            {timer}
+          </div>
         </div>
       )}
       {phase === "negotiation" && (
         <div>
-          <h2>Forhandling - {countdown}</h2>
-          {renderPairs()}
+          <h2>Forhandling - {timer}</h2>
+          {renderPair()}
         </div>
       )}
+      {phase === "decision" && renderPair()}
       {phase === "reveal" && (
         <div>
-          <h2>Resultater</h2>
-          {renderResults()}
-          {renderLeaderboard()}
+          <h2>Resultater om {timer}</h2>
+          {timer === 0 && (
+            <>
+              {renderResults()}
+              {renderLeaderboard()}
+            </>
+          )}
         </div>
       )}
     </div>

@@ -17,50 +17,43 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 }) => {
   const [phase, setPhase] = useState<string>(gameState?.phase || "waiting");
   const [choice, setChoice] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number>(20);
+  const [timer, setTimer] = useState<number>(0);
   const [chatInput, setChatInput] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [result, setResult] = useState<any>(null);
+  const [isTurn, setIsTurn] = useState<boolean>(false);
 
   useEffect(() => {
     if (!socket) return;
 
-    const handleRoundStart = () => {
-      setPhase("negotiation");
-      setChoice(null);
-      setResult(null);
-      setCountdown(20);
-      setChatMessages([]);
-    };
-
-    const handleReveal = (data: any) => {
-      setPhase("reveal");
-      setResult(data.results.find((r: any) =>
-        r.pair.some((p: any) => p.id === socket.id)
-      ));
+    const handleState = (state: any) => {
+      setPhase(state.phase);
+      setTimer(state.timer || 0);
+      setIsTurn(state.currentTurn === socket.id);
+      if (state.phase === "reveal" && state.results) {
+        const res = state.results;
+        if (res.pair.some((p: any) => p.id === socket.id)) {
+          setResult(res);
+        }
+      }
+      if (state.phase !== "reveal") {
+        setResult(null);
+      }
     };
 
     const handleChat = (data: any) => {
       setChatMessages((msgs) => [...msgs, data]);
     };
 
-    socket.on("split-steal-round-start", handleRoundStart);
-    socket.on("split-steal-reveal", handleReveal);
+    socket.on("split-steal-state", handleState);
+    socket.on("split-steal-timer", (t: number) => setTimer(t));
     socket.on("split-steal-chat", handleChat);
     return () => {
-      socket.off("split-steal-round-start", handleRoundStart);
-      socket.off("split-steal-reveal", handleReveal);
+      socket.off("split-steal-state", handleState);
+      socket.off("split-steal-timer");
       socket.off("split-steal-chat", handleChat);
     };
   }, [socket]);
-
-  useEffect(() => {
-    let t: NodeJS.Timeout;
-    if (phase === "negotiation" && countdown > 0) {
-      t = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    }
-    return () => clearTimeout(t);
-  }, [phase, countdown]);
 
   const sendChat = () => {
     if (socket && chatInput.trim()) {
@@ -70,10 +63,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   };
 
   const sendChoice = (c: string) => {
-    if (socket && !choice) {
+    if (socket && !choice && isTurn) {
       setChoice(c);
       socket.emit("split-steal-choice", sessionId, c);
-      setPhase("waiting");
+      setIsTurn(false);
     }
   };
 
@@ -81,7 +74,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     <div className="split-steal controller">
       {phase === "negotiation" && (
         <div>
-          <div className="timer">{countdown}</div>
+      <div className="timer">{timer}</div>
           <div className="chat-box">
             <div className="messages">
               {chatMessages.map((m, i) => (
@@ -101,7 +94,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
           </div>
         </div>
       )}
-      {phase !== "reveal" && (
+      {phase === "decision" && isTurn && (
         <div className="choice-buttons">
           <button
             className="split-btn"
@@ -118,6 +111,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
             STEAL
           </button>
         </div>
+      )}
+      {phase === "decision" && !isTurn && (
+        <div className="waiting">Venter på motspiller...</div>
       )}
       {phase === "reveal" && result && (
         <div className="reveal">

@@ -13,6 +13,7 @@ import NotAllowedToLaugh from "./NotAllowedToLaugh";
 import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
 import SplitOrStealDashboard from "./SplitOrStealDashboard";
 import SplitOrStealController from "./SplitOrStealController";
+import SplitOrStealSetup from "./SplitOrStealSetup";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
@@ -393,14 +394,26 @@ const Game: React.FC = () => {
           />
         );
       case GAME_TYPES.SPLIT_OR_STEAL:
-        return sessionData.isHost ? (
-          <SplitOrStealDashboard
-            sessionId={sessionData.sessionId}
-            players={sessionData.players}
-            gameState={sessionData.gameState}
-            socket={socket}
-          />
-        ) : (
+        if (sessionData.isHost) {
+          if (sessionData.gameState?.phase === "setup") {
+            return (
+              <SplitOrStealSetup
+                sessionId={sessionData.sessionId}
+                players={sessionData.players}
+                socket={socket}
+              />
+            );
+          }
+          return (
+            <SplitOrStealDashboard
+              sessionId={sessionData.sessionId}
+              players={sessionData.players}
+              gameState={sessionData.gameState}
+              socket={socket}
+            />
+          );
+        }
+        return (
           <SplitOrStealController
             sessionId={sessionData.sessionId}
             players={sessionData.players}
