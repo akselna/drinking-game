@@ -27,9 +27,6 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   const [currentPhase, setCurrentPhase] = useState<string>("countdown");
   const [currentPair, setCurrentPair] = useState<any>(null);
   const [results, setResults] = useState<any>(null);
-  const [leaderboard, setLeaderboard] = useState<
-    Array<{ id: string; name: string; points: number }>
-  >([]);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [participants, setParticipants] = useState<
     Array<{ id: string; name: string }>
@@ -43,7 +40,6 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       setCurrentPhase(gameState.phase || "countdown");
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
-      setLeaderboard(gameState.leaderboard || []);
       setParticipants(gameState.participants || []);
     }
   }, [gameState]);
@@ -68,9 +64,6 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         setResults(data.results);
       }
 
-      if (data.leaderboard) {
-        setLeaderboard(data.leaderboard);
-      }
 
       if (data.participants) {
         setParticipants(data.participants);
@@ -341,27 +334,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         {currentPhase === "decision" && renderDecisionPhase()}
         {currentPhase === "reveal" && renderRevealPhase()}
 
-        {leaderboard.length > 0 && (
-          <div className="leaderboard">
-            <h3>Leaderboard</h3>
-            <div className="leaderboard-list">
-              {leaderboard.map((entry, index) => (
-                <div
-                  key={entry.id}
-                  className={`leaderboard-item ${
-                    index === 0 ? "first-place" : ""
-                  }`}
-                >
-                  <span className="player-rank">#{index + 1}</span>
-                  <div className="player-info">
-                    <span>{entry.name}</span>
-                  </div>
-                  <span className="player-score">{entry.points} pts</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* leaderboard removed for dashboard version */}
       </div>
 
       {renderSettingsModal()}

@@ -28,6 +28,8 @@ const GAME_TYPES = {
   SPLIT_OR_STEAL: "splitOrSteal", // Add this line
 };
 
+const DASHBOARD_GAMES = [GAME_TYPES.SKJENKEHJULET, GAME_TYPES.SPLIT_OR_STEAL];
+
 const Game: React.FC = () => {
   const socket = useContext(SocketContext);
   const navigate = useNavigate();
@@ -504,8 +506,18 @@ const Game: React.FC = () => {
           sessionId={sessionData.sessionId}
           lamboVotes={lamboVotes}
           hostBackHandler={
-            sessionData.gameType === GAME_TYPES.SKJENKEHJULET
-              ? () => skjenkehjuletRef.current?.backToConfig()
+            DASHBOARD_GAMES.includes(sessionData.gameType)
+              ? () => {
+                  if (sessionData.gameType === GAME_TYPES.SKJENKEHJULET) {
+                    if (skjenkehjuletRef.current?.getPhase() === "config") {
+                      returnToLobby();
+                    } else {
+                      skjenkehjuletRef.current?.backToConfig();
+                    }
+                  } else {
+                    returnToLobby();
+                  }
+                }
               : undefined
           }
         />
@@ -521,7 +533,7 @@ const Game: React.FC = () => {
         {/* Main Menu button for host */}
         {sessionData.isHost &&
           sessionData.gameType !== GAME_TYPES.NONE &&
-          sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
+          !DASHBOARD_GAMES.includes(sessionData.gameType) && (
             <div className="host-menu-button-container">
               <button
                 onClick={returnToLobby}
@@ -537,7 +549,7 @@ const Game: React.FC = () => {
         {!isReconnecting &&
           !error &&
           sessionData.sessionId &&
-          sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
+          !DASHBOARD_GAMES.includes(sessionData.gameType) && (
             <div className="lambo-button-container">
               <button
                 onClick={handleLamboVote}
@@ -557,7 +569,7 @@ const Game: React.FC = () => {
           )}
 
         {/* Leave Session button */}
-        {sessionData.gameType !== GAME_TYPES.SKJENKEHJULET && (
+        {!DASHBOARD_GAMES.includes(sessionData.gameType) && (
           <div className="mobile-leave-button-container">
             <button
               onClick={confirmLeaveSession}

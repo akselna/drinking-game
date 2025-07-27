@@ -27,9 +27,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   const [currentPhase, setCurrentPhase] = useState<string>("countdown");
   const [currentPair, setCurrentPair] = useState<any>(null);
   const [results, setResults] = useState<any>(null);
-  const [leaderboard, setLeaderboard] = useState<
-    Array<{ id: string; name: string; points: number }>
-  >([]);
   const [myChoice, setMyChoice] = useState<string | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -46,7 +43,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setCurrentPhase(gameState.phase || "countdown");
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
-      setLeaderboard(gameState.leaderboard || []);
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
 
@@ -79,9 +75,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         setResults(data.results);
       }
 
-      if (data.leaderboard) {
-        setLeaderboard(data.leaderboard);
-      }
 
       if (data.participants) {
         setParticipants(data.participants);
@@ -140,11 +133,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   };
 
 
-  const getMyPointsFromLeaderboard = (): number => {
-    if (!socket?.id) return 0;
-    const myEntry = leaderboard.find((entry) => entry.id === socket.id);
-    return myEntry ? myEntry.points : 0;
-  };
 
   const renderCountdownPhase = () => (
     <div className="controller-container">
@@ -412,21 +400,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       {currentPhase === "negotiation" && renderNegotiationPhase()}
       {currentPhase === "decision" && renderDecisionPhase()}
       {currentPhase === "reveal" && renderRevealPhase()}
-
-      {/* Always show personal score */}
-      <div
-        style={{
-          position: "fixed",
-          top: "20px",
-          left: "20px",
-          background: "rgba(0,0,0,0.3)",
-          padding: "10px 15px",
-          borderRadius: "8px",
-          backdropFilter: "blur(10px)",
-        }}
-      >
-        <strong>Your Score: {getMyPointsFromLeaderboard()} pts</strong>
-      </div>
 
       {renderSettingsModal()}
     </div>

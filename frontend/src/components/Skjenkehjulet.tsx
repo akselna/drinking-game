@@ -20,6 +20,7 @@ declare global {
 
 export interface SkjenkehjuletHandle {
   backToConfig: () => void;
+  getPhase: () => string;
 }
 
 // Helper function to shuffle an array
@@ -153,6 +154,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     backToConfig,
+    getPhase: () => phase,
   }));
 
   // Shuffle categories when starting a new game

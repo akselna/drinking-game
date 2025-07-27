@@ -74,9 +74,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     }, 300);
   };
 
-  // Updates needed for frontend/src/components/GameLobby.tsx
-
-  // Find the gameOptions array and add the Split or Steal option:
+  // Game categories
 
   const gameOptions: GameOption[] = [
     {
@@ -109,13 +107,15 @@ const GameLobby: React.FC<GameLobbyProps> = ({
       icon: "😂",
       color: "#6200ea",
     },
+  ];
+
+  const dashboardGames: GameOption[] = [
     {
       id: "skjenkehjulet",
       name: "Skjenkehjulet",
       icon: "🍻",
       color: "#ff9800",
     },
-    // Add this new option:
     {
       id: "splitOrSteal",
       name: "Split or Steal",
@@ -220,24 +220,50 @@ const GameLobby: React.FC<GameLobbyProps> = ({
                     </span>
                   )}
                 </h2>
-                <div className="games-grid">
-                  {gameOptions.map((game: GameOption) => (
-                    <button
-                      key={game.id}
-                      onClick={() => handleGameSelect(game.id)}
-                      className={`game-button ${
-                        selectedGame === game.id ? "selected" : ""
-                      } ${!isHost ? "non-host" : ""}`}
-                      style={{
-                        backgroundColor: game.color + "15", // Add transparency to color
-                        borderColor: game.color,
-                      }}
-                      disabled={!isHost}
-                    >
-                      <span className="game-icon">{game.icon}</span>
-                      <span className="game-name">{game.name}</span>
-                    </button>
-                  ))}
+                <div className="games-section">
+                  <h3 className="games-section-title">Party Games</h3>
+                  <div className="games-grid">
+                    {gameOptions.map((game: GameOption) => (
+                      <button
+                        key={game.id}
+                        onClick={() => handleGameSelect(game.id)}
+                        className={`game-button ${
+                          selectedGame === game.id ? "selected" : ""
+                        } ${!isHost ? "non-host" : ""}`}
+                        style={{
+                          backgroundColor: game.color + "15",
+                          borderColor: game.color,
+                        }}
+                        disabled={!isHost}
+                      >
+                        <span className="game-icon">{game.icon}</span>
+                        <span className="game-name">{game.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="games-section">
+                  <h3 className="games-section-title">Dashboard Games</h3>
+                  <div className="games-grid">
+                    {dashboardGames.map((game: GameOption) => (
+                      <button
+                        key={game.id}
+                        onClick={() => handleGameSelect(game.id)}
+                        className={`game-button ${
+                          selectedGame === game.id ? "selected" : ""
+                        } ${!isHost ? "non-host" : ""}`}
+                        style={{
+                          backgroundColor: game.color + "15",
+                          borderColor: game.color,
+                        }}
+                        disabled={!isHost}
+                      >
+                        <span className="game-icon">{game.icon}</span>
+                        <span className="game-name">{game.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 {!isHost && (
