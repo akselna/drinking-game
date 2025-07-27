@@ -347,7 +347,7 @@ io.on("connection", (socket) => {
 
     // CHANGE: Explicitly send the host ID to all players
     // This is the critical change that ensures all players know who the host is
-    const sanitizedSession = sanitizeSessionForClient(session);
+    let sanitizedSession = sanitizeSessionForClient(session);
     socket.emit("session-joined", {
       sessionId: sessionIdUpper,
       isHost: socket.id === session.host,
@@ -356,6 +356,16 @@ io.on("connection", (socket) => {
       gameState: sanitizedSession.gameState,
       players: sanitizedSession.players,
     });
+
+    // Send the latest Split or Steal state after joining so late joiners don't
+    // miss the current phase if a broadcast happened during the join process.
+    if (
+      session.gameType === GAME_TYPES.SPLIT_OR_STEAL &&
+      session.gameState
+    ) {
+      const { timerId, ...sanitizedGameState } = session.gameState;
+      socket.emit("split-steal-state", sanitizedGameState);
+    }
 
     // Update all players in the session
     io.to(sessionIdUpper).emit("update-players", session.players);

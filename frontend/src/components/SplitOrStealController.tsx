@@ -37,6 +37,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [initialized, setInitialized] = useState<boolean>(false);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -54,6 +55,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       if (gameState.phase !== "decision") {
         setMyChoice(null);
       }
+      setInitialized(true);
     }
   }, [gameState, socket?.id]);
 
@@ -95,6 +97,8 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       if (data.phase !== "decision") {
         setMyChoice(null);
       }
+
+      setInitialized(true);
     };
 
     socket.on("split-steal-timer", handleTimerUpdate);
@@ -184,6 +188,14 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   );
 
   const renderDecisionPhase = () => {
+    if (!initialized) {
+      return (
+        <div className="controller-container">
+          <div className="wait-message">Loading...</div>
+        </div>
+      );
+    }
+
     if (!currentPair || !currentPlayer) {
       return (
         <div className="controller-container">
