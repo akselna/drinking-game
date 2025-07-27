@@ -31,6 +31,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     Array<{ id: string; name: string; points: number }>
   >([]);
   const [myChoice, setMyChoice] = useState<string | null>(null);
+  // With a shared controller there's always exactly one device used by all
+  // participants. We still keep an "isMyTurn" flag to know when the device
+  // should accept input, but it simply reflects whether the game is expecting a
+  // choice from any player at the moment.
   const [isMyTurn, setIsMyTurn] = useState<boolean>(false);
   const [currentPlayer, setCurrentPlayer] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -50,9 +54,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
 
-      // Check if it's my turn
+      // With the shared controller we simply check if a player is expected to
+      // make a choice. If so, the device should allow input.
       if (gameState.currentPair && gameState.currentPlayer) {
-        setIsMyTurn(gameState.currentPlayer === socket?.id);
+        setIsMyTurn(true);
       } else {
         setIsMyTurn(false);
       }
@@ -92,10 +97,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         setParticipants(data.participants);
       }
 
-      // Update current player and my turn status
+      // Update current player and input status
       if (data.currentPlayer !== undefined) {
         setCurrentPlayer(data.currentPlayer);
-        setIsMyTurn(data.currentPlayer === socket?.id);
+        setIsMyTurn(!!data.currentPlayer && data.phase === "decision");
       }
 
       // Reset choice when phase changes
@@ -120,10 +125,13 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   };
 
   const handleChoice = (choice: "SPLIT" | "STEAL") => {
-    if (!socket || !isMyTurn || myChoice) return;
+    if (!socket || !isMyTurn || myChoice || !currentPlayer) return;
 
     setMyChoice(choice);
-    socket.emit("split-steal-choice", sessionId, choice);
+    socket.emit("split-steal-choice", sessionId, {
+      choice,
+      playerId: currentPlayer,
+    });
   };
 
   const handleAddParticipant = () => {
@@ -213,7 +221,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   );
 
   const renderDecisionPhase = () => {
-    if (!isInCurrentDuel) {
+    if (!currentPair || !currentPlayer) {
       return (
         <div className="controller-container">
           <div className="wait-message">
@@ -232,26 +240,19 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       );
     }
 
+    const activePlayer =
+      currentPair.player1.id === currentPlayer
+        ? currentPair.player1
+        : currentPair.player2;
+
     return (
       <div className="controller-container">
-        {isMyTurn && (
-          <div className="current-player-indicator">
-            <div className="your-turn">It's your turn!</div>
-            <p>Choose your strategy: Split or Steal?</p>
+        <div className="current-player-indicator">
+          <div className="your-turn">
+            {activePlayer.name}'s turn to choose!
           </div>
-        )}
-
-        {!isMyTurn && currentPlayer && currentPair && (
-          <div className="wait-message">
-            <h3>Waiting for opponent</h3>
-            <p>
-              {currentPair.player1 && currentPair.player1.id === currentPlayer
-                ? currentPair.player1.name || "Player 1"
-                : currentPair.player2?.name || "Player 2"}{" "}
-              is making their choice...
-            </p>
-          </div>
-        )}
+          <p>Choose your strategy: Split or Steal?</p>
+        </div>
 
         <div className="choice-buttons">
           <button
@@ -438,21 +439,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       {currentPhase === "negotiation" && renderNegotiationPhase()}
       {currentPhase === "decision" && renderDecisionPhase()}
       {currentPhase === "reveal" && renderRevealPhase()}
-
-      {/* Always show personal score */}
-      <div
-        style={{
-          position: "fixed",
-          top: "20px",
-          left: "20px",
-          background: "rgba(0,0,0,0.3)",
-          padding: "10px 15px",
-          borderRadius: "8px",
-          backdropFilter: "blur(10px)",
-        }}
-      >
-        <strong>Your Score: {getMyPointsFromLeaderboard()} pts</strong>
-      </div>
 
       {renderSettingsModal()}
     </div>
