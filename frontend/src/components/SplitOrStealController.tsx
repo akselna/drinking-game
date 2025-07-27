@@ -415,6 +415,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
   return (
     <div className="split-or-steal">
+      <button className="back-button" onClick={returnToLobby} title="Back">
+        ←
+      </button>
       <h1>💰 Split or Steal</h1>
 
       <button

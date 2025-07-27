@@ -549,7 +549,8 @@ const Game: React.FC = () => {
         {!isReconnecting &&
           !error &&
           sessionData.sessionId &&
-          !DASHBOARD_GAMES.includes(sessionData.gameType) && (
+          !DASHBOARD_GAMES.includes(sessionData.gameType) &&
+          sessionData.gameType !== GAME_TYPES.SPLIT_OR_STEAL && (
             <div className="lambo-button-container">
               <button
                 onClick={handleLamboVote}
@@ -569,7 +570,8 @@ const Game: React.FC = () => {
           )}
 
         {/* Leave Session button */}
-        {!DASHBOARD_GAMES.includes(sessionData.gameType) && (
+        {!DASHBOARD_GAMES.includes(sessionData.gameType) &&
+          sessionData.gameType !== GAME_TYPES.SPLIT_OR_STEAL && (
           <div className="mobile-leave-button-container">
             <button
               onClick={confirmLeaveSession}

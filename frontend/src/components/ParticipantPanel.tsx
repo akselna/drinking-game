@@ -72,10 +72,10 @@ const ParticipantPanel: React.FC<ParticipantPanelProps> = ({
       {!isOpen && (
         <button
           className={`participant-toggle ${isHost && !hostBackHandler ? "is-host" : ""}`}
-          onClick={isHost && hostBackHandler ? hostBackHandler : togglePanel}
-          aria-label={isHost && hostBackHandler ? "Tilbake" : "Vis deltakere"}
+          onClick={hostBackHandler ? hostBackHandler : togglePanel}
+          aria-label={hostBackHandler ? "Tilbake" : "Vis deltakere"}
         >
-          {isHost && hostBackHandler ? "←" : "👥"}
+          {hostBackHandler ? "←" : "👥"}
         </button>
       )}
 
