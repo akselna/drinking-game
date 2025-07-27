@@ -1,0 +1,73 @@
+.split-steal {
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+.split-steal .choice-buttons button {
+  font-size: 2rem;
+  margin: 10px;
+  padding: 20px 40px;
+}
+
+.split-steal .chat-box {
+  border: 1px solid #444;
+  padding: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.split-steal .messages {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.split-steal .input-row {
+  display: flex;
+}
+
+.split-steal .input-row input {
+  flex: 1;
+  padding: 4px;
+  margin-right: 4px;
+}
+
+.split-steal.dash .pair {
+  margin: 5px 0;
+}
+
+.setup-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.participants {
+  display: flex;
+  flex-direction: column;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.participant-row {
+  margin: 2px 0;
+}
+
+.timer {
+  font-size: 4rem;
+  margin-top: 10px;
+}
+
+.tension {
+  color: #ff4d4f;
+  animation: pop 0.5s infinite alternate;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.2);
+  }
+}
