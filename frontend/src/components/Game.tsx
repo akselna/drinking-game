@@ -11,6 +11,9 @@ import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
 import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
+import SplitOrStealDashboard from "./SplitOrStealDashboard";
+import SplitOrStealController from "./SplitOrStealController";
+import SplitOrStealSetup from "./SplitOrStealSetup";
 
 // Game type constants (must match server constants)
 const GAME_TYPES = {
@@ -20,6 +23,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge",
   BEAT4BEAT: "beat4Beat",
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SPLIT_OR_STEAL: "splitOrSteal",
   SKJENKEHJULET: "skjenkehjulet",
 };
 
@@ -187,6 +191,13 @@ const Game: React.FC = () => {
       }));
     };
 
+    const handleSplitStealState = (state: any) => {
+      setSessionData((prev) => ({
+        ...prev,
+        gameState: state,
+      }));
+    };
+
     const handleDisconnect = (reason: string) => {
       console.log("Socket disconnected:", reason);
       // Only set error if we're not already reconnecting
@@ -222,6 +233,7 @@ const Game: React.FC = () => {
     socket.on("host-changed", handleHostChanged);
     socket.on("error", handleError);
     socket.on("game-restarted", handleGameRestarted);
+    socket.on("split-steal-state", handleSplitStealState);
     socket.on("disconnect", handleDisconnect);
 
     // Lambo event listeners
@@ -243,6 +255,7 @@ const Game: React.FC = () => {
       socket.off("host-changed", handleHostChanged);
       socket.off("error", handleError);
       socket.off("game-restarted", handleGameRestarted);
+      socket.off("split-steal-state", handleSplitStealState);
       socket.off("disconnect", handleDisconnect);
 
       // Lambo cleanup
@@ -387,6 +400,31 @@ const Game: React.FC = () => {
             restartGame={restartGame}
             leaveSession={confirmLeaveSession}
             returnToLobby={returnToLobby}
+          />
+        );
+      case GAME_TYPES.SPLIT_OR_STEAL:
+        if (sessionData.isHost) {
+          if (sessionData.gameState?.phase === "setup") {
+            return (
+              <SplitOrStealSetup
+                sessionId={sessionData.sessionId}
+                socket={socket}
+              />
+            );
+          }
+          return (
+            <SplitOrStealDashboard
+              sessionId={sessionData.sessionId}
+              gameState={sessionData.gameState}
+              socket={socket}
+            />
+          );
+        }
+        return (
+          <SplitOrStealController
+            sessionId={sessionData.sessionId}
+            gameState={sessionData.gameState}
+            socket={socket}
           />
         );
       case GAME_TYPES.SKJENKEHJULET:
