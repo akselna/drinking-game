@@ -6,6 +6,7 @@ require("dotenv").config();
 const spotifyService = require("./spotify");
 const path = require("path");
 const sessionTimers = new Map();
+const splitOrStealEngine = require("../splitOrStealGameEngine");
 
 function generateSessionId(length = 6) {
   const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789"; // Exclude 0 and O
@@ -168,6 +169,7 @@ const GAME_TYPES = {
   DRINK_OR_JUDGE: "drinkOrJudge", // Added new game type
   BEAT4BEAT: "beat4Beat", // Add this line
   NOT_ALLOWED_TO_LAUGH: "notAllowedToLaugh", // Added new game type
+  SPLIT_OR_STEAL: "splitOrSteal",
   SKJENKEHJULET: "skjenkehjulet",
 };
 
@@ -986,6 +988,16 @@ io.on("connection", (socket) => {
       };
     } else if (gameType === GAME_TYPES.SKJENKEHJULET) {
       session.gameState = { phase: "idle" };
+    } else if (gameType === GAME_TYPES.SPLIT_OR_STEAL) {
+      session.gameState = {
+        phase: "setup",
+        round: 1,
+        countdown: 30,
+        pairs: [],
+        choices: {},
+        leaderboard: {},
+        participants: [],
+      };
     }
 
     // Notify all players about the game selection
@@ -2238,6 +2250,63 @@ io.on("connection", (socket) => {
     // Notify all clients that Lambo is ended
     io.to(sessionId).emit("lambo-ended");
   });
+
+  // === Split or Steal Events ===
+  socket.on("split-steal-config", (sessionId, config) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+      socket.emit("error", { message: "Invalid session or game" });
+      return;
+    }
+    if (socket.id !== session.host) {
+      socket.emit("error", { message: "Only host can start" });
+      return;
+    }
+    session.gameState.countdown = Math.max(10, parseInt(config.countdown) || 30);
+    session.gameState.participants = config.participants || session.players.map((p) => p.id);
+    session.gameState.phase = "countdown";
+    io.to(sessionId).emit("split-steal-countdown", { countdown: session.gameState.countdown });
+
+    if (session.gameState.timerId) clearInterval(session.gameState.timerId);
+    session.gameState.timerId = setInterval(() => {
+      const s = sessions[sessionId];
+      if (!s || s.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
+        clearInterval(session.gameState.timerId);
+        return;
+      }
+      s.gameState.countdown--;
+      if (s.gameState.countdown <= 0) {
+        clearInterval(s.gameState.timerId);
+        startSplitStealRound(sessionId);
+      }
+    }, 1000);
+  });
+
+  socket.on("split-steal-choice", (sessionId, choice) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+    session.gameState.choices[socket.id] = choice;
+
+    const allChosen = session.gameState.participants.every(
+      (id) => session.gameState.choices[id]
+    );
+    if (allChosen) {
+      revealSplitSteal(sessionId);
+    }
+  });
+
+  socket.on("split-steal-chat", (sessionId, message) => {
+    const session = sessions[sessionId];
+    updateSessionActivity(sessionId);
+    if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+    const player = session.players.find((p) => p.id === socket.id);
+    io.to(sessionId).emit("split-steal-chat", {
+      playerName: player ? player.name : "",
+      message,
+    });
+  });
 });
 
 const disconnectedHosts = {}; // Track temporarily disconnected hosts
@@ -2579,6 +2648,41 @@ function moveToNextStatement(sessionId) {
     statement: nextStatement,
     statementIndex: session.gameState.currentStatementIndex,
     totalStatements: session.gameState.availableStatements.length,
+  });
+}
+
+function startSplitStealRound(sessionId) {
+  const session = sessions[sessionId];
+  if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+  const participants = session.gameState.participants
+    .map((id) => session.players.find((p) => p.id === id))
+    .filter(Boolean);
+  const pairs = splitOrStealEngine.pairPlayers(participants);
+  session.gameState.phase = "negotiation";
+  session.gameState.pairs = pairs;
+  session.gameState.choices = {};
+  io.to(sessionId).emit("split-steal-round-start", { pairs });
+  session.gameState.timerId = setTimeout(() => {
+    session.gameState.phase = "decision";
+    io.to(sessionId).emit("split-steal-decision");
+  }, 60000);
+}
+
+function revealSplitSteal(sessionId) {
+  const session = sessions[sessionId];
+  if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
+  const results = splitOrStealEngine.calculateResults(
+    session.gameState.pairs,
+    session.gameState.choices
+  );
+  session.gameState.leaderboard = splitOrStealEngine.updateLeaderboard(
+    session.gameState.leaderboard || {},
+    results
+  );
+  session.gameState.phase = "reveal";
+  io.to(sessionId).emit("split-steal-reveal", {
+    results,
+    leaderboard: session.gameState.leaderboard,
   });
 }
 
