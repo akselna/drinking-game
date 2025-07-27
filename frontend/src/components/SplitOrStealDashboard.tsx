@@ -25,6 +25,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   const [timer, setTimer] = useState<number>(0);
   const [results, setResults] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any>({});
+  const [participants, setParticipants] = useState<any[]>([]);
   const [showSettings, setShowSettings] = useState(false);
   const [newName, setNewName] = useState("");
 
@@ -45,6 +46,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         setCurrentPair(null);
       }
       if (state.leaderboard) setLeaderboard(state.leaderboard);
+      if (state.participants) setParticipants(state.participants);
       if (state.results) setResults(state.results);
     };
 
@@ -131,10 +133,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
             />
             <button onClick={addPlayer}>Legg til</button>
           </div>
-          {Object.keys(leaderboard).map((id) => (
-            <div key={id} className="player-row">
-              {leaderboard[id].name}
-              <button onClick={() => removePlayer(id)}>x</button>
+          {participants.map((p) => (
+            <div key={p.id} className="player-row">
+              {p.name}
+              <button onClick={() => removePlayer(p.id)}>x</button>
             </div>
           ))}
           <button onClick={skipRound}>Hopp over runde</button>
@@ -157,13 +159,20 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
           </div>
         </div>
       )}
-      {phase === "negotiation" && (
+      {phase === "negotiation" && currentPair && (
         <div>
-          <h2>Forhandling - {timer}</h2>
-          {renderPair()}
+          <p>
+            {currentPair.nameA} and {currentPair.nameB || "Sitter over"} have {timer} seconds to discuss what to choose
+          </p>
         </div>
       )}
-      {phase === "decision" && renderPair()}
+      {phase === "decision" && currentPair && (
+        <div>
+          <p>
+            {currentPair.nameA} and {currentPair.nameB || "Sitter over"} have to make a decision
+          </p>
+        </div>
+      )}
       {phase === "reveal" && (
         <div>
           <h2>Resultater om {timer}</h2>

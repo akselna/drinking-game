@@ -21,6 +21,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   const [showSettings, setShowSettings] = useState(false);
   const [newName, setNewName] = useState("");
   const [leaderboard, setLeaderboard] = useState<any>({});
+  const [participants, setParticipants] = useState<any[]>([]);
 
   useEffect(() => {
     if (!socket) return;
@@ -30,6 +31,8 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setTimer(state.timer || 0);
       setCurrentPlayer(state.currentTurnName || "");
       if (state.leaderboard) setLeaderboard(state.leaderboard);
+      if (state.participants) setParticipants(state.participants);
+      setChoice(null);
       if (state.phase === "reveal" && state.results) {
         setResult(state.results);
       } else {
@@ -66,10 +69,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
             />
             <button onClick={() => {socket?.emit('split-steal-add-player', sessionId, newName); setNewName('');}}>Legg til</button>
           </div>
-          {Object.keys(leaderboard).map((id) => (
-            <div key={id} className="player-row">
-              {leaderboard[id].name}
-              <button onClick={() => socket?.emit('split-steal-remove-player', sessionId, id)}>x</button>
+          {participants.map((p) => (
+            <div key={p.id} className="player-row">
+              {p.name}
+              <button onClick={() => socket?.emit('split-steal-remove-player', sessionId, p.id)}>x</button>
             </div>
           ))}
           <button onClick={() => socket?.emit('split-steal-skip', sessionId)}>Hopp over runde</button>
