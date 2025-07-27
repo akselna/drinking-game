@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { CustomSocket } from "../types/socket.types";
+import { PENALTY_SYSTEMS, PenaltyMode } from "../data/penaltySystems";
 import "../styles/SplitOrSteal.css";
 
 interface SplitOrStealSetupProps {
@@ -27,6 +28,7 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
   const [participants, setParticipants] = useState<
     Array<{ id: string; name: string }>
   >([]);
+  const [penaltyMode, setPenaltyMode] = useState<PenaltyMode>("party");
   const [newParticipantName, setNewParticipantName] = useState<string>("");
 
   const handleAddParticipant = () => {
@@ -67,6 +69,7 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
     socket.emit("split-steal-config", sessionId, {
       countdownDuration,
       participants,
+      penaltyMode,
     });
   };
 
@@ -114,6 +117,19 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
             <small style={{ opacity: 0.8 }}>
               Time players have to prepare between each duel (10-300 seconds)
             </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="penalties">Penalty System</label>
+            <select
+              id="penalties"
+              value={penaltyMode}
+              onChange={(e) => setPenaltyMode(e.target.value as PenaltyMode)}
+            >
+              <option value="party">Party Mode</option>
+              <option value="casual">Casual Mode</option>
+              <option value="blackout">Blackout Mode</option>
+            </select>
           </div>
 
           <div className="participants-section">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CustomSocket } from "../types/socket.types";
+import { PENALTY_SYSTEMS, PenaltyMode } from "../data/penaltySystems";
 import "../styles/SplitOrSteal.css";
 
 interface SplitOrStealControllerProps {
@@ -34,6 +35,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [penaltyMode, setPenaltyMode] = useState<PenaltyMode>(
+    gameState?.penaltyMode || "party"
+  );
   const [initialized, setInitialized] = useState<boolean>(false);
 
   // Initialize state from gameState
@@ -45,6 +49,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setResults(gameState.results || null);
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
+      setPenaltyMode(gameState.penaltyMode || "party");
 
 
       // Reset choice when phase changes
@@ -78,6 +83,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+
+      if (data.penaltyMode) {
+        setPenaltyMode(data.penaltyMode);
       }
 
       // Update current player
@@ -144,6 +153,21 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         <p style={{ fontSize: "1.1rem", opacity: 0.9, textAlign: "center" }}>
           Get ready for the next duel!
         </p>
+        <div className="penalty-info">
+          <h4 style={{ marginBottom: "0.5rem" }}>Next up:</h4>
+          {(() => {
+            const p = PENALTY_SYSTEMS[penaltyMode];
+            return (
+              <ul style={{ margin: 0, paddingLeft: "1.2rem", lineHeight: 1.4 }}>
+                <li>Split/Split: {p.splitSplit}</li>
+                <li>
+                  Split/Steal: {p.splitSteal.splitter}/{p.splitSteal.stealer}
+                </li>
+                <li>Steal/Steal: {p.stealSteal}</li>
+              </ul>
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
@@ -314,7 +338,32 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
               {results.drinkingPenalty &&
                 results.drinkingPenalty.includes(socket?.id) && (
                   <div className="drinking-penalty">
-                    <div className="penalty-title">🍺 You must drink!</div>
+                    <div className="penalty-title">
+                      🍺 You must drink {
+                        (() => {
+                          const p = PENALTY_SYSTEMS[penaltyMode];
+                          const choice =
+                            results.choices && results.choices[socket?.id];
+                          if (results.choices[currentPair.player1.id] ===
+                              "SPLIT" &&
+                              results.choices[currentPair.player2.id] ===
+                              "SPLIT") {
+                            return p.splitSplit;
+                          }
+                          if (
+                            results.choices[currentPair.player1.id] ===
+                              "STEAL" &&
+                            results.choices[currentPair.player2.id] === "STEAL"
+                          ) {
+                            return p.stealSteal;
+                          }
+                          const isSplitter = choice === "SPLIT";
+                          return isSplitter
+                            ? p.splitSteal.splitter
+                            : p.splitSteal.stealer;
+                        })()
+                      }
+                    </div>
                   </div>
                 )}
             </>

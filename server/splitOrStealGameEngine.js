@@ -57,7 +57,8 @@ function calculateResults(player1, player2, choice1, choice2) {
     // Both players split - each gets 2 points
     player1Points = 2;
     player2Points = 2;
-    outcomeMessage = `${player1.name} and ${player2.name} both chose to SPLIT! They each get 2 points! 🤝`;
+    outcomeMessage = `${player1.name} and ${player2.name} both chose to SPLIT! They each get 2 points and must drink! 🤝`;
+    drinkingPenalty = [player1.id, player2.id];
   } else if (choice1 === "STEAL" && choice2 === "STEAL") {
     // Both players steal - nobody gets points, both drink
     player1Points = 0;
