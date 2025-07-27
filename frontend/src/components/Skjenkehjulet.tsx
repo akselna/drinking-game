@@ -102,8 +102,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
     | "combined-result"
     | "refilling"
   >("config");
-  const [countdownValue, setCountdownValue] = useState(10);
-  const [rounds, setRounds] = useState(1);
+  const [countdownValue, setCountdownValue] = useState<number | "">(10);
+  const [rounds, setRounds] = useState<number | "">(1);
   const [currentRound, setCurrentRound] = useState(1);
   const [displayCount, setDisplayCount] = useState(10);
   const [finalScore, setFinalScore] = useState<string | null>(null);
@@ -125,6 +125,13 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
   const [beerHeight, setBeerHeight] = useState("0%");
   const [isGlassVisible, setIsGlassVisible] = useState(false);
   const [isRefilling, setIsRefilling] = useState(false);
+
+  // New validation logic for the config screen
+  const configInvalid =
+    countdownValue === "" ||
+    rounds === "" ||
+    +countdownValue <= 0 ||
+    +rounds <= 0;
 
   const dangerActive =
     finalScore === "CHUG" &&
@@ -229,7 +236,8 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
       setIsRefilling(false);
 
       let startTime: number | null = null;
-      const totalDuration = countdownValue * 1000;
+      // Use +countdownValue to ensure it's treated as a number
+      const totalDuration = +countdownValue * 1000;
 
       const animate = (timestamp: number) => {
         if (!startTime) startTime = timestamp;
@@ -237,7 +245,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
         const progress = Math.min(elapsedTime / totalDuration, 1);
         const newBeerHeight = 89 * (1 - progress);
         setBeerHeight(`${newBeerHeight}%`);
-        const newDisplayCount = Math.ceil(countdownValue - elapsedTime / 1000);
+        const newDisplayCount = Math.ceil(+countdownValue - elapsedTime / 1000);
         setDisplayCount(newDisplayCount > 0 ? newDisplayCount : 0);
 
         if (progress < 1) {
@@ -261,7 +269,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
 
     if (phase === "combined-result") {
       const nextPhaseTimer = setTimeout(() => {
-        if (currentRound < rounds) {
+        if (currentRound < +rounds) {
           setCurrentRound((c) => c + 1);
           setFinalScore(null);
           setWheelCategory(null);
@@ -929,9 +937,17 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             <input
               type="number"
               value={countdownValue}
-              onChange={(e) =>
-                setCountdownValue(parseInt(e.target.value) || 10)
-              }
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "") {
+                  setCountdownValue("");
+                } else {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num)) {
+                    setCountdownValue(num);
+                  }
+                }
+              }}
             />
           </label>
           <label>
@@ -939,7 +955,17 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
             <input
               type="number"
               value={rounds}
-              onChange={(e) => setRounds(parseInt(e.target.value) || 1)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "") {
+                  setRounds("");
+                } else {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num)) {
+                    setRounds(num);
+                  }
+                }
+              }}
             />
           </label>
           <label>
@@ -957,7 +983,7 @@ const Skjenkehjulet = forwardRef<SkjenkehjuletHandle>((props, ref) => {
           <button
             className="plinko-btn"
             onClick={() => setPhase("countdown")}
-            disabled={!ready}
+            disabled={!ready || configInvalid}
           >
             Start Game
           </button>
