@@ -31,13 +31,13 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     Array<{ id: string; name: string; points: number }>
   >([]);
   const [myChoice, setMyChoice] = useState<string | null>(null);
-  const [isMyTurn, setIsMyTurn] = useState<boolean>(false);
   const [currentPlayer, setCurrentPlayer] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [participants, setParticipants] = useState<
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [initialized, setInitialized] = useState<boolean>(false);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -50,17 +50,12 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
 
-      // Check if it's my turn
-      if (gameState.currentPair && gameState.currentPlayer) {
-        setIsMyTurn(gameState.currentPlayer === socket?.id);
-      } else {
-        setIsMyTurn(false);
-      }
 
       // Reset choice when phase changes
       if (gameState.phase !== "decision") {
         setMyChoice(null);
       }
+      setInitialized(true);
     }
   }, [gameState, socket?.id]);
 
@@ -92,16 +87,18 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         setParticipants(data.participants);
       }
 
-      // Update current player and my turn status
+      // Update current player
       if (data.currentPlayer !== undefined) {
         setCurrentPlayer(data.currentPlayer);
-        setIsMyTurn(data.currentPlayer === socket?.id);
+        setMyChoice(null);
       }
 
       // Reset choice when phase changes
       if (data.phase !== "decision") {
         setMyChoice(null);
       }
+
+      setInitialized(true);
     };
 
     socket.on("split-steal-timer", handleTimerUpdate);
@@ -120,10 +117,13 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   };
 
   const handleChoice = (choice: "SPLIT" | "STEAL") => {
-    if (!socket || !isMyTurn || myChoice) return;
+    if (!socket || !currentPlayer || myChoice) return;
 
     setMyChoice(choice);
-    socket.emit("split-steal-choice", sessionId, choice);
+    socket.emit("split-steal-choice", sessionId, {
+      choice,
+      playerId: currentPlayer,
+    });
   };
 
   const handleAddParticipant = () => {
@@ -139,13 +139,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     socket.emit("split-steal-remove-player", sessionId, participantId);
   };
 
-  const isInCurrentDuel =
-    currentPair &&
-    socket?.id &&
-    currentPair.player1 &&
-    currentPair.player2 &&
-    (currentPair.player1.id === socket.id ||
-      currentPair.player2.id === socket.id);
 
   const getMyPointsFromLeaderboard = (): number => {
     if (!socket?.id) return 0;
@@ -185,35 +178,25 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
           </div>
         )}
 
-        {isInCurrentDuel ? (
-          <div style={{ textAlign: "center", marginTop: "2rem" }}>
-            <p
-              style={{
-                fontSize: "1.2rem",
-                fontWeight: "bold",
-                color: "#f1c40f",
-              }}
-            >
-              You're in this duel!
-            </p>
-            <p style={{ opacity: 0.9 }}>
-              Use this time to negotiate with your opponent. Will you split the
-              points fairly, or go for the steal?
-            </p>
-          </div>
-        ) : (
-          <div style={{ textAlign: "center", marginTop: "2rem" }}>
-            <p style={{ fontSize: "1.1rem", opacity: 0.8 }}>
-              Watch the negotiation between the current players.
-            </p>
-          </div>
-        )}
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <p style={{ fontSize: "1.1rem", opacity: 0.8 }}>
+            Players are negotiating their choices.
+          </p>
+        </div>
       </div>
     </div>
   );
 
   const renderDecisionPhase = () => {
-    if (!isInCurrentDuel) {
+    if (!initialized) {
+      return (
+        <div className="controller-container">
+          <div className="wait-message">Loading...</div>
+        </div>
+      );
+    }
+
+    if (!currentPair || !currentPlayer) {
       return (
         <div className="controller-container">
           <div className="wait-message">
@@ -232,39 +215,30 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       );
     }
 
+    const activePlayer =
+      currentPair.player1.id === currentPlayer
+        ? currentPair.player1
+        : currentPair.player2;
+
     return (
       <div className="controller-container">
-        {isMyTurn && (
-          <div className="current-player-indicator">
-            <div className="your-turn">It's your turn!</div>
-            <p>Choose your strategy: Split or Steal?</p>
-          </div>
-        )}
-
-        {!isMyTurn && currentPlayer && currentPair && (
-          <div className="wait-message">
-            <h3>Waiting for opponent</h3>
-            <p>
-              {currentPair.player1 && currentPair.player1.id === currentPlayer
-                ? currentPair.player1.name || "Player 1"
-                : currentPair.player2?.name || "Player 2"}{" "}
-              is making their choice...
-            </p>
-          </div>
-        )}
+        <div className="current-player-indicator">
+          <div className="your-turn">{activePlayer.name}'s Turn</div>
+          <p>Choose your strategy: Split or Steal?</p>
+        </div>
 
         <div className="choice-buttons">
           <button
             className="choice-button split-button"
             onClick={() => handleChoice("SPLIT")}
-            disabled={!isMyTurn || !!myChoice}
+            disabled={!!myChoice}
           >
-            {myChoice === "SPLIT" ? "✓ " : ""}Split
+           {myChoice === "SPLIT" ? "✓ " : ""}Split
           </button>
           <button
             className="choice-button steal-button"
             onClick={() => handleChoice("STEAL")}
-            disabled={!isMyTurn || !!myChoice}
+            disabled={!!myChoice}
           >
             {myChoice === "STEAL" ? "✓ " : ""}Steal
           </button>

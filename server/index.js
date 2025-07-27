@@ -347,7 +347,7 @@ io.on("connection", (socket) => {
 
     // CHANGE: Explicitly send the host ID to all players
     // This is the critical change that ensures all players know who the host is
-    const sanitizedSession = sanitizeSessionForClient(session);
+    let sanitizedSession = sanitizeSessionForClient(session);
     socket.emit("session-joined", {
       sessionId: sessionIdUpper,
       isHost: socket.id === session.host,
@@ -356,6 +356,16 @@ io.on("connection", (socket) => {
       gameState: sanitizedSession.gameState,
       players: sanitizedSession.players,
     });
+
+    // Send the latest Split or Steal state after joining so late joiners don't
+    // miss the current phase if a broadcast happened during the join process.
+    if (
+      session.gameType === GAME_TYPES.SPLIT_OR_STEAL &&
+      session.gameState
+    ) {
+      const { timerId, ...sanitizedGameState } = session.gameState;
+      socket.emit("split-steal-state", sanitizedGameState);
+    }
 
     // Update all players in the session
     io.to(sessionIdUpper).emit("update-players", session.players);
@@ -2051,7 +2061,7 @@ io.on("connection", (socket) => {
     const session = sessions[sessionId];
     if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) return;
 
-    // Pair players
+    // Pair players from the configured participants list
     const pair = pairPlayers(session.gameState.participants);
 
     if (!pair) {
@@ -2231,11 +2241,17 @@ io.on("connection", (socket) => {
 
     console.log(`Configuring Split or Steal game in session ${sessionId}`);
 
+    // Validate participants. The host will manually configure the list, so
+    // we simply ensure each entry has an id and a name.
+    const validParticipants = config.participants.filter(
+      (p) => p && p.id && p.name
+    );
+
     // Initialize game state
     session.gameState = {
       phase: "countdown",
       countdownDuration: config.countdownDuration,
-      participants: config.participants,
+      participants: validParticipants,
       scoreboard: {}, // player_id -> points
       leaderboard: [], // sorted array for display
       currentPair: null,
@@ -2247,7 +2263,7 @@ io.on("connection", (socket) => {
     };
 
     // Initialize scoreboard for all participants
-    config.participants.forEach((participant) => {
+    validParticipants.forEach((participant) => {
       session.gameState.scoreboard[participant.id] = 0;
     });
 
@@ -2271,7 +2287,7 @@ io.on("connection", (socket) => {
   });
 
   // Split or Steal - Player Choice
-  socket.on("split-steal-choice", (sessionId, choice) => {
+  socket.on("split-steal-choice", (sessionId, data) => {
     const session = sessions[sessionId];
 
     if (!session || session.gameType !== GAME_TYPES.SPLIT_OR_STEAL) {
@@ -2284,8 +2300,19 @@ io.on("connection", (socket) => {
       return;
     }
 
+    let choice;
+    let playerId;
+
+    if (typeof data === "string") {
+      choice = data;
+      playerId = socket.id;
+    } else {
+      choice = data.choice;
+      playerId = data.playerId;
+    }
+
     // Check if it's this player's turn
-    if (session.gameState.currentPlayer !== socket.id) {
+    if (session.gameState.currentPlayer !== playerId) {
       socket.emit("error", { message: "Not your turn" });
       return;
     }
@@ -2296,10 +2323,10 @@ io.on("connection", (socket) => {
       return;
     }
 
-    console.log(`Player ${socket.id} chose ${choice} in session ${sessionId}`);
+    console.log(`Player ${playerId} chose ${choice} in session ${sessionId}`);
 
     // Store the choice
-    session.gameState.choices[socket.id] = choice;
+    session.gameState.choices[playerId] = choice;
 
     const pair = session.gameState.currentPair;
 

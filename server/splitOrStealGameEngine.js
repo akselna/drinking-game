@@ -7,7 +7,9 @@
  * @returns {Object|null} - {player1, player2} or null if insufficient players
  */
 function pairPlayers(participants) {
-  // Filter out players who might be disconnected or invalid
+  // Filter out players who might be disconnected or invalid. The list of
+  // participants should already contain only the players that were manually
+  // configured by the host.
   const availablePlayers = participants.filter((p) => p && p.id && p.name);
 
   console.log(
