@@ -1,0 +1,94 @@
+.split-steal {
+  color: #fff;
+  padding: 20px;
+  text-align: center;
+}
+
+.split-steal .choice-buttons button {
+  font-size: 2rem;
+  margin: 10px;
+  padding: 20px 40px;
+}
+
+.split-steal .chat-box {
+  border: 1px solid #444;
+  padding: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.split-steal .messages {
+  text-align: left;
+  margin-bottom: 10px;
+}
+
+.split-steal .input-row {
+  display: flex;
+}
+
+.split-steal .input-row input {
+  flex: 1;
+  padding: 4px;
+  margin-right: 4px;
+}
+
+.split-steal.dash .pair {
+  margin: 5px 0;
+}
+
+.split-steal.setup {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.split-steal .config-row {
+  margin: 10px 0;
+  text-align: left;
+}
+
+.countdown-text {
+  font-size: 4rem;
+  margin-top: 20px;
+}
+
+.countdown-text.flash {
+  color: red;
+  animation: flash 1s steps(2, start) infinite;
+}
+
+.settings-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.settings-panel {
+  position: absolute;
+  top: 40px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 10px;
+  border: 1px solid #444;
+  text-align: left;
+}
+
+.player-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+
+.add-player-row {
+  display: flex;
+  margin-bottom: 6px;
+}
+
+@keyframes flash {
+  to {
+    visibility: hidden;
+  }
+}
