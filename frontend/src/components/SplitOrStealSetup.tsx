@@ -28,6 +28,7 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
     Array<{ id: string; name: string }>
   >([]);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [penaltyMode, setPenaltyMode] = useState<string>("party");
 
   const handleAddParticipant = () => {
     if (!newParticipantName.trim()) return;
@@ -67,6 +68,7 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
     socket.emit("split-steal-config", sessionId, {
       countdownDuration,
       participants,
+      penaltyMode,
     });
   };
 
@@ -114,6 +116,19 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
             <small style={{ opacity: 0.8 }}>
               Time players have to prepare between each duel (10-300 seconds)
             </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="penalty-mode">Penalty Mode</label>
+            <select
+              id="penalty-mode"
+              value={penaltyMode}
+              onChange={(e) => setPenaltyMode(e.target.value)}
+            >
+              <option value="party">Party Mode</option>
+              <option value="casual">Casual Mode</option>
+              <option value="blackout">Blackout Mode</option>
+            </select>
           </div>
 
           <div className="participants-section">

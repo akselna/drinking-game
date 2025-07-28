@@ -2020,6 +2020,7 @@ io.on("connection", (socket) => {
       timeLeft: duration,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2082,6 +2083,7 @@ io.on("connection", (socket) => {
       currentPair: pair,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2131,6 +2133,7 @@ io.on("connection", (socket) => {
       currentPlayer: session.gameState.currentPlayer,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2182,6 +2185,7 @@ io.on("connection", (socket) => {
       results: results,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penaltyMode: session.gameState.penaltyMode,
     });
 
     // Clear any existing timer
@@ -2257,6 +2261,7 @@ io.on("connection", (socket) => {
       timeLeft: config.countdownDuration,
       currentPlayer: null,
       timerId: null,
+      penaltyMode: config.penaltyMode || "party",
     };
 
     // Initialize scoreboard for all participants
@@ -2345,6 +2350,7 @@ io.on("connection", (socket) => {
         currentPlayer: session.gameState.currentPlayer,
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
+        penaltyMode: session.gameState.penaltyMode,
       });
     }
   });
@@ -2405,6 +2411,7 @@ io.on("connection", (socket) => {
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
       currentPlayer: session.gameState.currentPlayer,
+      penaltyMode: session.gameState.penaltyMode,
     });
   });
 
@@ -2458,6 +2465,7 @@ io.on("connection", (socket) => {
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
         currentPlayer: session.gameState.currentPlayer,
+        penaltyMode: session.gameState.penaltyMode,
       });
     }
   });

@@ -2,6 +2,24 @@ import React, { useState, useEffect } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/SplitOrSteal.css";
 
+const penaltySystems: Record<string, { splitSplit: string; splitSteal: string; stealSteal: string }> = {
+  party: {
+    splitSplit: "5 sips each",
+    splitSteal: "Splitter = 10 sips, Stealer = none",
+    stealSteal: "20 sips each (≈ half a 0.5 L bottle)",
+  },
+  casual: {
+    splitSplit: "2 sips each",
+    splitSteal: "Splitter = 5 sips, Stealer = none",
+    stealSteal: "10 sips each (≈ quarter bottle)",
+  },
+  blackout: {
+    splitSplit: "10 sips each",
+    splitSteal: "Splitter = ½-chug (~12–15 sips), Stealer = none",
+    stealSteal: "Full chug (~30–35 sips)",
+  },
+};
+
 interface SplitOrStealDashboardProps {
   sessionId: string;
   players: any[];
@@ -32,6 +50,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [penaltyMode, setPenaltyMode] = useState<string>(gameState?.penaltyMode || "party");
 
   // Initialize state from gameState
   useEffect(() => {
@@ -41,6 +60,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
       setParticipants(gameState.participants || []);
+      setPenaltyMode(gameState.penaltyMode || "party");
     }
   }, [gameState]);
 
@@ -66,6 +86,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+
+      if (data.penaltyMode) {
+        setPenaltyMode(data.penaltyMode);
       }
     };
 
@@ -110,9 +134,14 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
         {formatTime(timeLeft)}
       </div>
-      <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
-        Players are preparing for the next duel...
-      </p>
+      <div className="penalty-summary">
+        <div>Next up:</div>
+        <ul>
+          <li>Split / Split: {penaltySystems[penaltyMode].splitSplit}</li>
+          <li>Split / Steal: {penaltySystems[penaltyMode].splitSteal}</li>
+          <li>Steal / Steal: {penaltySystems[penaltyMode].stealSteal}</li>
+        </ul>
+      </div>
     </div>
   );
 

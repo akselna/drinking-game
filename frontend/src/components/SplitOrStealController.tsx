@@ -2,6 +2,24 @@ import React, { useState, useEffect } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/SplitOrSteal.css";
 
+const penaltySystems: Record<string, { splitSplit: string; splitSteal: string; stealSteal: string }> = {
+  party: {
+    splitSplit: "5 sips each",
+    splitSteal: "Splitter = 10 sips, Stealer = none",
+    stealSteal: "20 sips each (≈ half a 0.5 L bottle)",
+  },
+  casual: {
+    splitSplit: "2 sips each",
+    splitSteal: "Splitter = 5 sips, Stealer = none",
+    stealSteal: "10 sips each (≈ quarter bottle)",
+  },
+  blackout: {
+    splitSplit: "10 sips each",
+    splitSteal: "Splitter = ½-chug (~12–15 sips), Stealer = none",
+    stealSteal: "Full chug (~30–35 sips)",
+  },
+};
+
 interface SplitOrStealControllerProps {
   sessionId: string;
   players: any[];
@@ -35,6 +53,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
   const [initialized, setInitialized] = useState<boolean>(false);
+  const [penaltyMode, setPenaltyMode] = useState<string>(gameState?.penaltyMode || "party");
 
   // Initialize state from gameState
   useEffect(() => {
@@ -45,6 +64,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setResults(gameState.results || null);
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
+      setPenaltyMode(gameState.penaltyMode || "party");
 
 
       // Reset choice when phase changes
@@ -78,6 +98,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+
+      if (data.penaltyMode) {
+        setPenaltyMode(data.penaltyMode);
       }
 
       // Update current player
@@ -141,9 +165,14 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
           {formatTime(timeLeft)}
         </div>
-        <p style={{ fontSize: "1.1rem", opacity: 0.9, textAlign: "center" }}>
-          Get ready for the next duel!
-        </p>
+        <div className="penalty-summary">
+          <div>Next up:</div>
+          <ul>
+            <li>Split / Split: {penaltySystems[penaltyMode].splitSplit}</li>
+            <li>Split / Steal: {penaltySystems[penaltyMode].splitSteal}</li>
+            <li>Steal / Steal: {penaltySystems[penaltyMode].stealSteal}</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
@@ -386,6 +415,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
   return (
     <div className="split-or-steal">
+      <button className="back-button" onClick={returnToLobby} title="Back">
+        ←
+      </button>
       <h1>💰 Split or Steal</h1>
 
       <button
