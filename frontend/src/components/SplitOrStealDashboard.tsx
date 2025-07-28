@@ -171,18 +171,21 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     return (
       <div className="phase-container">
         <style>{`
-          .reveal-animation-container {
-            position: relative;
-            width: 100%;
-            height: 400px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 100%);
-            border-radius: 10px;
-            margin: 20px 0;
-          }
+         .reveal-animation-container {
+          position: relative;
+          width: 100vw; /* Changed: Use viewport width */
+          left: 50%;
+          right: 50%;
+          margin-left: -50vw;
+          margin-right: -50vw;
+          height: 400px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+          background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 100%);
+          /* border-radius and margin removed to be flush with edges */
+        }
   
           .reveal-red-bar {
             position: absolute;

@@ -50,31 +50,28 @@ function pairPlayers(participants) {
 function calculateResults(player1, player2, choice1, choice2) {
   let player1Points = 0;
   let player2Points = 0;
-  let outcomeMessage = "";
+  let outcomeMessage = ""; // This will now be empty
   let drinkingPenalty = [];
 
   if (choice1 === "SPLIT" && choice2 === "SPLIT") {
     // Both players split - each gets 2 points
     player1Points = 2;
     player2Points = 2;
-    outcomeMessage = `${player1.name} and ${player2.name} both chose to SPLIT! They each get 2 points! 🤝`;
   } else if (choice1 === "STEAL" && choice2 === "STEAL") {
     // Both players steal - nobody gets points, both drink
     player1Points = 0;
     player2Points = 0;
-    outcomeMessage = `${player1.name} and ${player2.name} both chose to STEAL! Nobody gets points and both must drink! 🍺`;
     drinkingPenalty = [player1.id, player2.id];
   } else {
     // One splits, one steals - stealer gets all points, splitter drinks
     if (choice1 === "STEAL" && choice2 === "SPLIT") {
       player1Points = 4;
       player2Points = 0;
-      outcomeMessage = `${player1.name} STOLE from ${player2.name}! ${player1.name} gets 4 points, ${player2.name} must drink! 💰`;
       drinkingPenalty = [player2.id];
     } else {
+      // (choice1 === "SPLIT" && choice2 === "STEAL")
       player1Points = 0;
       player2Points = 4;
-      outcomeMessage = `${player2.name} STOLE from ${player1.name}! ${player2.name} gets 4 points, ${player1.name} must drink! 💰`;
       drinkingPenalty = [player1.id];
     }
   }
@@ -82,7 +79,7 @@ function calculateResults(player1, player2, choice1, choice2) {
   return {
     player1Points,
     player2Points,
-    outcomeMessage,
+    outcomeMessage, // Will be an empty string
     drinkingPenalty,
     choices: {
       [player1.id]: choice1,
