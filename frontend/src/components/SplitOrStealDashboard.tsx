@@ -251,62 +251,60 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
             filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));
           }
   
-          .player-name-label {
+          .reveal-player-names {
             position: absolute;
-            bottom: -40px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20%;
             color: white;
-            font-size: 18px;
+            font-size: 1.2rem;
             font-weight: bold;
-            text-align: center;
-            width: 200px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 25;
           }
-  
-          .reveal-results-overlay {
+
+          .reveal-result-screen {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #2a5298;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
             color: white;
             z-index: 30;
             opacity: 0;
             animation: revealFadeIn 0.5s ease-out 2s forwards;
           }
-  
-          .reveal-outcome-message {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+
+          .reveal-result-player {
+            text-align: center;
           }
-  
-          .reveal-drinking-penalty {
-            background: rgba(0, 0, 0, 0.5);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-          }
-  
-          .reveal-penalty-title {
-            font-size: 20px;
-            margin-bottom: 10px;
+
+          .reveal-result-sips {
+            font-size: 2rem;
+            margin-top: 0.5rem;
           }
         `}</style>
 
-        <div className="reveal-results">
-          <h3 style={{ marginTop: 0 }}>Results</h3>
-
-          {results &&
+        {results &&
             currentPair &&
             currentPair.player1 &&
             currentPair.player2 && (
               <div className="reveal-animation-container">
                 {/* Red bars */}
                 <div className="reveal-red-bar reveal-red-bar-left"></div>
+
                 <div className="reveal-red-bar reveal-red-bar-right"></div>
+
+                <div className="reveal-player-names">
+                  <div>{currentPair.player1.name}</div>
+                  <div>{currentPair.player2.name}</div>
+                </div>
 
                 {/* Player 1 button (left side) */}
                 <div className="reveal-button-container reveal-button-left">
@@ -457,9 +455,6 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                       </g>
                     </svg>
                   )}
-                  <div className="player-name-label">
-                    {currentPair.player1.name || "Player 1"}
-                  </div>
                 </div>
 
                 {/* Player 2 button (right side) */}
@@ -611,40 +606,26 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                       </g>
                     </svg>
                   )}
-                  <div className="player-name-label">
-                    {currentPair.player2.name || "Player 2"}
-                  </div>
                 </div>
 
                 {/* Results overlay */}
-                <div className="reveal-results-overlay">
-                  <div className="reveal-outcome-message">
-                    {results.outcomeMessage || "No outcome message"}
+                <div className="reveal-result-screen">
+                  <div className="reveal-result-player">
+                    <div>{currentPair.player1.name}</div>
+                    <div className="reveal-result-sips">
+                      {results.drinkingPenalty?.filter(
+                        (id: string) => id === currentPair.player1.id
+                      ).length || 0} sips
+                    </div>
                   </div>
-
-                  {results.drinkingPenalty &&
-                    results.drinkingPenalty.length > 0 && (
-                      <div className="reveal-drinking-penalty">
-                        <div className="reveal-penalty-title">
-                          🍺 Drinking Penalty:
-                        </div>
-                        {results.drinkingPenalty.map((playerId: string) => {
-                          const player =
-                            participants.find((p) => p.id === playerId) ||
-                            (currentPair.player1.id === playerId
-                              ? currentPair.player1
-                              : currentPair.player2);
-                          return (
-                            <div key={playerId} style={{ marginTop: "0.5rem" }}>
-                              <strong>
-                                {player?.name || "Unknown Player"}
-                              </strong>{" "}
-                              must drink!
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                  <div className="reveal-result-player">
+                    <div>{currentPair.player2.name}</div>
+                    <div className="reveal-result-sips">
+                      {results.drinkingPenalty?.filter(
+                        (id: string) => id === currentPair.player2.id
+                      ).length || 0} sips
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
