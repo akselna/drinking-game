@@ -26,7 +26,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-color);
   color: var(--text-color);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 /* App container */
