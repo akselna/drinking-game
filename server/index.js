@@ -359,10 +359,7 @@ io.on("connection", (socket) => {
 
     // Send the latest Split or Steal state after joining so late joiners don't
     // miss the current phase if a broadcast happened during the join process.
-    if (
-      session.gameType === GAME_TYPES.SPLIT_OR_STEAL &&
-      session.gameState
-    ) {
+    if (session.gameType === GAME_TYPES.SPLIT_OR_STEAL && session.gameState) {
       const { timerId, ...sanitizedGameState } = session.gameState;
       socket.emit("split-steal-state", sanitizedGameState);
     }
@@ -2074,14 +2071,14 @@ io.on("connection", (socket) => {
     }
 
     session.gameState.phase = "negotiation";
-    session.gameState.timeLeft = 60; // 60 seconds for negotiation
+    session.gameState.timeLeft = 3; // 60 seconds for negotiation
     session.gameState.currentPair = pair;
     session.gameState.choices = {};
 
     // Broadcast negotiation state
     io.to(sessionId).emit("split-steal-state", {
       phase: "negotiation",
-      timeLeft: 60,
+      timeLeft: 3,
       currentPair: pair,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,

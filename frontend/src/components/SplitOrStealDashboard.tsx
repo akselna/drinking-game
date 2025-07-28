@@ -64,7 +64,6 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         setResults(data.results);
       }
 
-
       if (data.participants) {
         setParticipants(data.participants);
       }
@@ -162,82 +161,499 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     </div>
   );
 
-  const renderRevealPhase = () => (
-    <div className="phase-container">
-      <div className="reveal-results">
-        <h3 style={{ marginTop: 0 }}>Results</h3>
+  const renderRevealPhase = () => {
+    // Get player choices (convert to uppercase to match button rendering)
+    const player1Choice =
+      results?.choices?.[currentPair?.player1?.id]?.toUpperCase();
+    const player2Choice =
+      results?.choices?.[currentPair?.player2?.id]?.toUpperCase();
 
-        {results &&
-          currentPair &&
-          currentPair.player1 &&
-          currentPair.player2 && (
-            <>
-              <div className="choice-display">
-                <div className="choice-item">
-                  <div className="choice-name">
+    return (
+      <div className="phase-container">
+        <style>{`
+          .reveal-animation-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f1e 100%);
+            border-radius: 10px;
+            margin: 20px 0;
+          }
+  
+          .reveal-red-bar {
+            position: absolute;
+            height: 120px;
+            background: linear-gradient(90deg, #DC143C 0%, #FF6B6B 50%, #DC143C 100%);
+            box-shadow: 
+              0 0 30px rgba(220, 20, 60, 0.8),
+              0 0 60px rgba(220, 20, 60, 0.5),
+              inset 0 2px 4px rgba(255, 255, 255, 0.3);
+            z-index: 10;
+          }
+  
+          .reveal-red-bar-left {
+            left: -50%;
+            width: 50%;
+            animation: revealSlideInLeft 1.5s ease-out forwards;
+          }
+  
+          .reveal-red-bar-right {
+            right: -50%;
+            width: 50%;
+            animation: revealSlideInRight 1.5s ease-out forwards;
+          }
+  
+          @keyframes revealSlideInLeft {
+            to {
+              left: 0;
+              width: calc(20% + 75px);
+            }
+          }
+  
+          @keyframes revealSlideInRight {
+            to {
+              right: 0;
+              width: calc(20% + 75px);
+            }
+          }
+  
+          .reveal-button-container {
+            position: absolute;
+            z-index: 20;
+            opacity: 0;
+            animation: revealFadeIn 0.5s ease-out 1.5s forwards;
+          }
+  
+          .reveal-button-left {
+            left: 20%;
+          }
+  
+          .reveal-button-right {
+            right: 20%;
+          }
+  
+          @keyframes revealFadeIn {
+            to {
+              opacity: 1;
+            }
+          }
+  
+          .reveal-button-svg {
+            width: 150px;
+            height: 150px;
+            filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));
+          }
+  
+          .player-name-label {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            width: 200px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+          }
+  
+          .reveal-results-overlay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            color: white;
+            z-index: 30;
+            opacity: 0;
+            animation: revealFadeIn 0.5s ease-out 2s forwards;
+          }
+  
+          .reveal-outcome-message {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+          }
+  
+          .reveal-drinking-penalty {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+          }
+  
+          .reveal-penalty-title {
+            font-size: 20px;
+            margin-bottom: 10px;
+          }
+        `}</style>
+
+        <div className="reveal-results">
+          <h3 style={{ marginTop: 0 }}>Results</h3>
+
+          {results &&
+            currentPair &&
+            currentPair.player1 &&
+            currentPair.player2 && (
+              <div className="reveal-animation-container">
+                {/* Red bars */}
+                <div className="reveal-red-bar reveal-red-bar-left"></div>
+                <div className="reveal-red-bar reveal-red-bar-right"></div>
+
+                {/* Player 1 button (left side) */}
+                <div className="reveal-button-container reveal-button-left">
+                  {player1Choice === "SPLIT" ? (
+                    // SPLIT button SVG
+                    <svg
+                      className="reveal-button-svg"
+                      viewBox="0 0 200 200"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <defs>
+                        <radialGradient id="yellowGradient1">
+                          <stop offset="0%" stopColor="#FFE066" />
+                          <stop offset="70%" stopColor="#FFA500" />
+                          <stop offset="100%" stopColor="#FF8C00" />
+                        </radialGradient>
+                      </defs>
+                      <g transform="translate(100, 100)">
+                        <circle
+                          r="70"
+                          fill="none"
+                          stroke="#C0C0C0"
+                          strokeWidth="5"
+                        />
+                        <circle r="68" fill="white" />
+                        <circle r="65" fill="url(#yellowGradient1)" />
+                        <circle
+                          r="60"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="55"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.15)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="50"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.1)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="45"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.05)"
+                          strokeWidth="1"
+                        />
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="#FFF"
+                        >
+                          SPLIT
+                        </text>
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="none"
+                          stroke="#FF8C00"
+                          strokeWidth="3"
+                        >
+                          SPLIT
+                        </text>
+                      </g>
+                    </svg>
+                  ) : (
+                    // STEAL button SVG
+                    <svg
+                      className="reveal-button-svg"
+                      viewBox="0 0 200 200"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <defs>
+                        <radialGradient id="redGradient1">
+                          <stop offset="0%" stopColor="#FF6B6B" />
+                          <stop offset="70%" stopColor="#DC143C" />
+                          <stop offset="100%" stopColor="#8B0000" />
+                        </radialGradient>
+                      </defs>
+                      <g transform="translate(100, 100)">
+                        <circle
+                          r="70"
+                          fill="none"
+                          stroke="#C0C0C0"
+                          strokeWidth="5"
+                        />
+                        <circle r="68" fill="white" />
+                        <circle r="65" fill="url(#redGradient1)" />
+                        <circle
+                          r="60"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="55"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.15)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="50"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.1)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="45"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.05)"
+                          strokeWidth="1"
+                        />
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="#FFF"
+                        >
+                          STEAL
+                        </text>
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="none"
+                          stroke="#8B0000"
+                          strokeWidth="3"
+                        >
+                          STEAL
+                        </text>
+                      </g>
+                    </svg>
+                  )}
+                  <div className="player-name-label">
                     {currentPair.player1.name || "Player 1"}
                   </div>
-                  <div
-                    className={`choice-value choice-${
-                      results.choices && results.choices[currentPair.player1.id]
-                        ? results.choices[currentPair.player1.id].toLowerCase()
-                        : "unknown"
-                    }`}
-                  >
-                    {(results.choices &&
-                      results.choices[currentPair.player1.id]) ||
-                      "Unknown"}
-                  </div>
                 </div>
-                <div className="choice-item">
-                  <div className="choice-name">
+
+                {/* Player 2 button (right side) */}
+                <div className="reveal-button-container reveal-button-right">
+                  {player2Choice === "SPLIT" ? (
+                    // SPLIT button SVG
+                    <svg
+                      className="reveal-button-svg"
+                      viewBox="0 0 200 200"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <defs>
+                        <radialGradient id="yellowGradient2">
+                          <stop offset="0%" stopColor="#FFE066" />
+                          <stop offset="70%" stopColor="#FFA500" />
+                          <stop offset="100%" stopColor="#FF8C00" />
+                        </radialGradient>
+                      </defs>
+                      <g transform="translate(100, 100)">
+                        <circle
+                          r="70"
+                          fill="none"
+                          stroke="#C0C0C0"
+                          strokeWidth="5"
+                        />
+                        <circle r="68" fill="white" />
+                        <circle r="65" fill="url(#yellowGradient2)" />
+                        <circle
+                          r="60"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="55"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.15)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="50"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.1)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="45"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.05)"
+                          strokeWidth="1"
+                        />
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="#FFF"
+                        >
+                          SPLIT
+                        </text>
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="none"
+                          stroke="#FF8C00"
+                          strokeWidth="3"
+                        >
+                          SPLIT
+                        </text>
+                      </g>
+                    </svg>
+                  ) : (
+                    // STEAL button SVG
+                    <svg
+                      className="reveal-button-svg"
+                      viewBox="0 0 200 200"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <defs>
+                        <radialGradient id="redGradient2">
+                          <stop offset="0%" stopColor="#FF6B6B" />
+                          <stop offset="70%" stopColor="#DC143C" />
+                          <stop offset="100%" stopColor="#8B0000" />
+                        </radialGradient>
+                      </defs>
+                      <g transform="translate(100, 100)">
+                        <circle
+                          r="70"
+                          fill="none"
+                          stroke="#C0C0C0"
+                          strokeWidth="5"
+                        />
+                        <circle r="68" fill="white" />
+                        <circle r="65" fill="url(#redGradient2)" />
+                        <circle
+                          r="60"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.2)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="55"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.15)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="50"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.1)"
+                          strokeWidth="1"
+                        />
+                        <circle
+                          r="45"
+                          fill="none"
+                          stroke="rgba(255,255,255,0.05)"
+                          strokeWidth="1"
+                        />
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="#FFF"
+                        >
+                          STEAL
+                        </text>
+                        <text
+                          y="10"
+                          textAnchor="middle"
+                          fontFamily="Arial Black"
+                          fontSize="40"
+                          fontWeight="900"
+                          letterSpacing="-2"
+                          fill="none"
+                          stroke="#8B0000"
+                          strokeWidth="3"
+                        >
+                          STEAL
+                        </text>
+                      </g>
+                    </svg>
+                  )}
+                  <div className="player-name-label">
                     {currentPair.player2.name || "Player 2"}
                   </div>
-                  <div
-                    className={`choice-value choice-${
-                      results.choices && results.choices[currentPair.player2.id]
-                        ? results.choices[currentPair.player2.id].toLowerCase()
-                        : "unknown"
-                    }`}
-                  >
-                    {(results.choices &&
-                      results.choices[currentPair.player2.id]) ||
-                      "Unknown"}
+                </div>
+
+                {/* Results overlay */}
+                <div className="reveal-results-overlay">
+                  <div className="reveal-outcome-message">
+                    {results.outcomeMessage || "No outcome message"}
                   </div>
+
+                  {results.drinkingPenalty &&
+                    results.drinkingPenalty.length > 0 && (
+                      <div className="reveal-drinking-penalty">
+                        <div className="reveal-penalty-title">
+                          🍺 Drinking Penalty:
+                        </div>
+                        {results.drinkingPenalty.map((playerId: string) => {
+                          const player =
+                            participants.find((p) => p.id === playerId) ||
+                            (currentPair.player1.id === playerId
+                              ? currentPair.player1
+                              : currentPair.player2);
+                          return (
+                            <div key={playerId} style={{ marginTop: "0.5rem" }}>
+                              <strong>
+                                {player?.name || "Unknown Player"}
+                              </strong>{" "}
+                              must drink!
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                 </div>
               </div>
+            )}
 
-              <div className="outcome-message">
-                {results.outcomeMessage || "No outcome message"}
-              </div>
-
-              {results.drinkingPenalty &&
-                results.drinkingPenalty.length > 0 && (
-                  <div className="drinking-penalty">
-                    <div className="penalty-title">🍺 Drinking Penalty:</div>
-                    {results.drinkingPenalty.map((playerId: string) => {
-                      const player =
-                        participants.find((p) => p.id === playerId) ||
-                        (currentPair.player1.id === playerId
-                          ? currentPair.player1
-                          : currentPair.player2);
-                      return (
-                        <div key={playerId} style={{ marginTop: "0.5rem" }}>
-                          <strong>{player?.name || "Unknown Player"}</strong>{" "}
-                          must drink!
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-            </>
-          )}
+          <div className="countdown-display" style={{ marginTop: "20px" }}>
+            {formatTime(timeLeft)}
+          </div>
+          <p>Next round starting in {timeLeft} seconds...</p>
+        </div>
       </div>
-
-      <div className="countdown-display">{formatTime(timeLeft)}</div>
-      <p>Next round starting in {timeLeft} seconds...</p>
-    </div>
-  );
+    );
+  };
 
   const renderSettingsModal = () => {
     if (!showSettings) return null;
