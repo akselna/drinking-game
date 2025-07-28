@@ -230,6 +230,26 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
             opacity: 0;
             animation: revealFadeIn 0.5s ease-out 1.5s forwards;
           }
+
+          .player-name-static {
+            position: absolute;
+            bottom: -40px;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            z-index: 15;
+          }
+
+          .player-name-static.left {
+            left: 20%;
+            transform: translateX(-50%);
+          }
+
+          .player-name-static.right {
+            right: 20%;
+            transform: translateX(50%);
+          }
   
           .reveal-button-left {
             left: 20%;
@@ -251,18 +271,6 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
             filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.8));
           }
   
-          .player-name-label {
-            position: absolute;
-            bottom: -40px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            text-align: center;
-            width: 200px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-          }
   
           .reveal-results-overlay {
             position: absolute;
@@ -275,12 +283,46 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
             opacity: 0;
             animation: revealFadeIn 0.5s ease-out 2s forwards;
           }
-  
-          .reveal-outcome-message {
-            font-size: 24px;
+
+          .final-summary {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #2a5298;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            opacity: 0;
+            z-index: 40;
+            animation: summaryFadeIn 0.5s ease-out 2.5s forwards;
+          }
+
+          .summary-players {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            margin-bottom: 1rem;
+          }
+
+          .summary-player-name {
+            font-size: 2rem;
             font-weight: bold;
-            margin: 20px 0;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-bottom: 0.5rem;
+          }
+
+          .summary-player-sips {
+            font-size: 1.5rem;
+          }
+
+          @keyframes summaryFadeIn {
+            to {
+              opacity: 1;
+            }
           }
   
           .reveal-drinking-penalty {
@@ -307,6 +349,12 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                 {/* Red bars */}
                 <div className="reveal-red-bar reveal-red-bar-left"></div>
                 <div className="reveal-red-bar reveal-red-bar-right"></div>
+                <div className="player-name-static left">
+                  {currentPair.player1.name || "Player 1"}
+                </div>
+                <div className="player-name-static right">
+                  {currentPair.player2.name || "Player 2"}
+                </div>
 
                 {/* Player 1 button (left side) */}
                 <div className="reveal-button-container reveal-button-left">
@@ -457,9 +505,6 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                       </g>
                     </svg>
                   )}
-                  <div className="player-name-label">
-                    {currentPair.player1.name || "Player 1"}
-                  </div>
                 </div>
 
                 {/* Player 2 button (right side) */}
@@ -611,17 +656,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                       </g>
                     </svg>
                   )}
-                  <div className="player-name-label">
-                    {currentPair.player2.name || "Player 2"}
-                  </div>
                 </div>
 
                 {/* Results overlay */}
                 <div className="reveal-results-overlay">
-                  <div className="reveal-outcome-message">
-                    {results.outcomeMessage || "No outcome message"}
-                  </div>
-
                   {results.drinkingPenalty &&
                     results.drinkingPenalty.length > 0 && (
                       <div className="reveal-drinking-penalty">
@@ -645,6 +683,27 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                         })}
                       </div>
                     )}
+                </div>
+                <div className="final-summary">
+                  <div className="summary-players">
+                    <div>
+                      <div className="summary-player-name">
+                        {currentPair.player1.name || "Player 1"}
+                      </div>
+                      <div className="summary-player-sips">
+                        {results.player1Points} sips
+                      </div>
+                    </div>
+                    <div>
+                      <div className="summary-player-name">
+                        {currentPair.player2.name || "Player 2"}
+                      </div>
+                      <div className="summary-player-sips">
+                        {results.player2Points} sips
+                      </div>
+                    </div>
+                  </div>
+                  <div>{timeLeft} seconds until next round</div>
                 </div>
               </div>
             )}
