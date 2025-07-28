@@ -1,6 +1,7 @@
 /* SplitOrSteal.css */
 
 .split-or-steal {
+  flex: 1;
   min-height: 100vh;
   background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
   color: white;
@@ -514,6 +515,49 @@
 
 .skip-round:hover {
   background: #f39c12;
+}
+
+/* Reveal sips screen */
+.reveal-sips-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: #2a5298;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  z-index: 40;
+  opacity: 0;
+  animation: revealFadeIn 0.5s ease-out 2s forwards;
+}
+
+.reveal-sips-players {
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+}
+
+.reveal-sip-player {
+  text-align: center;
+}
+
+.reveal-sip-name {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.reveal-sip-amount {
+  font-size: 3rem;
+  margin-top: 0.5rem;
+}
+
+.reveal-next-round {
+  font-size: 1.2rem;
 }
 
 /* Mobile Responsiveness */
