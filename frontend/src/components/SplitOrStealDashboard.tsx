@@ -732,6 +732,11 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     );
   }
 
+  // Conditionally render the reveal phase *outside* the main dashboard if it's active
+  if (currentPhase === "reveal") {
+    return renderRevealPhase();
+  }
+
   return (
     <div className="split-or-steal">
       <h1>💰 Split or Steal</h1>
@@ -748,9 +753,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         {currentPhase === "countdown" && renderCountdownPhase()}
         {currentPhase === "negotiation" && renderNegotiationPhase()}
         {currentPhase === "decision" && renderDecisionPhase()}
-        {currentPhase === "reveal" && renderRevealPhase()}
-
-        {/* leaderboard removed for dashboard version */}
+        {/* Reveal phase is now handled above to allow for a full-screen takeover */}
       </div>
 
       {renderSettingsModal()}
