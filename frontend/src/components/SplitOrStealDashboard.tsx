@@ -33,6 +33,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
   const [showPostReveal, setShowPostReveal] = useState<boolean>(false);
+  const [penalties, setPenalties] = useState<any>(gameState?.penalties);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -42,6 +43,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
       setParticipants(gameState.participants || []);
+      if (gameState.penalties) {
+        setPenalties(gameState.penalties);
+      }
     }
   }, [gameState]);
 
@@ -67,6 +71,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+      if (data.penalties) {
+        setPenalties(data.penalties);
       }
     };
 
@@ -134,6 +141,14 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
         {formatTime(timeLeft)}
       </div>
+      {penalties && (
+        <div className="penalties-display">
+          <p>Current penalties:</p>
+          <div>Cheers/Cheers: {penalties.splitSplit} sips each</div>
+          <div>Cheers/Tears: {penalties.splitSteal} sips for splitter</div>
+          <div>Tears/Tears: {penalties.stealSteal} sips each</div>
+        </div>
+      )}
       <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
         Players are preparing for the next duel...
       </p>
@@ -192,9 +207,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     const player2Choice =
       results?.choices?.[currentPair?.player2?.id]?.toUpperCase();
 
-    if (showPostReveal && currentPair) {
-      const player1Sips = calculateSips(currentPair.player1.intensity);
-      const player2Sips = calculateSips(currentPair.player2.intensity);
+    if (showPostReveal && currentPair && results && results.sips) {
+      const player1Sips = results.sips[currentPair.player1.id] || 0;
+      const player2Sips = results.sips[currentPair.player2.id] || 0;
       return (
         <div className="phase-container">
           <div
@@ -685,13 +700,14 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                     </div>
                   )}
 
-                  {results.drinkingPenalty &&
-                    results.drinkingPenalty.length > 0 && (
-                      <div className="reveal-drinking-penalty">
-                        <div className="reveal-penalty-title">
-                          🍺 Drinking Penalty:
-                        </div>
-                        {results.drinkingPenalty.map((playerId: string) => {
+                  {results.sips && (
+                    <div className="reveal-drinking-penalty">
+                      <div className="reveal-penalty-title">
+                        🍺 Drinking Penalty:
+                      </div>
+                      {Object.entries(results.sips).map(
+                        ([playerId, sips]: [string, any]) => {
+                          if (!sips || sips <= 0) return null;
                           const player =
                             participants.find((p) => p.id === playerId) ||
                             (currentPair.player1.id === playerId
@@ -702,12 +718,13 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                               <strong>
                                 {player?.name || "Unknown Player"}
                               </strong>{" "}
-                              must drink!
+                              drinks {sips} sips
                             </div>
                           );
-                        })}
-                      </div>
-                    )}
+                        }
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

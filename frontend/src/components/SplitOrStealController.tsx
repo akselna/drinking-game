@@ -35,6 +35,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
   const [initialized, setInitialized] = useState<boolean>(false);
+  const [penalties, setPenalties] = useState<any>(gameState?.penalties);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -45,6 +46,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setResults(gameState.results || null);
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
+      if (gameState.penalties) {
+        setPenalties(gameState.penalties);
+      }
 
 
       // Reset choice when phase changes
@@ -78,6 +82,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+      if (data.penalties) {
+        setPenalties(data.penalties);
       }
 
       // Update current player
@@ -141,6 +148,14 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
           {formatTime(timeLeft)}
         </div>
+        {penalties && (
+          <div className="penalties-display">
+            <p>Current penalties:</p>
+            <div>Cheers/Cheers: {penalties.splitSplit} sips each</div>
+            <div>Cheers/Tears: {penalties.splitSteal} sips for splitter</div>
+            <div>Tears/Tears: {penalties.stealSteal} sips each</div>
+          </div>
+        )}
         <p style={{ fontSize: "1.1rem", opacity: 0.9, textAlign: "center" }}>
           Get ready for the next duel!
         </p>
@@ -311,12 +326,13 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
                 {results.outcomeMessage || "No outcome message"}
               </div>
 
-              {results.drinkingPenalty &&
-                results.drinkingPenalty.includes(socket?.id) && (
-                  <div className="drinking-penalty">
-                    <div className="penalty-title">🍺 You must drink!</div>
+              {results.sips && results.sips[socket?.id] > 0 && (
+                <div className="drinking-penalty">
+                  <div className="penalty-title">
+                    🍺 Drink {results.sips[socket?.id]} sips!
                   </div>
-                )}
+                </div>
+              )}
             </>
           )}
       </div>

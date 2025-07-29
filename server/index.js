@@ -2014,12 +2014,16 @@ io.on("connection", (socket) => {
     session.gameState.results = null;
     session.gameState.currentPlayer = null;
 
-    // Broadcast initial state
+    // Recalculate penalties based on recent history
+    session.gameState.penalties = calculatePenalties(session.gameState.history);
+
+    // Broadcast initial state with current penalties
     io.to(sessionId).emit("split-steal-state", {
       phase: "countdown",
       timeLeft: duration,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2075,13 +2079,14 @@ io.on("connection", (socket) => {
     session.gameState.currentPair = pair;
     session.gameState.choices = {};
 
-    // Broadcast negotiation state
+    // Broadcast negotiation state with current penalties
     io.to(sessionId).emit("split-steal-state", {
       phase: "negotiation",
       timeLeft: 3,
       currentPair: pair,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2131,6 +2136,7 @@ io.on("connection", (socket) => {
       currentPlayer: session.gameState.currentPlayer,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2155,6 +2161,24 @@ io.on("connection", (socket) => {
       choice2
     );
 
+    // Determine drinking sips based on current penalties
+    const p = session.gameState.penalties;
+    let sips1 = 0;
+    let sips2 = 0;
+    if (choice1 === "SPLIT" && choice2 === "SPLIT") {
+      sips1 = sips2 = p.splitSplit;
+    } else if (choice1 === "STEAL" && choice2 === "SPLIT") {
+      sips2 = p.splitSteal;
+    } else if (choice1 === "SPLIT" && choice2 === "STEAL") {
+      sips1 = p.splitSteal;
+    } else if (choice1 === "STEAL" && choice2 === "STEAL") {
+      sips1 = sips2 = p.stealSteal;
+    }
+    results.sips = {
+      [pair.player1.id]: sips1,
+      [pair.player2.id]: sips2,
+    };
+
     // Update leaderboard
     session.gameState.scoreboard = updateLeaderboard(
       session.gameState.scoreboard,
@@ -2174,6 +2198,13 @@ io.on("connection", (socket) => {
     session.gameState.timeLeft = 10; // 10 seconds to show results
     session.gameState.results = results;
 
+    // Update history and penalties for next round
+    session.gameState.history.push({ choice1, choice2 });
+    if (session.gameState.history.length > 10) {
+      session.gameState.history.shift();
+    }
+    session.gameState.penalties = calculatePenalties(session.gameState.history);
+
     // Broadcast reveal state
     io.to(sessionId).emit("split-steal-state", {
       phase: "reveal",
@@ -2182,6 +2213,7 @@ io.on("connection", (socket) => {
       results: results,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      penalties: session.gameState.penalties,
     });
 
     // Clear any existing timer
@@ -2257,6 +2289,8 @@ io.on("connection", (socket) => {
       timeLeft: config.countdownDuration,
       currentPlayer: null,
       timerId: null,
+      history: [],
+      penalties: calculatePenalties([]),
     };
 
     // Initialize scoreboard for all participants
@@ -3127,4 +3161,5 @@ const {
   calculateResults,
   updateLeaderboard,
   getSortedLeaderboard,
+  calculatePenalties,
 } = require("./splitOrStealGameEngine");

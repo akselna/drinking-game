@@ -140,9 +140,36 @@ function getSortedLeaderboard(leaderboard, allPlayers) {
     .sort((a, b) => b.points - a.points);
 }
 
+/**
+ * Calculate dynamic drinking penalties based on recent history
+ * @param {Array} history - Array of {choice1, choice2}
+ * @param {number} [maxRounds=10] - How many rounds to keep in history
+ * @returns {Object} - {splitSplit, splitSteal, stealSteal, stealFraction}
+ */
+function calculatePenalties(history = [], maxRounds = 10) {
+  const recent = history.slice(-maxRounds);
+  const totalChoices = recent.length * 2;
+  let stealCount = 0;
+  for (const round of recent) {
+    if (round.choice1 === "STEAL") stealCount++;
+    if (round.choice2 === "STEAL") stealCount++;
+  }
+
+  const stealFraction = totalChoices > 0 ? stealCount / totalChoices : 0;
+  const delta = Math.round(5 * stealFraction);
+
+  return {
+    splitSplit: 3 + delta,
+    splitSteal: 8 - delta,
+    stealSteal: 10 + delta,
+    stealFraction,
+  };
+}
+
 module.exports = {
   pairPlayers,
   calculateResults,
   updateLeaderboard,
   getSortedLeaderboard,
+  calculatePenalties,
 };
