@@ -32,6 +32,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [showPostReveal, setShowPostReveal] = useState<boolean>(false);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -78,10 +79,33 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     };
   }, [socket]);
 
+  useEffect(() => {
+    if (currentPhase === "reveal") {
+      setShowPostReveal(false);
+      const t = setTimeout(() => setShowPostReveal(true), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [currentPhase]);
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const calculateSips = (intensity?: string): number => {
+    switch (intensity) {
+      case "Mild":
+        return 1;
+      case "Medium":
+        return 2;
+      case "Fyllehund":
+        return 3;
+      case "Gr\u00f8fta":
+        return 4;
+      default:
+        return 2;
+    }
   };
 
   const handleAddParticipant = () => {
@@ -168,6 +192,36 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     const player2Choice =
       results?.choices?.[currentPair?.player2?.id]?.toUpperCase();
 
+    if (showPostReveal && currentPair) {
+      const player1Sips = calculateSips(currentPair.player1.intensity);
+      const player2Sips = calculateSips(currentPair.player2.intensity);
+      return (
+        <div className="phase-container">
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              width: "100%",
+              padding: "0 20%",
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <div>{currentPair.player1.name}</div>
+              <div style={{ fontSize: "2rem", fontWeight: "bold" }}>
+                {player1Sips} sips
+              </div>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <div>{currentPair.player2.name}</div>
+              <div style={{ fontSize: "2rem", fontWeight: "bold" }}>
+                {player2Sips} sips
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="phase-container">
         <style>{`
@@ -227,6 +281,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
           .reveal-button-container {
             position: absolute;
             z-index: 20;
+          }
+
+          .reveal-button-wrapper {
             opacity: 0;
             animation: revealFadeIn 0.5s ease-out 1.5s forwards;
           }
@@ -310,8 +367,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
                 {/* Player 1 button (left side) */}
                 <div className="reveal-button-container reveal-button-left">
-                  {player1Choice === "SPLIT" ? (
-                    // SPLIT button SVG
+                  <div className="reveal-button-wrapper">
+                    {player1Choice === "SPLIT" ? (
+                      // SPLIT button SVG
                     <svg
                       className="reveal-button-svg"
                       viewBox="0 0 200 200"
@@ -383,8 +441,8 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                         </text>
                       </g>
                     </svg>
-                  ) : (
-                    // STEAL button SVG
+                    ) : (
+                      // STEAL button SVG
                     <svg
                       className="reveal-button-svg"
                       viewBox="0 0 200 200"
@@ -456,7 +514,8 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                         </text>
                       </g>
                     </svg>
-                  )}
+                    )}
+                  </div>
                   <div className="player-name-label">
                     {currentPair.player1.name || "Player 1"}
                   </div>
@@ -464,8 +523,9 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
                 {/* Player 2 button (right side) */}
                 <div className="reveal-button-container reveal-button-right">
-                  {player2Choice === "SPLIT" ? (
-                    // SPLIT button SVG
+                  <div className="reveal-button-wrapper">
+                    {player2Choice === "SPLIT" ? (
+                      // SPLIT button SVG
                     <svg
                       className="reveal-button-svg"
                       viewBox="0 0 200 200"
@@ -610,7 +670,8 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                         </text>
                       </g>
                     </svg>
-                  )}
+                    )}
+                  </div>
                   <div className="player-name-label">
                     {currentPair.player2.name || "Player 2"}
                   </div>
@@ -618,9 +679,11 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
                 {/* Results overlay */}
                 <div className="reveal-results-overlay">
-                  <div className="reveal-outcome-message">
-                    {results.outcomeMessage || "No outcome message"}
-                  </div>
+                  {results.outcomeMessage && (
+                    <div className="reveal-outcome-message">
+                      {results.outcomeMessage}
+                    </div>
+                  )}
 
                   {results.drinkingPenalty &&
                     results.drinkingPenalty.length > 0 && (
