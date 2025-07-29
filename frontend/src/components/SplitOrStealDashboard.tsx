@@ -27,11 +27,26 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   const [currentPhase, setCurrentPhase] = useState<string>("countdown");
   const [currentPair, setCurrentPair] = useState<any>(null);
   const [results, setResults] = useState<any>(null);
+  const [showSipResults, setShowSipResults] = useState<boolean>(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [participants, setParticipants] = useState<
     Array<{ id: string; name: string }>
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
+
+  const getIntensityMultiplier = () => {
+    const level = localStorage.getItem("intensity") || "Mild";
+    switch (level) {
+      case "Medium":
+        return 2;
+      case "Fyllehund":
+        return 3;
+      case "Grøfta":
+        return 4;
+      default:
+        return 1;
+    }
+  };
 
   // Initialize state from gameState
   useEffect(() => {
@@ -77,6 +92,14 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       socket.off("split-steal-state", handleStateUpdate);
     };
   }, [socket]);
+
+  useEffect(() => {
+    if (currentPhase === "reveal") {
+      setShowSipResults(false);
+      const timer = setTimeout(() => setShowSipResults(true), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentPhase]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -254,14 +277,43 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
           .player-name-label {
             position: absolute;
             bottom: -40px;
-            left: 50%;
-            transform: translateX(-50%);
             color: white;
             font-size: 18px;
             font-weight: bold;
             text-align: center;
             width: 200px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+          }
+          .label-left {
+            left: 20%;
+            transform: translateX(-50%);
+          }
+          .label-right {
+            left: 80%;
+            transform: translateX(-50%);
+          }
+
+          .sip-results {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            color: white;
+            z-index: 40;
+          }
+
+          .sip-player {
+            text-align: center;
+            font-size: 1.5rem;
+          }
+
+          .sip-count {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
           }
   
           .reveal-results-overlay {
@@ -308,9 +360,11 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                 <div className="reveal-red-bar reveal-red-bar-left"></div>
                 <div className="reveal-red-bar reveal-red-bar-right"></div>
 
-                {/* Player 1 button (left side) */}
-                <div className="reveal-button-container reveal-button-left">
-                  {player1Choice === "SPLIT" ? (
+                {!showSipResults && (
+                  <>
+                    {/* Player 1 button (left side) */}
+                    <div className="reveal-button-container reveal-button-left">
+                      {player1Choice === "SPLIT" ? (
                     // SPLIT button SVG
                     <svg
                       className="reveal-button-svg"
@@ -457,13 +511,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                       </g>
                     </svg>
                   )}
-                  <div className="player-name-label">
-                    {currentPair.player1.name || "Player 1"}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Player 2 button (right side) */}
-                <div className="reveal-button-container reveal-button-right">
+                    {/* Player 2 button (right side) */}
+                    <div className="reveal-button-container reveal-button-right">
                   {player2Choice === "SPLIT" ? (
                     // SPLIT button SVG
                     <svg
@@ -611,41 +662,70 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                       </g>
                     </svg>
                   )}
-                  <div className="player-name-label">
-                    {currentPair.player2.name || "Player 2"}
-                  </div>
+                    </div>
+                  </>
+                )}
+
+                <div className="player-name-label label-left">
+                  {currentPair.player1.name || "Player 1"}
+                </div>
+                <div className="player-name-label label-right">
+                  {currentPair.player2.name || "Player 2"}
                 </div>
 
-                {/* Results overlay */}
-                <div className="reveal-results-overlay">
-                  <div className="reveal-outcome-message">
-                    {results.outcomeMessage || "No outcome message"}
+                {showSipResults && (
+                  <div className="sip-results">
+                    <div className="sip-player sip-left">
+                      <div>{currentPair.player1.name}</div>
+                      <div className="sip-count">
+                        {results.drinkingPenalty?.includes(currentPair.player1.id)
+                          ? getIntensityMultiplier()
+                          : 0} sips
+                      </div>
+                    </div>
+                    <div className="sip-player sip-right">
+                      <div>{currentPair.player2.name}</div>
+                      <div className="sip-count">
+                        {results.drinkingPenalty?.includes(currentPair.player2.id)
+                          ? getIntensityMultiplier()
+                          : 0} sips
+                      </div>
+                    </div>
                   </div>
-
-                  {results.drinkingPenalty &&
-                    results.drinkingPenalty.length > 0 && (
-                      <div className="reveal-drinking-penalty">
-                        <div className="reveal-penalty-title">
-                          🍺 Drinking Penalty:
-                        </div>
-                        {results.drinkingPenalty.map((playerId: string) => {
-                          const player =
-                            participants.find((p) => p.id === playerId) ||
-                            (currentPair.player1.id === playerId
-                              ? currentPair.player1
-                              : currentPair.player2);
-                          return (
-                            <div key={playerId} style={{ marginTop: "0.5rem" }}>
-                              <strong>
-                                {player?.name || "Unknown Player"}
-                              </strong>{" "}
-                              must drink!
-                            </div>
-                          );
-                        })}
+                )}
+                {!showSipResults && (
+                  <div className="reveal-results-overlay">
+                    {results.outcomeMessage && (
+                      <div className="reveal-outcome-message">
+                        {results.outcomeMessage}
                       </div>
                     )}
-                </div>
+
+                    {results.drinkingPenalty &&
+                      results.drinkingPenalty.length > 0 && (
+                        <div className="reveal-drinking-penalty">
+                          <div className="reveal-penalty-title">
+                            🍺 Drinking Penalty:
+                          </div>
+                          {results.drinkingPenalty.map((playerId: string) => {
+                            const player =
+                              participants.find((p) => p.id === playerId) ||
+                              (currentPair.player1.id === playerId
+                                ? currentPair.player1
+                                : currentPair.player2);
+                            return (
+                              <div key={playerId} style={{ marginTop: "0.5rem" }}>
+                                <strong>
+                                  {player?.name || "Unknown Player"}
+                                </strong>{" "}
+                                must drink!
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                  </div>
+                )}
               </div>
             )}
 
