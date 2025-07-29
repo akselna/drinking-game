@@ -161,8 +161,9 @@ function calculatePenalties(history = [], maxRounds = 10) {
   const stealFraction = totalChoices > 0 ? stealCount / totalChoices : 0;
   const splitFraction = totalChoices > 0 ? splitCount / totalChoices : 0;
 
-  const stealDelta = Math.round(5 * stealFraction);
-  const splitDelta = Math.round(5 * splitFraction);
+  // Using smaller multipliers so a single round doesn't spike penalties
+  const stealDelta = Math.round(3 * stealFraction);
+  const splitDelta = Math.round(3 * splitFraction);
 
   return {
     // Increase Cheers/Cheers penalty when splits dominate
