@@ -150,19 +150,29 @@ function calculatePenalties(history = [], maxRounds = 10) {
   const recent = history.slice(-maxRounds);
   const totalChoices = recent.length * 2;
   let stealCount = 0;
+  let splitCount = 0;
   for (const round of recent) {
     if (round.choice1 === "STEAL") stealCount++;
     if (round.choice2 === "STEAL") stealCount++;
+    if (round.choice1 === "SPLIT") splitCount++;
+    if (round.choice2 === "SPLIT") splitCount++;
   }
 
   const stealFraction = totalChoices > 0 ? stealCount / totalChoices : 0;
-  const delta = Math.round(5 * stealFraction);
+  const splitFraction = totalChoices > 0 ? splitCount / totalChoices : 0;
+
+  const stealDelta = Math.round(5 * stealFraction);
+  const splitDelta = Math.round(5 * splitFraction);
 
   return {
-    splitSplit: 3 + delta,
-    splitSteal: 8 - delta,
-    stealSteal: 10 + delta,
+    // Increase Cheers/Cheers penalty when splits dominate
+    splitSplit: 3 + splitDelta,
+    // Make stealing less attractive when many steal
+    splitSteal: 8 - stealDelta,
+    // Punish Tears/Tears heavily if stealing is common
+    stealSteal: 10 + stealDelta,
     stealFraction,
+    splitFraction,
   };
 }
 
