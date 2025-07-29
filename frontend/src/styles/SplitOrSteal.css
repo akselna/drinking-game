@@ -248,6 +248,12 @@
   color: #f39c12;
 }
 
+.penalty-info {
+  margin-top: 1rem;
+  line-height: 1.4;
+  font-size: 1rem;
+}
+
 .reveal-results {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 12px;

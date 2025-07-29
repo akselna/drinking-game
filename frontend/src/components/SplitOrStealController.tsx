@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CustomSocket } from "../types/socket.types";
+import { penaltyModes } from "../data/penaltyModes";
 import "../styles/SplitOrSteal.css";
 
 interface SplitOrStealControllerProps {
@@ -35,6 +36,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
   const [initialized, setInitialized] = useState<boolean>(false);
+  const [penaltyMode, setPenaltyMode] = useState<string>(gameState?.penaltyMode || "party");
 
   // Initialize state from gameState
   useEffect(() => {
@@ -45,6 +47,9 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setResults(gameState.results || null);
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
+      if (gameState.penaltyMode) {
+        setPenaltyMode(gameState.penaltyMode);
+      }
 
 
       // Reset choice when phase changes
@@ -78,6 +83,10 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
       if (data.participants) {
         setParticipants(data.participants);
+      }
+
+      if (data.penaltyMode) {
+        setPenaltyMode(data.penaltyMode);
       }
 
       // Update current player
@@ -134,19 +143,42 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
 
 
-  const renderCountdownPhase = () => (
-    <div className="controller-container">
-      <div className="phase-container">
-        <div className="countdown-label">Next duel starting in</div>
-        <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
-          {formatTime(timeLeft)}
+  const renderCountdownPhase = () => {
+    const mode = penaltyModes.find((m) => m.id === penaltyMode);
+    return (
+      <div className="controller-container">
+        <div className="phase-container">
+          <div className="countdown-label">Next duel starting in</div>
+          <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
+            {formatTime(timeLeft)}
+          </div>
+
+          {currentPair && currentPair.player1 && currentPair.player2 && mode && (
+            <>
+              <h3>Next Up:</h3>
+              <div className="player-pair">
+                <span>{currentPair.player1.name}</span>
+                <span className="player-vs">VS</span>
+                <span>{currentPair.player2.name}</span>
+              </div>
+              <div className="penalty-info" style={{ textAlign: "center" }}>
+                <div>Split: {mode.splitSplit}</div>
+                <div>
+                  Split/Steal: {mode.splitStealSplitter}/{" "}
+                  {mode.splitStealStealer}
+                </div>
+                <div>Steal/Steal: {mode.stealSteal}</div>
+              </div>
+            </>
+          )}
+
+          <p style={{ fontSize: "1.1rem", opacity: 0.9, textAlign: "center" }}>
+            Get ready for the next duel!
+          </p>
         </div>
-        <p style={{ fontSize: "1.1rem", opacity: 0.9, textAlign: "center" }}>
-          Get ready for the next duel!
-        </p>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderNegotiationPhase = () => (
     <div className="controller-container">
