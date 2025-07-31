@@ -140,9 +140,47 @@ function getSortedLeaderboard(leaderboard, allPlayers) {
     .sort((a, b) => b.points - a.points);
 }
 
+/**
+ * Calculate dynamic drinking penalties based on recent history
+ * @param {Array} history - Array of {choice1, choice2}
+ * @param {number} [maxRounds=10] - How many rounds to keep in history
+ * @returns {Object} - {splitSplit, splitSteal, stealSteal, stealFraction}
+ */
+function calculatePenalties(history = [], maxRounds = 10) {
+  const recent = history.slice(-maxRounds);
+  const totalChoices = recent.length * 2;
+  let stealCount = 0;
+  let splitCount = 0;
+  for (const round of recent) {
+    if (round.choice1 === "STEAL") stealCount++;
+    if (round.choice2 === "STEAL") stealCount++;
+    if (round.choice1 === "SPLIT") splitCount++;
+    if (round.choice2 === "SPLIT") splitCount++;
+  }
+
+  const stealFraction = totalChoices > 0 ? stealCount / totalChoices : 0;
+  const splitFraction = totalChoices > 0 ? splitCount / totalChoices : 0;
+
+  // Using smaller multipliers so a single round doesn't spike penalties
+  const stealDelta = Math.round(3 * stealFraction);
+  const splitDelta = Math.round(3 * splitFraction);
+
+  return {
+    // Increase Cheers/Cheers penalty when splits dominate
+    splitSplit: 3 + splitDelta,
+    // Make stealing less attractive when many steal
+    splitSteal: 8 - stealDelta,
+    // Punish Tears/Tears heavily if stealing is common
+    stealSteal: 10 + stealDelta,
+    stealFraction,
+    splitFraction,
+  };
+}
+
 module.exports = {
   pairPlayers,
   calculateResults,
   updateLeaderboard,
   getSortedLeaderboard,
+  calculatePenalties,
 };
