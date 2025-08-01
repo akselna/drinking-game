@@ -103,25 +103,27 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     };
   }, [socket]);
 
-  // Effect to handle the delay between player decisions
+  // Effect to handle the delay when a turn starts
   useEffect(() => {
     if (
       currentPlayer &&
       socket &&
       currentPlayer === socket.id &&
-      prevPlayerRef.current !== currentPlayer &&
-      prevPlayerRef.current !== null
+      prevPlayerRef.current !== currentPlayer
     ) {
-      setIsTurnStarting(true);
-      const timer = setTimeout(() => {
-        setIsTurnStarting(false);
-      }, 2500); // 2.5-second delay
+      // Only apply the delay if there was a previous player (i.e., this is the second player's turn)
+      if (prevPlayerRef.current) {
+        setIsTurnStarting(true);
+        const timer = setTimeout(() => {
+          setIsTurnStarting(false);
+        }, 2500); // 2.5-second delay
 
-      return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
+      }
     }
   }, [currentPlayer, socket]);
 
-  // Update the ref after each render to track the previous player
+  // Effect to update the ref with the current player after every render
   useEffect(() => {
     prevPlayerRef.current = currentPlayer;
   });
@@ -265,14 +267,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
             style={{ textAlign: "center", marginTop: "1rem", color: "#f1c40f" }}
           >
             <strong>You chose: {myChoice}</strong>
-          </div>
-        )}
-
-        {isTurnStarting && (
-          <div
-            style={{ textAlign: "center", marginTop: "1rem", color: "#ccc" }}
-          >
-            The other player has chosen. Your turn begins shortly...
           </div>
         )}
 
