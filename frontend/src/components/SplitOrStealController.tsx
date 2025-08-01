@@ -281,11 +281,12 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         >
           <h4 style={{ margin: "0 0 0.5rem 0" }}>Quick Reminder:</h4>
           <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: 1.4 }}>
-            <strong>Both Split:</strong> 2 points each
+            <strong>Both Cheers:</strong> 2 points each
             <br />
-            <strong>Split vs Steal:</strong> Stealer gets 4, Splitter drinks
+            <strong>Cheers vs Tears:</strong> Tears gets *to be updated when
+            intensity comes
             <br />
-            <strong>Both Steal:</strong> 0 points each, both drink
+            <strong>Both Tears:</strong> 0 points each, both drink
           </p>
         </div>
       </div>

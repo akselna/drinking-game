@@ -316,7 +316,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             letterSpacing="-2"
                             fill="#FFF"
                           >
-                            SPLIT
+                            CHEERS
                           </text>
                           <text
                             y="10"
@@ -329,7 +329,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             stroke="#FF8C00"
                             strokeWidth="3"
                           >
-                            SPLIT
+                            CHEERS
                           </text>
                         </g>
                       </svg>
@@ -383,7 +383,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             letterSpacing="-2"
                             fill="#FFF"
                           >
-                            STEAL
+                            TEARS
                           </text>
                           <text
                             y="10"
@@ -396,7 +396,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             stroke="#8B0000"
                             strokeWidth="3"
                           >
-                            STEAL
+                            TEARS
                           </text>
                         </g>
                       </svg>
@@ -464,7 +464,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             letterSpacing="-2"
                             fill="#FFF"
                           >
-                            SPLIT
+                            CHEERS
                           </text>
                           <text
                             y="10"
@@ -477,7 +477,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             stroke="#FF8C00"
                             strokeWidth="3"
                           >
-                            SPLIT
+                            CHEERS
                           </text>
                         </g>
                       </svg>
@@ -531,7 +531,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             letterSpacing="-2"
                             fill="#FFF"
                           >
-                            STEAL
+                            TEARS
                           </text>
                           <text
                             y="10"
@@ -544,7 +544,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                             stroke="#8B0000"
                             strokeWidth="3"
                           >
-                            STEAL
+                            TEARS
                           </text>
                         </g>
                       </svg>
