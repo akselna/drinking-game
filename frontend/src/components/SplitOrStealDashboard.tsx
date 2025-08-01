@@ -28,6 +28,7 @@ interface GameState {
   currentPair?: CurrentPair | null;
   results?: Results | null;
   participants?: Participant[];
+  intensity?: string;
 }
 
 interface SplitOrStealDashboardProps {
@@ -61,6 +62,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   );
   const [newParticipantName, setNewParticipantName] = useState("");
   const [showPostReveal, setShowPostReveal] = useState(false);
+  const [gameIntensity, setGameIntensity] = useState<string>(gameState?.intensity || "Chill");
 
   // Initialize state from gameState
   useEffect(() => {
@@ -70,6 +72,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       setCurrentPair(gameState.currentPair || null);
       setResults(gameState.results || null);
       setParticipants(gameState.participants || []);
+      setGameIntensity(gameState.intensity || "Chill");
     }
   }, [gameState]);
 
@@ -98,6 +101,10 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       if (data.participants) {
         setParticipants(data.participants);
       }
+
+      if (data.intensity) {
+        setGameIntensity(data.intensity);
+      }
     };
 
     socket.on("split-steal-timer", handleTimerUpdate);
@@ -123,19 +130,43 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const calculateSips = (intensity: string) => {
-    switch (intensity) {
-      case "Mild":
-        return 1;
-      case "Medium":
-        return 2;
-      case "Fyllehund":
-        return 3;
-      case "Grøfta":
-        return 4;
-      default:
-        return 2;
-    }
+  const calculateSips = (
+    intensity: string,
+    p1Choice?: string,
+    p2Choice?: string
+  ): number => {
+    if (!p1Choice || !p2Choice) return 0;
+
+    const combo = `${p1Choice}/${p2Choice}`;
+
+    const table: Record<string, Record<string, number>> = {
+      Chill: {
+        "SPLIT/SPLIT": 3,
+        "STEAL/SPLIT": 8,
+        "SPLIT/STEAL": 8,
+        "STEAL/STEAL": 6,
+      },
+      Medium: {
+        "SPLIT/SPLIT": 4,
+        "STEAL/SPLIT": 10,
+        "SPLIT/STEAL": 10,
+        "STEAL/STEAL": 8,
+      },
+      Fyllehund: {
+        "SPLIT/SPLIT": 6,
+        "STEAL/SPLIT": 15,
+        "SPLIT/STEAL": 15,
+        "STEAL/STEAL": 12,
+      },
+      Grøfta: {
+        "SPLIT/SPLIT": 9,
+        "STEAL/SPLIT": 23,
+        "SPLIT/STEAL": 23,
+        "STEAL/STEAL": 18,
+      },
+    };
+
+    return table[intensity]?.[combo] ?? 0;
   };
 
   const handleAddParticipant = () => {
@@ -435,8 +466,12 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         : undefined;
 
     if (showPostReveal && currentPair) {
-      const player1Sips = calculateSips(currentPair.player1.intensity);
-      const player2Sips = calculateSips(currentPair.player2.intensity);
+      const player1Sips = calculateSips(
+        gameIntensity,
+        player1Choice,
+        player2Choice
+      );
+      const player2Sips = player1Sips; // same for both players
 
       return (
         <div className="reveal-phase">

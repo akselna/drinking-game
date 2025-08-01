@@ -2018,6 +2018,7 @@ io.on("connection", (socket) => {
     io.to(sessionId).emit("split-steal-state", {
       phase: "countdown",
       timeLeft: duration,
+      intensity: session.gameState.intensity,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2061,6 +2062,12 @@ io.on("connection", (socket) => {
     // Pair players from the configured participants list
     const pair = pairPlayers(session.gameState.participants);
 
+    // Attach intensity to the paired players
+    if (pair) {
+      pair.player1.intensity = session.gameState.intensity;
+      pair.player2.intensity = session.gameState.intensity;
+    }
+
     if (!pair) {
       // Not enough players, restart countdown
       console.log(
@@ -2080,6 +2087,7 @@ io.on("connection", (socket) => {
       phase: "negotiation",
       timeLeft: 3,
       currentPair: pair,
+      intensity: session.gameState.intensity,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2129,6 +2137,7 @@ io.on("connection", (socket) => {
       phase: "decision",
       currentPair: session.gameState.currentPair,
       currentPlayer: session.gameState.currentPlayer,
+      intensity: session.gameState.intensity,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2180,6 +2189,7 @@ io.on("connection", (socket) => {
       timeLeft: 10,
       currentPair: pair,
       results: results,
+      intensity: session.gameState.intensity,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
     });
@@ -2244,10 +2254,13 @@ io.on("connection", (socket) => {
       (p) => p && p.id && p.name
     );
 
+    const intensity = config.intensity || "Chill";
+
     // Initialize game state
     session.gameState = {
       phase: "countdown",
       countdownDuration: config.countdownDuration,
+      intensity,
       participants: validParticipants,
       scoreboard: {}, // player_id -> points
       leaderboard: [], // sorted array for display
