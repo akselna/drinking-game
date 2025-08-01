@@ -2020,6 +2020,7 @@ io.on("connection", (socket) => {
       timeLeft: duration,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      intensity: session.gameState.intensity,
     });
 
     // Clear any existing timer
@@ -2082,6 +2083,7 @@ io.on("connection", (socket) => {
       currentPair: pair,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      intensity: session.gameState.intensity,
     });
 
     // Clear any existing timer
@@ -2131,6 +2133,7 @@ io.on("connection", (socket) => {
       currentPlayer: session.gameState.currentPlayer,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      intensity: session.gameState.intensity,
     });
 
     // Clear any existing timer
@@ -2182,6 +2185,7 @@ io.on("connection", (socket) => {
       results: results,
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
+      intensity: session.gameState.intensity,
     });
 
     // Clear any existing timer
@@ -2248,6 +2252,7 @@ io.on("connection", (socket) => {
     session.gameState = {
       phase: "countdown",
       countdownDuration: config.countdownDuration,
+      intensity: config.intensity,
       participants: validParticipants,
       scoreboard: {}, // player_id -> points
       leaderboard: [], // sorted array for display
@@ -2405,6 +2410,7 @@ io.on("connection", (socket) => {
       leaderboard: session.gameState.leaderboard,
       participants: session.gameState.participants,
       currentPlayer: session.gameState.currentPlayer,
+      intensity: session.gameState.intensity,
     });
   });
 
@@ -2458,6 +2464,7 @@ io.on("connection", (socket) => {
         leaderboard: session.gameState.leaderboard,
         participants: session.gameState.participants,
         currentPlayer: session.gameState.currentPlayer,
+        intensity: session.gameState.intensity,
       });
     }
   });

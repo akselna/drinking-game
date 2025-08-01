@@ -25,7 +25,9 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
   isHost,
   socket,
 }) => {
-  const [countdownDuration, setCountdownDuration] = useState<number>(30);
+  const [countdownMinutes, setCountdownMinutes] = useState<number>(0);
+  const [countdownSeconds, setCountdownSeconds] = useState<number>(30);
+  const [intensity, setIntensity] = useState<string>("Chill");
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
 
@@ -53,8 +55,10 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
 
   const handleStartGame = () => {
     if (!socket || !isHost || participants.length < 2) return;
+    const totalSeconds = countdownMinutes * 60 + countdownSeconds;
     socket.emit("split-steal-config", sessionId, {
-      countdownDuration,
+      countdownDuration: totalSeconds,
+      intensity,
       participants,
     });
   };
@@ -101,19 +105,46 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
 
           {/* Countdown Duration */}
           <div style={styles.formGroup}>
-            <label style={styles.label}>
-              Countdown Between Duels (10-300s)
-            </label>
-            <input
-              type="number"
-              min="10"
-              max="300"
-              value={countdownDuration}
-              onChange={(e) =>
-                setCountdownDuration(parseInt(e.target.value, 10) || 30)
-              }
+            <label style={styles.label}>Countdown Between Duels</label>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <input
+                type="number"
+                min="0"
+                max="5"
+                value={countdownMinutes}
+                onChange={(e) =>
+                  setCountdownMinutes(Math.max(0, parseInt(e.target.value, 10) || 0))
+                }
+                style={{ ...styles.input, width: "80px" }}
+              />
+              <span style={{ alignSelf: "center" }}>min</span>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                value={countdownSeconds}
+                onChange={(e) =>
+                  setCountdownSeconds(Math.max(0, parseInt(e.target.value, 10) || 0))
+                }
+                style={{ ...styles.input, width: "80px" }}
+              />
+              <span style={{ alignSelf: "center" }}>sec</span>
+            </div>
+          </div>
+
+          {/* Intensity */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Intensity</label>
+            <select
+              value={intensity}
+              onChange={(e) => setIntensity(e.target.value)}
               style={styles.input}
-            />
+            >
+              <option value="Chill">Chill</option>
+              <option value="Medium">Medium</option>
+              <option value="Fyllehund">Fyllehund</option>
+              <option value="Grøfta">Grøfta</option>
+            </select>
           </div>
 
           {/* Participants List */}
