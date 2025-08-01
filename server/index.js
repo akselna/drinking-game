@@ -2248,6 +2248,7 @@ io.on("connection", (socket) => {
     session.gameState = {
       phase: "countdown",
       countdownDuration: config.countdownDuration,
+      intensity: config.intensity || "Chill",
       participants: validParticipants,
       scoreboard: {}, // player_id -> points
       leaderboard: [], // sorted array for display
