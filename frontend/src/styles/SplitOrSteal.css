@@ -222,8 +222,12 @@
 .phase-container {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 16px;
-  padding: 2rem;
+  box-sizing: border-box;
   width: 100%;
+  padding: 2rem;
+  max-width: 100vw;
+  overflow-x: hidden;
+
   text-align: center;
   backdrop-filter: blur(10px);
 }
@@ -555,5 +559,583 @@
   .settings-content {
     width: 95%;
     padding: 1.5rem;
+  }
+}
+/* === Updated Reveal Phase Styles === */
+.reveal-phase {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Main container for player cards */
+.reveal-players-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 80px;
+  margin-bottom: 60px;
+  animation: fadeInScale 0.8s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Individual player card */
+.reveal-player-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 40px;
+  text-align: center;
+  min-width: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+.reveal-player-card::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  border-radius: 20px;
+  opacity: 0;
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Player name */
+.reveal-player-name {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Sips container */
+.reveal-sips-container {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
+/* Sips number */
+.reveal-sips-number {
+  font-size: 72px;
+  font-weight: 900;
+  color: #f39c12;
+  line-height: 1;
+  margin-bottom: 8px;
+  text-shadow: 0 0 30px rgba(243, 156, 18, 0.5);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Sips label */
+.reveal-sips-label {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+/* VS divider */
+.reveal-vs-divider {
+  font-size: 48px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.3);
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  animation: fadeIn 1s ease-out 0.5s both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Countdown timer at bottom */
+.reveal-countdown-container {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  animation: slideUp 0.8s ease-out 0.5s both;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.reveal-countdown-label {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.reveal-countdown-timer {
+  font-size: 36px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Beer emoji animation */
+.reveal-beer-emoji {
+  font-size: 48px;
+  margin-bottom: 16px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .reveal-players-container {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .reveal-player-card {
+    min-width: 240px;
+    padding: 30px;
+  }
+
+  .reveal-player-name {
+    font-size: 24px;
+  }
+
+  .reveal-sips-number {
+    font-size: 56px;
+  }
+
+  .reveal-sips-label {
+    font-size: 20px;
+  }
+
+  .reveal-vs-divider {
+    font-size: 36px;
+    margin: 20px 0;
+  }
+
+  .reveal-countdown-container {
+    bottom: 30px;
+  }
+
+  .reveal-countdown-timer {
+    font-size: 28px;
+  }
+}
+
+/* === Updated Reveal Animation Phase Styles === */
+.reveal-animation-phase {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Title section */
+.reveal-title-section {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 30;
+  animation: fadeInDown 0.8s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.reveal-title {
+  font-size: 48px;
+  font-weight: 900;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.reveal-subtitle {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+/* Main animation container */
+.reveal-animation-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  height: 400px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Player names above the animation */
+.reveal-players-header {
+  position: absolute;
+  top: -80px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 15%;
+  z-index: 25;
+}
+
+.reveal-player-label {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px 32px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.reveal-player-label-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Red sliding bars */
+.reveal-red-bar {
+  position: absolute;
+  height: 140px;
+  background: linear-gradient(
+    90deg,
+    rgba(220, 20, 60, 0.9) 0%,
+    rgba(255, 107, 107, 0.9) 50%,
+    rgba(220, 20, 60, 0.9) 100%
+  );
+  box-shadow: 0 0 40px rgba(220, 20, 60, 0.8), 0 0 80px rgba(220, 20, 60, 0.5),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+  z-index: 10;
+  backdrop-filter: blur(5px);
+}
+
+.reveal-red-bar-left {
+  left: -50%;
+  width: 50%;
+  animation: revealSlideInLeft 1.5s ease-out forwards;
+}
+
+.reveal-red-bar-right {
+  right: -50%;
+  width: 50%;
+  animation: revealSlideInRight 1.5s ease-out forwards;
+}
+
+@keyframes revealSlideInLeft {
+  to {
+    left: 0;
+    width: calc(20% + 90px);
+  }
+}
+
+@keyframes revealSlideInRight {
+  to {
+    right: 0;
+    width: calc(20% + 90px);
+  }
+}
+
+/* Button containers */
+.reveal-button-container {
+  position: absolute;
+  z-index: 20;
+}
+
+.reveal-button-wrapper {
+  opacity: 0;
+  animation: revealButtonFadeIn 0.5s ease-out 1.5s forwards;
+}
+
+@keyframes revealButtonFadeIn {
+  to {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.reveal-button-left {
+  left: 20%;
+}
+
+.reveal-button-right {
+  right: 20%;
+}
+
+.reveal-button-svg {
+  width: 180px;
+  height: 180px;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.5));
+  transition: transform 0.3s ease;
+}
+
+.reveal-button-svg:hover {
+  transform: scale(1.05);
+}
+
+/* Results overlay */
+.reveal-results-overlay {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: white;
+  z-index: 30;
+  opacity: 0;
+  animation: revealResultsFadeIn 0.8s ease-out 2s forwards;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px 48px;
+  min-width: 400px;
+}
+
+@keyframes revealResultsFadeIn {
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-10px);
+  }
+}
+
+.reveal-outcome-message {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+}
+
+.reveal-drinking-penalty {
+  background: rgba(243, 156, 18, 0.1);
+  border: 2px solid rgba(243, 156, 18, 0.3);
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
+.reveal-penalty-title {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: #f39c12;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.reveal-penalty-players {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.reveal-penalty-player {
+  font-size: 18px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Countdown section */
+.reveal-countdown-section {
+  position: absolute;
+  bottom: 40px;
+  right: 40px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 20px 32px;
+  animation: slideInRight 0.8s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.reveal-countdown-next {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.reveal-countdown-time {
+  font-size: 32px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .reveal-title-section {
+    top: 40px;
+  }
+
+  .reveal-title {
+    font-size: 36px;
+  }
+
+  .reveal-subtitle {
+    font-size: 16px;
+  }
+
+  .reveal-animation-container {
+    width: 95%;
+    height: 300px;
+    border-radius: 20px;
+  }
+
+  .reveal-players-header {
+    top: -70px;
+    padding: 0 5%;
+  }
+
+  .reveal-player-label {
+    padding: 12px 20px;
+  }
+
+  .reveal-player-label-name {
+    font-size: 18px;
+  }
+
+  .reveal-button-svg {
+    width: 140px;
+    height: 140px;
+  }
+
+  .reveal-results-overlay {
+    min-width: 300px;
+    padding: 20px 32px;
+  }
+
+  .reveal-outcome-message {
+    font-size: 22px;
+  }
+
+  .reveal-countdown-section {
+    bottom: 20px;
+    right: 20px;
+    padding: 16px 24px;
+  }
+
+  .reveal-countdown-time {
+    font-size: 24px;
   }
 }
