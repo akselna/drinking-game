@@ -867,28 +867,30 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* Player names above the animation */
-.reveal-players-header {
+/* Player names above buttons - visible throughout animation */
+.reveal-player-name-label {
   position: absolute;
-  top: -80px;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 15%;
+  top: -60px;
   z-index: 25;
-}
-
-.reveal-player-label {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   padding: 16px 32px;
-  animation: fadeIn 0.5s ease-out;
+  animation: fadeIn 0.3s ease-out;
 }
 
-.reveal-player-label-name {
+.reveal-player-name-label.left {
+  left: 20%;
+  transform: translateX(-50%);
+}
+
+.reveal-player-name-label.right {
+  right: 20%;
+  transform: translateX(50%);
+}
+
+.reveal-player-name-text {
   font-size: 24px;
   font-weight: 700;
   color: #ffffff;
@@ -976,7 +978,7 @@
   transform: scale(1.05);
 }
 
-/* Results overlay */
+/* Results overlay - simplified without drinking penalty */
 .reveal-results-overlay {
   position: absolute;
   bottom: 40px;
@@ -987,12 +989,6 @@
   z-index: 30;
   opacity: 0;
   animation: revealResultsFadeIn 0.8s ease-out 2s forwards;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  padding: 24px 48px;
-  min-width: 400px;
 }
 
 @keyframes revealResultsFadeIn {
@@ -1003,43 +999,15 @@
 }
 
 .reveal-outcome-message {
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
-  margin-bottom: 20px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
   color: #ffffff;
-}
-
-.reveal-drinking-penalty {
-  background: rgba(243, 156, 18, 0.1);
-  border: 2px solid rgba(243, 156, 18, 0.3);
-  padding: 20px;
-  border-radius: 12px;
-  margin-top: 20px;
-}
-
-.reveal-penalty-title {
-  font-size: 22px;
-  margin-bottom: 12px;
-  color: #f39c12;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.reveal-penalty-players {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.reveal-penalty-player {
-  font-size: 18px;
-  color: #ffffff;
-  font-weight: 500;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 24px 48px;
 }
 
 /* Countdown section */

@@ -252,26 +252,19 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
             <>
               {/* Main Animation Container */}
               <div className="reveal-animation-container">
-                {/* Player Names Header */}
-                <div className="reveal-players-header">
-                  <div className="reveal-player-label">
-                    <div className="reveal-player-label-name">
-                      {currentPair.player1.name || "Player 1"}
-                    </div>
-                  </div>
-                  <div className="reveal-player-label">
-                    <div className="reveal-player-label-name">
-                      {currentPair.player2.name || "Player 2"}
-                    </div>
-                  </div>
-                </div>
-
                 {/* Red sliding bars */}
                 <div className="reveal-red-bar reveal-red-bar-left"></div>
                 <div className="reveal-red-bar reveal-red-bar-right"></div>
 
-                {/* Player 1 button (left side) */}
+                {/* Player 1 button (left side) with name */}
                 <div className="reveal-button-container reveal-button-left">
+                  {/* Player 1 name - visible from start */}
+                  <div className="reveal-player-name-label left">
+                    <div className="reveal-player-name-text">
+                      {currentPair.player1.name || "Player 1"}
+                    </div>
+                  </div>
+
                   <div className="reveal-button-wrapper">
                     {player1Choice === "SPLIT" ? (
                       // SPLIT button SVG
@@ -411,8 +404,15 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Player 2 button (right side) */}
+                {/* Player 2 button (right side) with name */}
                 <div className="reveal-button-container reveal-button-right">
+                  {/* Player 2 name - visible from start */}
+                  <div className="reveal-player-name-label right">
+                    <div className="reveal-player-name-text">
+                      {currentPair.player2.name || "Player 2"}
+                    </div>
+                  </div>
+
                   <div className="reveal-button-wrapper">
                     {player2Choice === "SPLIT" ? (
                       // SPLIT button SVG
@@ -552,45 +552,14 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                   </div>
                 </div>
 
-                {/* Results overlay */}
-                <div className="reveal-results-overlay">
-                  {results.outcomeMessage && (
+                {/* Results overlay - only shows outcome message */}
+                {results.outcomeMessage && (
+                  <div className="reveal-results-overlay">
                     <div className="reveal-outcome-message">
                       {results.outcomeMessage}
                     </div>
-                  )}
-
-                  {results.drinkingPenalty &&
-                    results.drinkingPenalty.length > 0 && (
-                      <div className="reveal-drinking-penalty">
-                        <div className="reveal-penalty-title">
-                          <span>🍺</span>
-                          <span>Drinking Penalty</span>
-                          <span>🍺</span>
-                        </div>
-                        <div className="reveal-penalty-players">
-                          {results.drinkingPenalty.map((playerId: string) => {
-                            const player =
-                              participants.find((p) => p.id === playerId) ||
-                              (currentPair.player1.id === playerId
-                                ? currentPair.player1
-                                : currentPair.player2);
-                            return (
-                              <div
-                                key={playerId}
-                                className="reveal-penalty-player"
-                              >
-                                <strong>
-                                  {player?.name || "Unknown Player"}
-                                </strong>{" "}
-                                must drink!
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* Countdown Section */}
