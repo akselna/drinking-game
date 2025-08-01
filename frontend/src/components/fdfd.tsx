@@ -180,7 +180,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
       )}
 
       <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
-        Players are making their choices: Split or Steal?
+        Players are making their choices: Cheers Or Tears?
       </p>
     </div>
   );
@@ -242,7 +242,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         {/* Title Section */}
         <div className="reveal-title-section">
           <h1 className="reveal-title">The Reveal</h1>
-          <p className="reveal-subtitle">Did they split or steal?</p>
+          <p className="reveal-subtitle">Did they cheers or cry?</p>
         </div>
 
         {results &&
@@ -643,7 +643,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   if (!isHost) {
     return (
       <div className="split-or-steal">
-        <h1>💰 Split or Steal</h1>
+        <h1>💰 Cheers Or Tears</h1>
         <div className="wait-message">
           <h3>Game in progress...</h3>
           <p>The host is managing the game. Watch the main screen!</p>
@@ -659,7 +659,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
   return (
     <div className="split-or-steal">
-      <h1>💰 Split or Steal</h1>
+      <h1>💰 Cheers Or Tears</h1>
 
       <button
         className="settings-button"

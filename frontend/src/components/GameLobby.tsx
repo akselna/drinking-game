@@ -118,7 +118,7 @@ const GameLobby: React.FC<GameLobbyProps> = ({
     },
     {
       id: "splitOrSteal",
-      name: "Split or Steal",
+      name: "Cheers Or Tears",
       icon: "💰",
       color: "#f39c12",
     },

@@ -235,7 +235,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       <div className="controller-container">
         <div className="current-player-indicator">
           <div className="your-turn">{activePlayer.name}'s Turn</div>
-          <p>Choose your strategy: Split or Steal?</p>
+          <p>Choose your strategy: Cheers Or Tears?</p>
         </div>
 
         <div
@@ -396,7 +396,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
   return (
     <div className="split-or-steal">
-      <h1>💰 Split or Steal</h1>
+      <h1>💰 Cheers Or Tears</h1>
 
       <button
         className="settings-button"

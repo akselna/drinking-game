@@ -11,7 +11,7 @@ import Beat4Beat from "./Beat4Beat";
 import LamboScreen from "./LamboScreen"; // Import the new LamboScreen component
 import NotAllowedToLaugh from "./NotAllowedToLaugh";
 import Skjenkehjulet, { SkjenkehjuletHandle } from "./Skjenkehjulet";
-// 1. First, add the import for Split or Steal components at the top:
+// 1. First, add the import for Cheers Or Tears components at the top:
 import SplitOrStealSetup from "./SplitOrStealSetup";
 import SplitOrStealDashboard from "./SplitOrStealDashboard";
 import SplitOrStealController from "./SplitOrStealController";

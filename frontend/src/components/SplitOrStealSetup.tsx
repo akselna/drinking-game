@@ -70,7 +70,7 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
     return (
       <BlueDotBackground>
         <div style={styles.container}>
-          <h1 style={styles.mainTitle}>💰 Split or Steal</h1>
+          <h1 style={styles.mainTitle}>💰 Cheers Or Tears</h1>
           <div style={styles.card}>
             <h3 style={{ ...styles.subTitle, color: "#4d9eff" }}>
               Waiting for Host
@@ -88,7 +88,7 @@ const SplitOrStealSetup: React.FC<SplitOrStealSetupProps> = ({
   return (
     <BlueDotBackground>
       <div style={styles.container}>
-        <h1 style={styles.mainTitle}>💰 Split or Steal</h1>
+        <h1 style={styles.mainTitle}>💰 Cheers Or Tears</h1>
 
         <div
           style={{
