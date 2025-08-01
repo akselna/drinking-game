@@ -1,40 +1,12 @@
-// src/components/SplitOrStealDashboard.tsx
 import React, { useState, useEffect } from "react";
-import BlueDotBackground from "./BlueDotBackground";
 import { CustomSocket } from "../types/socket.types";
-
-// Type Definitions
-interface Participant {
-  id: string;
-  name: string;
-}
-
-interface Player extends Participant {
-  intensity: string;
-}
-
-interface CurrentPair {
-  player1: Player;
-  player2: Player;
-}
-
-interface Results {
-  choices: { [key: string]: string };
-}
-
-interface GameState {
-  timeLeft?: number;
-  phase?: string;
-  currentPair?: CurrentPair | null;
-  results?: Results | null;
-  participants?: Participant[];
-}
+import "../styles/SplitOrSteal.css";
 
 interface SplitOrStealDashboardProps {
   sessionId: string;
   players: any[];
   isHost: boolean;
-  gameState: GameState;
+  gameState: any;
   socket: CustomSocket | null;
   restartGame: () => void;
   leaveSession: () => void;
@@ -51,16 +23,16 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   leaveSession,
   returnToLobby,
 }) => {
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [currentPhase, setCurrentPhase] = useState("countdown");
-  const [currentPair, setCurrentPair] = useState<CurrentPair | null>(null);
-  const [results, setResults] = useState<Results | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [participants, setParticipants] = useState<Participant[]>(
-    gameState?.participants || []
-  );
-  const [newParticipantName, setNewParticipantName] = useState("");
-  const [showPostReveal, setShowPostReveal] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [currentPhase, setCurrentPhase] = useState<string>("countdown");
+  const [currentPair, setCurrentPair] = useState<any>(null);
+  const [results, setResults] = useState<any>(null);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [participants, setParticipants] = useState<
+    Array<{ id: string; name: string }>
+  >(gameState?.participants || []);
+  const [newParticipantName, setNewParticipantName] = useState<string>("");
+  const [showPostReveal, setShowPostReveal] = useState<boolean>(false);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -77,14 +49,12 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
   useEffect(() => {
     if (!socket) return;
 
-    const handleTimerUpdate = (data: { timeLeft: number }) => {
+    const handleTimerUpdate = (data: any) => {
       setTimeLeft(data.timeLeft);
     };
 
-    const handleStateUpdate = (data: GameState) => {
-      if (data.phase) {
-        setCurrentPhase(data.phase);
-      }
+    const handleStateUpdate = (data: any) => {
+      setCurrentPhase(data.phase);
       setTimeLeft(data.timeLeft || 0);
 
       if (data.currentPair) {
@@ -117,13 +87,13 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     }
   }, [currentPhase]);
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const calculateSips = (intensity: string) => {
+  const calculateSips = (intensity?: string): number => {
     switch (intensity) {
       case "Mild":
         return 1;
@@ -131,7 +101,7 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
         return 2;
       case "Fyllehund":
         return 3;
-      case "Grøfta":
+      case "Gr\u00f8fta":
         return 4;
       default:
         return 2;
@@ -140,281 +110,76 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
   const handleAddParticipant = () => {
     if (!socket || !isHost || !newParticipantName.trim()) return;
+
     socket.emit("split-steal-add-player", sessionId, newParticipantName.trim());
     setNewParticipantName("");
   };
 
   const handleRemoveParticipant = (participantId: string) => {
     if (!socket || !isHost) return;
+
     socket.emit("split-steal-remove-player", sessionId, participantId);
   };
 
   const handleSkipRound = () => {
     if (!socket || !isHost) return;
+
     socket.emit("split-steal-skip-round", sessionId);
     setShowSettings(false);
   };
 
   const renderCountdownPhase = () => (
-    <div
-      style={{
-        textAlign: "center",
-        animation: "fadeIn 0.8s ease-out",
-      }}
-    >
-      <h2
-        style={{
-          fontSize: "2.5rem",
-          fontWeight: "300",
-          marginBottom: "1rem",
-          color: "#4d9eff",
-          textShadow: "0 0 20px rgba(77, 158, 255, 0.5)",
-        }}
-      >
-        Time until next duel
-      </h2>
-      <div
-        style={{
-          fontSize: "6rem",
-          fontWeight: "900",
-          letterSpacing: "-2px",
-          background:
-            timeLeft <= 10
-              ? "linear-gradient(135deg, #ff6b6b 0%, #dc143c 100%)"
-              : "linear-gradient(135deg, #4d9eff 0%, #1a5fb4 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          marginBottom: "2rem",
-          animation: timeLeft <= 10 ? "pulse 1s ease-in-out infinite" : "none",
-        }}
-      >
+    <div className="phase-container">
+      <div className="countdown-label">Time until next duel</div>
+      <div className={`countdown-display ${timeLeft <= 10 ? "warning" : ""}`}>
         {formatTime(timeLeft)}
       </div>
-      <p
-        style={{
-          fontSize: "1.5rem",
-          opacity: 0.8,
-          fontWeight: "300",
-        }}
-      >
+      <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
         Players are preparing for the next duel...
       </p>
     </div>
   );
 
   const renderNegotiationPhase = () => (
-    <div
-      style={{
-        textAlign: "center",
-        animation: "fadeIn 0.8s ease-out",
-      }}
-    >
-      <h2
-        style={{
-          fontSize: "3rem",
-          fontWeight: "800",
-          marginBottom: "2rem",
-          background: "linear-gradient(135deg, #FFE066 0%, #FFA500 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          textShadow: "0 0 30px rgba(255, 165, 0, 0.3)",
-        }}
-      >
-        Negotiation Phase
-      </h2>
-
-      <div
-        style={{
-          fontSize: "4rem",
-          fontWeight: "700",
-          color: "#fff",
-          marginBottom: "3rem",
-        }}
-      >
-        {formatTime(timeLeft)}
-      </div>
+    <div className="phase-container">
+      <div className="negotiation-info">Negotiation Phase</div>
+      <div className="countdown-display">{formatTime(timeLeft)}</div>
 
       {currentPair && currentPair.player1 && currentPair.player2 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "3rem",
-            marginBottom: "2rem",
-          }}
-        >
-          <div
-            style={{
-              padding: "2rem",
-              background: "rgba(77, 158, 255, 0.1)",
-              borderRadius: "15px",
-              border: "2px solid rgba(77, 158, 255, 0.3)",
-              animation: "slideInLeft 0.5s ease-out",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                color: "#4d9eff",
-                marginBottom: "0.5rem",
-              }}
-            >
-              {currentPair.player1.name || "Player 1"}
-            </h3>
-          </div>
-
-          <span
-            style={{
-              fontSize: "2.5rem",
-              fontWeight: "900",
-              color: "#FFA500",
-              textShadow: "0 0 20px rgba(255, 165, 0, 0.5)",
-            }}
-          >
-            VS
+        <div className="player-pair">
+          <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            {currentPair.player1.name || "Player 1"}
           </span>
-
-          <div
-            style={{
-              padding: "2rem",
-              background: "rgba(255, 107, 107, 0.1)",
-              borderRadius: "15px",
-              border: "2px solid rgba(255, 107, 107, 0.3)",
-              animation: "slideInRight 0.5s ease-out",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "2rem",
-                fontWeight: "700",
-                color: "#ff6b6b",
-                marginBottom: "0.5rem",
-              }}
-            >
-              {currentPair.player2.name || "Player 2"}
-            </h3>
-          </div>
+          <span className="player-vs">VS</span>
+          <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            {currentPair.player2.name || "Player 2"}
+          </span>
         </div>
       )}
 
-      <p
-        style={{
-          fontSize: "1.3rem",
-          opacity: 0.8,
-          fontWeight: "300",
-          maxWidth: "600px",
-          margin: "0 auto",
-        }}
-      >
+      <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
         Players have 60 seconds to negotiate before making their decision...
       </p>
     </div>
   );
 
   const renderDecisionPhase = () => (
-    <div
-      style={{
-        textAlign: "center",
-        animation: "fadeIn 0.8s ease-out",
-      }}
-    >
-      <h2
-        style={{
-          fontSize: "3.5rem",
-          fontWeight: "900",
-          marginBottom: "3rem",
-          background: "linear-gradient(135deg, #ff6b6b 0%, #dc143c 100%)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          textShadow: "0 0 30px rgba(220, 20, 60, 0.3)",
-          animation: "pulse 2s ease-in-out infinite",
-        }}
-      >
-        Decision Time!
-      </h2>
+    <div className="phase-container">
+      <div className="decision-info">Decision Time!</div>
 
       {currentPair && currentPair.player1 && currentPair.player2 && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "4rem",
-            marginBottom: "3rem",
-          }}
-        >
-          <div
-            style={{
-              padding: "2.5rem",
-              background: "rgba(20, 20, 20, 0.8)",
-              borderRadius: "20px",
-              border: "2px solid rgba(255, 255, 255, 0.2)",
-              animation: "scaleIn 0.5s ease-out",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "2.2rem",
-                fontWeight: "800",
-                background: "linear-gradient(135deg, #4d9eff 0%, #1a5fb4 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              {currentPair.player1.name || "Player 1"}
-            </h3>
-          </div>
-
-          <span
-            style={{
-              fontSize: "3rem",
-              fontWeight: "900",
-              background: "linear-gradient(135deg, #FFE066 0%, #FF8C00 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              textShadow: "0 0 30px rgba(255, 140, 0, 0.5)",
-            }}
-          >
-            VS
+        <div className="player-pair">
+          <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            {currentPair.player1.name || "Player 1"}
           </span>
-
-          <div
-            style={{
-              padding: "2.5rem",
-              background: "rgba(20, 20, 20, 0.8)",
-              borderRadius: "20px",
-              border: "2px solid rgba(255, 255, 255, 0.2)",
-              animation: "scaleIn 0.5s ease-out 0.1s both",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "2.2rem",
-                fontWeight: "800",
-                background: "linear-gradient(135deg, #ff6b6b 0%, #dc143c 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              {currentPair.player2.name || "Player 2"}
-            </h3>
-          </div>
+          <span className="player-vs">VS</span>
+          <span style={{ fontSize: "1.5rem", fontWeight: "bold" }}>
+            {currentPair.player2.name || "Player 2"}
+          </span>
         </div>
       )}
 
-      <p
-        style={{
-          fontSize: "1.5rem",
-          opacity: 0.9,
-          fontWeight: "400",
-          color: "#FFE066",
-          textShadow: "0 0 10px rgba(255, 224, 102, 0.3)",
-        }}
-      >
+      <p style={{ fontSize: "1.2rem", opacity: 0.9 }}>
         Players are making their choices: Split or Steal?
       </p>
     </div>
@@ -788,6 +553,13 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
                 </div>
 
                 {/* Results overlay - only shows outcome message */}
+                {results.outcomeMessage && (
+                  <div className="reveal-results-overlay">
+                    <div className="reveal-outcome-message">
+                      {results.outcomeMessage}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Countdown Section */}
@@ -807,184 +579,58 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
     if (!showSettings) return null;
 
     return (
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(0, 0, 0, 0.8)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000,
-          animation: "fadeIn 0.3s ease-out",
-        }}
-      >
-        <div
-          style={{
-            background: "rgba(20, 20, 20, 0.95)",
-            borderRadius: "20px",
-            padding: "3rem",
-            maxWidth: "600px",
-            width: "90%",
-            maxHeight: "80vh",
-            overflow: "auto",
-            border: "2px solid rgba(255, 255, 255, 0.1)",
-            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
-            animation: "scaleIn 0.3s ease-out",
-          }}
-        >
-          <h3
-            style={{
-              fontSize: "2rem",
-              marginBottom: "2rem",
-              background: "linear-gradient(135deg, #4d9eff 0%, #1a5fb4 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
-          >
-            Game Settings
-          </h3>
+      <div className="settings-modal">
+        <div className="settings-content">
+          <h3>Game Settings</h3>
 
-          <div style={{ marginBottom: "2rem" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "1rem",
-                fontSize: "1.2rem",
-                fontWeight: "600",
-                color: "#fff",
-              }}
-            >
-              Participants ({participants.length})
-            </label>
+          <div className="participants-section">
+            <label>Participants ({participants.length})</label>
 
-            <div
-              style={{
-                maxHeight: "300px",
-                overflowY: "auto",
-                padding: "1rem",
-                background: "rgba(0, 0, 0, 0.3)",
-                borderRadius: "10px",
-                marginBottom: "1rem",
-              }}
-            >
+            <div className="participants-list">
               {participants.map((participant) => (
-                <div
-                  key={participant.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "0.8rem",
-                    marginBottom: "0.5rem",
-                    background: "rgba(255, 255, 255, 0.05)",
-                    borderRadius: "8px",
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <span style={{ fontSize: "1.1rem", color: "#fff" }}>
-                    {participant.name}
-                  </span>
+                <div key={participant.id} className="participant-item">
+                  <span className="participant-name">{participant.name}</span>
                   <button
+                    className="remove-participant"
                     onClick={() => handleRemoveParticipant(participant.id)}
-                    style={{
-                      padding: "0.5rem",
-                      background: "rgba(255, 69, 69, 0.2)",
-                      border: "1px solid rgba(255, 69, 69, 0.3)",
-                      borderRadius: "6px",
-                      color: "#ff4545",
-                      fontSize: "1.2rem",
-                      cursor: "pointer",
-                      transition: "all 0.3s ease",
-                    }}
+                    title="Remove participant"
                   >
-                    ×
+                    ✕
                   </button>
                 </div>
               ))}
             </div>
 
-            <div style={{ display: "flex", gap: "1rem" }}>
+            <div className="add-participant-form">
               <input
+                className="add-participant-input"
                 type="text"
                 value={newParticipantName}
                 onChange={(e) => setNewParticipantName(e.target.value)}
                 placeholder="Enter participant name"
                 maxLength={20}
-                style={{
-                  flex: 1,
-                  padding: "0.8rem 1.2rem",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "2px solid rgba(255, 255, 255, 0.1)",
-                  borderRadius: "10px",
-                  color: "#fff",
-                  fontSize: "1rem",
-                }}
               />
               <button
+                className="add-participant-button"
                 onClick={handleAddParticipant}
                 disabled={!newParticipantName.trim()}
-                style={{
-                  padding: "0.8rem 2rem",
-                  background: !newParticipantName.trim()
-                    ? "rgba(100, 100, 100, 0.3)"
-                    : "linear-gradient(135deg, #4d9eff 0%, #1a5fb4 100%)",
-                  border: "none",
-                  borderRadius: "10px",
-                  color: "#fff",
-                  fontSize: "1rem",
-                  fontWeight: "600",
-                  cursor: !newParticipantName.trim()
-                    ? "not-allowed"
-                    : "pointer",
-                }}
               >
                 Add
               </button>
             </div>
           </div>
 
-          <div
-            style={{
-              display: "flex",
-              gap: "1rem",
-              justifyContent: "flex-end",
-            }}
-          >
+          <div className="settings-actions">
             <button
+              className="close-settings"
               onClick={() => setShowSettings(false)}
-              style={{
-                padding: "1rem 2rem",
-                background: "rgba(100, 100, 100, 0.3)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: "10px",
-                color: "#fff",
-                fontSize: "1rem",
-                cursor: "pointer",
-              }}
             >
               Close
             </button>
             <button
+              className="skip-round"
               onClick={handleSkipRound}
               disabled={currentPhase === "countdown"}
-              style={{
-                padding: "1rem 2rem",
-                background:
-                  currentPhase === "countdown"
-                    ? "rgba(100, 100, 100, 0.3)"
-                    : "linear-gradient(135deg, #FFE066 0%, #FF8C00 100%)",
-                border: "none",
-                borderRadius: "10px",
-                color: currentPhase === "countdown" ? "#666" : "#000",
-                fontSize: "1rem",
-                fontWeight: "600",
-                cursor:
-                  currentPhase === "countdown" ? "not-allowed" : "pointer",
-              }}
             >
               Skip Round
             </button>
@@ -996,174 +642,42 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
   if (!isHost) {
     return (
-      <BlueDotBackground>
-        <div
-          style={{
-            minHeight: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "2rem",
-            color: "#fff",
-            textAlign: "center",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: "4rem",
-              fontWeight: "900",
-              marginBottom: "2rem",
-              background: "linear-gradient(135deg, #FFE066 0%, #FF8C00 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              textShadow: "0 0 30px rgba(255, 140, 0, 0.3)",
-            }}
-          >
-            💰 Split or Steal
-          </h1>
-          <div
-            style={{
-              background: "rgba(20, 20, 20, 0.9)",
-              borderRadius: "20px",
-              padding: "3rem",
-              border: "2px solid rgba(255, 255, 255, 0.1)",
-              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
-            }}
-          >
-            <h3
-              style={{
-                fontSize: "2rem",
-                marginBottom: "1rem",
-                color: "#4d9eff",
-              }}
-            >
-              Game in progress...
-            </h3>
-            <p style={{ fontSize: "1.3rem", opacity: 0.8 }}>
-              The host is managing the game. Watch the main screen!
-            </p>
-          </div>
+      <div className="split-or-steal">
+        <h1>💰 Split or Steal</h1>
+        <div className="wait-message">
+          <h3>Game in progress...</h3>
+          <p>The host is managing the game. Watch the main screen!</p>
         </div>
-      </BlueDotBackground>
+      </div>
     );
   }
 
-  // Conditionally render the reveal phase
+  // Conditionally render the reveal phase *outside* the main dashboard if it's active
   if (currentPhase === "reveal") {
     return renderRevealPhase();
   }
 
   return (
-    <BlueDotBackground>
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "2rem",
-          color: "#fff",
-        }}
+    <div className="split-or-steal">
+      <h1>💰 Split or Steal</h1>
+
+      <button
+        className="settings-button"
+        onClick={() => setShowSettings(true)}
+        title="Game Settings"
       >
-        <h1
-          style={{
-            fontSize: "4rem",
-            fontWeight: "900",
-            letterSpacing: "-2px",
-            marginBottom: "3rem",
-            background:
-              "linear-gradient(135deg, #FFE066 0%, #FFA500 50%, #FF8C00 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            textShadow: "0 0 30px rgba(255, 165, 0, 0.5)",
-          }}
-        >
-          💰 Split or Steal
-        </h1>
+        ⚙️
+      </button>
 
-        <button
-          onClick={() => setShowSettings(true)}
-          style={{
-            position: "absolute",
-            top: "2rem",
-            right: "2rem",
-            padding: "1rem",
-            background: "rgba(255, 255, 255, 0.1)",
-            border: "2px solid rgba(255, 255, 255, 0.2)",
-            borderRadius: "10px",
-            color: "#fff",
-            fontSize: "1.5rem",
-            cursor: "pointer",
-            transition: "all 0.3s ease",
-          }}
-          onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
-            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
-          }}
-          onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
-            e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
-            e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-          }}
-        >
-          ⚙️
-        </button>
-
-        <div
-          style={{
-            background: "rgba(20, 20, 20, 0.9)",
-            backdropFilter: "blur(10px)",
-            borderRadius: "30px",
-            padding: "4rem",
-            minWidth: "800px",
-            minHeight: "400px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
-            border: "2px solid rgba(255, 255, 255, 0.1)",
-          }}
-        >
-          {currentPhase === "countdown" && renderCountdownPhase()}
-          {currentPhase === "negotiation" && renderNegotiationPhase()}
-          {currentPhase === "decision" && renderDecisionPhase()}
-        </div>
-
-        {renderSettingsModal()}
+      <div className="dashboard-container">
+        {currentPhase === "countdown" && renderCountdownPhase()}
+        {currentPhase === "negotiation" && renderNegotiationPhase()}
+        {currentPhase === "decision" && renderDecisionPhase()}
+        {/* Reveal phase is now handled above to allow for a full-screen takeover */}
       </div>
 
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-50px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(50px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        
-        @keyframes scaleIn {
-          from { opacity: 0; transform: scale(0.8); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.8; }
-        }
-        
-        input::placeholder {
-          color: rgba(255, 255, 255, 0.3);
-        }
-      `}</style>
-    </BlueDotBackground>
+      {renderSettingsModal()}
+    </div>
   );
 };
 
