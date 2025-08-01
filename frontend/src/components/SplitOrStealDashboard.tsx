@@ -422,10 +422,17 @@ const SplitOrStealDashboard: React.FC<SplitOrStealDashboardProps> = ({
 
   const renderRevealPhase = () => {
     // Get player choices (convert to uppercase to match button rendering)
+    const player1Id = currentPair?.player1?.id;
+    const player2Id = currentPair?.player2?.id;
+
     const player1Choice =
-      results?.choices?.[currentPair?.player1?.id]?.toUpperCase();
+      player1Id !== undefined
+        ? results?.choices[player1Id]?.toUpperCase()
+        : undefined;
     const player2Choice =
-      results?.choices?.[currentPair?.player2?.id]?.toUpperCase();
+      player2Id !== undefined
+        ? results?.choices[player2Id]?.toUpperCase()
+        : undefined;
 
     if (showPostReveal && currentPair) {
       const player1Sips = calculateSips(currentPair.player1.intensity);
