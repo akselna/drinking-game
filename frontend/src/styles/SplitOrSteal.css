@@ -1107,3 +1107,192 @@
     font-size: 24px;
   }
 }
+
+/* General Controller Styles */
+.split-or-steal {
+  background-color: #1a1a2e;
+  color: #e0e0e0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  position: relative;
+}
+
+.split-or-steal h1 {
+  background: linear-gradient(135deg, #ffe066 0%, #ffa500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+}
+
+.controller-container {
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.wait-message,
+.phase-container {
+  color: #f1c40f;
+}
+
+.countdown-display {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #4d9eff;
+}
+.countdown-display.warning {
+  color: #e74c3c;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+/* Decision Phase Specific Styles */
+.controller-container.decision-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.current-player-indicator {
+  margin-bottom: 2rem;
+}
+
+.player-turn-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #ffe066;
+  text-shadow: 0 0 15px rgba(255, 224, 102, 0.4);
+}
+
+.strategy-prompt {
+  font-size: 1.25rem;
+  color: #e0e0e0;
+  opacity: 0.9;
+  margin-top: 0.5rem;
+}
+
+.buzzer-container {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.buzzer {
+  width: 180px;
+  height: 180px;
+  border: none;
+  border-radius: 50%;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4),
+    inset 0 2px 3px rgba(255, 255, 255, 0.2);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.buzzer.split {
+  background: radial-gradient(circle at 65% 35%, #6fbf73, #2e7d32);
+}
+
+.buzzer.steal {
+  background: radial-gradient(circle at 65% 35%, #f44336, #c62828);
+}
+
+.buzzer:not(:disabled):active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5), inset 0 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.buzzer:disabled {
+  background: radial-gradient(circle at 65% 35%, #777, #444);
+  color: #aaa;
+  cursor: not-allowed;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.lock-message {
+  font-size: 1.5rem;
+  color: #ff6b6b;
+  font-weight: bold;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.choice-made-message {
+  margin-top: 1.5rem;
+  font-size: 1.2rem;
+  color: #4d9eff;
+}
+
+/* Other styles from original file (condensed) */
+.settings-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.player-pair {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.player-vs {
+  color: #f1c40f;
+  font-weight: bold;
+}
+.reveal-results h3 {
+  color: #4d9eff;
+}
+.choice-display {
+  display: flex;
+  justify-content: space-around;
+  margin: 1rem 0;
+}
+.choice-item {
+  text-align: center;
+}
+.choice-name {
+  font-weight: bold;
+}
+.choice-value {
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  margin-top: 0.5rem;
+}
+.choice-split {
+  background-color: #2ecc71;
+}
+.choice-steal {
+  background-color: #e74c3c;
+}
+.outcome-message {
+  margin-top: 1rem;
+  font-style: italic;
+}
+.drinking-penalty {
+  margin-top: 1rem;
+  color: #e74c3c;
+  font-weight: bold;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { CustomSocket } from "../types/socket.types";
 import "../styles/SplitOrSteal.css";
 
@@ -35,6 +35,8 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   >(gameState?.participants || []);
   const [newParticipantName, setNewParticipantName] = useState<string>("");
   const [initialized, setInitialized] = useState<boolean>(false);
+  const [isTurnStarting, setIsTurnStarting] = useState<boolean>(false);
+  const prevPlayerRef = useRef<string | null>(null);
 
   // Initialize state from gameState
   useEffect(() => {
@@ -45,7 +47,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
       setResults(gameState.results || null);
       setCurrentPlayer(gameState.currentPlayer || null);
       setParticipants(gameState.participants || []);
-
 
       // Reset choice when phase changes
       if (gameState.phase !== "decision") {
@@ -75,7 +76,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
         setResults(data.results);
       }
 
-
       if (data.participants) {
         setParticipants(data.participants);
       }
@@ -103,6 +103,29 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     };
   }, [socket]);
 
+  // Effect to handle the delay between player decisions
+  useEffect(() => {
+    if (
+      currentPlayer &&
+      socket &&
+      currentPlayer === socket.id &&
+      prevPlayerRef.current !== currentPlayer &&
+      prevPlayerRef.current !== null
+    ) {
+      setIsTurnStarting(true);
+      const timer = setTimeout(() => {
+        setIsTurnStarting(false);
+      }, 2500); // 2.5-second delay
+
+      return () => clearTimeout(timer);
+    }
+  }, [currentPlayer, socket]);
+
+  // Update the ref after each render to track the previous player
+  useEffect(() => {
+    prevPlayerRef.current = currentPlayer;
+  });
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -110,7 +133,7 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
   };
 
   const handleChoice = (choice: "SPLIT" | "STEAL") => {
-    if (!socket || !currentPlayer || myChoice) return;
+    if (!socket || !currentPlayer || myChoice || isTurnStarting) return;
 
     setMyChoice(choice);
     socket.emit("split-steal-choice", sessionId, {
@@ -131,8 +154,6 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
 
     socket.emit("split-steal-remove-player", sessionId, participantId);
   };
-
-
 
   const renderCountdownPhase = () => (
     <div className="controller-container">
@@ -215,20 +236,27 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
           <p>Choose your strategy: Split or Steal?</p>
         </div>
 
-        <div className="choice-buttons">
+        <div
+          style={{
+            display: "flex",
+            gap: "20px",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <button
-            className="choice-button split-button"
+            className="buzzer split"
             onClick={() => handleChoice("SPLIT")}
-            disabled={!!myChoice}
+            disabled={!!myChoice || isTurnStarting}
           >
-           {myChoice === "SPLIT" ? "✓ " : ""}Split
+            {myChoice === "SPLIT" ? "✓ Split" : "Split"}
           </button>
           <button
-            className="choice-button steal-button"
+            className="buzzer steal"
             onClick={() => handleChoice("STEAL")}
-            disabled={!!myChoice}
+            disabled={!!myChoice || isTurnStarting}
           >
-            {myChoice === "STEAL" ? "✓ " : ""}Steal
+            {myChoice === "STEAL" ? "✓ Steal" : "Steal"}
           </button>
         </div>
 
@@ -237,6 +265,14 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
             style={{ textAlign: "center", marginTop: "1rem", color: "#f1c40f" }}
           >
             <strong>You chose: {myChoice}</strong>
+          </div>
+        )}
+
+        {isTurnStarting && (
+          <div
+            style={{ textAlign: "center", marginTop: "1rem", color: "#ccc" }}
+          >
+            The other player has chosen. Your turn begins shortly...
           </div>
         )}
 
@@ -266,61 +302,41 @@ const SplitOrStealController: React.FC<SplitOrStealControllerProps> = ({
     <div className="controller-container">
       <div className="reveal-results">
         <h3 style={{ marginTop: 0 }}>Results</h3>
-
-        {results &&
-          currentPair &&
-          currentPair.player1 &&
-          currentPair.player2 && (
-            <>
-              <div className="choice-display">
-                <div className="choice-item">
-                  <div className="choice-name">
-                    {currentPair.player1.name || "Player 1"}
-                  </div>
-                  <div
-                    className={`choice-value choice-${
-                      results.choices && results.choices[currentPair.player1.id]
-                        ? results.choices[currentPair.player1.id].toLowerCase()
-                        : "unknown"
-                    }`}
-                  >
-                    {(results.choices &&
-                      results.choices[currentPair.player1.id]) ||
-                      "Unknown"}
-                  </div>
-                </div>
-                <div className="choice-item">
-                  <div className="choice-name">
-                    {currentPair.player2.name || "Player 2"}
-                  </div>
-                  <div
-                    className={`choice-value choice-${
-                      results.choices && results.choices[currentPair.player2.id]
-                        ? results.choices[currentPair.player2.id].toLowerCase()
-                        : "unknown"
-                    }`}
-                  >
-                    {(results.choices &&
-                      results.choices[currentPair.player2.id]) ||
-                      "Unknown"}
-                  </div>
+        {results && currentPair?.player1 && currentPair?.player2 && (
+          <>
+            <div className="choice-display">
+              <div className="choice-item">
+                <div className="choice-name">{currentPair.player1.name}</div>
+                <div
+                  className={`choice-value choice-${
+                    results.choices?.[currentPair.player1.id]?.toLowerCase() ??
+                    "unknown"
+                  }`}
+                >
+                  {results.choices?.[currentPair.player1.id] ?? "Unknown"}
                 </div>
               </div>
-
-              <div className="outcome-message">
-                {results.outcomeMessage || "No outcome message"}
+              <div className="choice-item">
+                <div className="choice-name">{currentPair.player2.name}</div>
+                <div
+                  className={`choice-value choice-${
+                    results.choices?.[currentPair.player2.id]?.toLowerCase() ??
+                    "unknown"
+                  }`}
+                >
+                  {results.choices?.[currentPair.player2.id] ?? "Unknown"}
+                </div>
               </div>
-
-              {results.drinkingPenalty &&
-                results.drinkingPenalty.includes(socket?.id) && (
-                  <div className="drinking-penalty">
-                    <div className="penalty-title">🍺 You must drink!</div>
-                  </div>
-                )}
-            </>
-          )}
+            </div>
+            <div className="outcome-message">{results.outcomeMessage}</div>
+            {results.drinkingPenalty?.includes(socket?.id) && (
+              <div className="drinking-penalty">
+                <div className="penalty-title">🍺 You must drink!</div>
+              </div>
+            )}
+          </>
+        )}
       </div>
-
       <div className="countdown-display">{formatTime(timeLeft)}</div>
       <p style={{ textAlign: "center" }}>
         Next round starting in {timeLeft} seconds...
